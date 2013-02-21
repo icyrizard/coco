@@ -38,6 +38,7 @@
     </nodeset>
     <nodeset name="Statement">
       <target>
+        <node name="FunCall"/>
         <node name="Assign"/>
       </target>
     </nodeset>
@@ -129,8 +130,60 @@
         </attribute>
       </attributes>
     </node>
-    <node name="Assign">
+
+    <node name="Id">
         <sons/>
+        <attribute name="Name">
+          <type name="String">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+    </node>
+
+    <node name="Assign">
+        <son name="LetVar">
+          <targets>
+            <target mandatory="yes">
+              <set name="Id" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        <son name="Right">
+          <targets>
+            <target mandatory="yes">
+              <set name="Expr" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+    </node>
+
+    <node name="FunCall">
+      <sons>
+        <son name="Params">
+          <targets>
+            <target mandatory="yes">
+              <node name="ExprList" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
+      <attributes />
     </node>
     <node name="FunDef">
       <sons>
@@ -219,6 +272,32 @@
       </attributes>
     </node>
 
+    <node name="ExprList">
+      <sons>
+        <son name="Head">
+          <targets>
+            <target mandatory="yes">
+                <set name="Expr" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        <son name="Tail">
+          <targets>
+            <target mandatory="no">
+              <node name="ExprList" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
+      <attributes />
+    </node>
+
     <node name="VarDecList">
       <sons>
         <son name="Head">
@@ -245,7 +324,18 @@
       <attributes />
     </node>
     <node name="VarDec">
-        <sons/>
+      <sons>
+        <son name="Value">
+          <targets>
+            <target mandatory="no">
+              <set name="Expr" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
       <attributes>
         <attribute name="Type">
           <type name="Type">

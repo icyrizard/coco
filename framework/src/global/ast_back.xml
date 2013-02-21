@@ -6,7 +6,6 @@
     <type name="Bool" ctype="bool" init="FALSE" copy="literal" />
     <type name="Float" ctype="float" init="0.0" copy="literal" />
     <type name="BinOp" ctype="binop" init="BO_unknown" copy="literal" />
-    <type name="TypeDef" ctype="type" init="TYPE_unknown" copy="literal" />
     <type name="Link" ctype="node*" init="NULL" copy="lookup" />
     <type name="CompilerPhase" ctype="compiler_phase_t" init="PH_initial" copy="literal" />
   </attributetypes>
@@ -28,28 +27,24 @@
     </general>
   </phases>
   <nodesets>
-    <nodeset name="Declaration">
-      <target>
-        <node name="FunDec" />
-        <node name="FunDef" />
-        <!--<node name="GlobalDec" />
-        <node name="GlobalDef" />-->
-      </target>
-    </nodeset>
-    <nodeset name="Statement">
-      <target>
-        <node name="Assign"/>
-      </target>
-    </nodeset>
     <nodeset name="Expr">
       <target>
         <node name="BinOp" />
+        <node name="Var" />
+        <node name="Num" />
+        <node name="Float" />
+        <node name="Bool" />
+      </target>
+    </nodeset>
+    <nodeset name="Instr">
+      <target>
+        <node name="Assign" />
       </target>
     </nodeset>
   </nodesets>
 
   <syntaxtree>
-    <node name="Program">
+     <node name="Program">
       <sons>
         <son name="Head">
           <targets>
@@ -64,7 +59,7 @@
         <son name="Tail">
           <targets>
             <target mandatory="no">
-              <node name="Program" />
+              <node name="Instrs" />
               <phases>
                 <all />
               </phases>
@@ -74,13 +69,22 @@
       </sons>
       <attributes />
     </node>
-
-    <node name="FunDec">
+     <node name="Assign">
       <sons>
-        <son name="Header">
+        <son name="Let">
+          <targets>
+            <target mandatory="no">
+              <node name="VarLet" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        <son name="Expr">
           <targets>
             <target mandatory="yes">
-              <node name="FunHeader" />
+              <set name="Expr" />
               <phases>
                 <all />
               </phases>
@@ -90,7 +94,6 @@
       </sons>
       <attributes />
     </node>
-
     <node name="BinOp">
       <sons>
         <son name="Left">
@@ -129,193 +132,10 @@
         </attribute>
       </attributes>
     </node>
-    <node name="Assign">
-        <sons/>
-    </node>
-    <node name="FunDef">
+    <node name="VarLet">
       <sons>
-        <son name="Header">
-          <targets>
-            <target mandatory="yes">
-              <node name="FunHeader" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Body">
-          <targets>
-            <target mandatory="yes">
-              <node name="FunBody" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
       </sons>
       <attributes>
-        <attribute name="Export">
-          <type name="Bool">
-            <targets>
-              <target mandatory="yes">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-      </attributes>
-    </node>
-    <node name="FunBody">
-      <sons>
-        <son name="Vars">
-          <targets>
-            <target mandatory="no">
-              <node name="VarDecList" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Expr">
-          <targets>
-            <target mandatory="no">
-              <set name="Expr" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Statements">
-          <targets>
-            <target mandatory="no">
-              <node name="StatementList" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-      </sons>
-      <attributes>
-        <attribute name="Export">
-          <type name="Bool">
-            <targets>
-              <target mandatory="yes">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-      </attributes>
-    </node>
-
-    <node name="VarDecList">
-      <sons>
-        <son name="Head">
-          <targets>
-            <target mandatory="yes">
-              <set name="VarDec" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Tail">
-          <targets>
-            <target mandatory="no">
-              <node name="VarDecList" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-      </sons>
-      <attributes />
-    </node>
-    <node name="VarDec">
-        <sons/>
-      <attributes>
-        <attribute name="Type">
-          <type name="Type">
-            <targets>
-              <target mandatory="yes">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-      </attributes>
-    </node>
-    <node name="StatementList">
-      <sons>
-        <son name="Head">
-          <targets>
-            <target mandatory="yes">
-              <set name="Statement" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Tail">
-          <targets>
-            <target mandatory="no">
-              <node name="StatementList" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-      </sons>
-      <attributes />
-    </node>
-    <node name="Statement">
-        <sons/>
-        <attributes/>
-    </node>
-    <node name="FunHeader">
-      <sons>
-        <son name="Params">
-          <targets>
-            <target mandatory="yes">
-              <node name="ParamList" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-      </sons>
-      <attributes>
-        <attribute name="RetType">
-          <type name="TypeDef">
-            <targets>
-              <target mandatory="yes">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
         <attribute name="Name">
           <type name="String">
             <targets>
@@ -328,38 +148,26 @@
             </targets>
           </type>
         </attribute>
+        <attribute name="Decl">
+          <type name="Link">
+            <targets>
+              <target mandatory="no">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
       </attributes>
     </node>
-    <node name="ParamList">
+    <node name="Var">
       <sons>
-        <son name="Head">
-          <targets>
-            <target mandatory="yes">
-              <node name="Param" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
-        <son name="Tail">
-          <targets>
-            <target mandatory="no">
-              <node name="ParamList" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
       </sons>
-      <attributes/>
-    </node>
-    <node name="Param">
-      <sons/>
       <attributes>
-        <attribute name="Type">
-          <type name="TypeDef">
+        <attribute name="Name">
+          <type name="String">
             <targets>
               <target mandatory="yes">
                 <any />
@@ -370,8 +178,89 @@
             </targets>
           </type>
         </attribute>
+        <attribute name="Decl">
+          <type name="Link">
+            <targets>
+              <target mandatory="no">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+    <node name="Const">
+      <sons>
+      </sons>
+      <attributes>
         <attribute name="Name">
           <type name="String">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="Decl">
+          <type name="Link">
+            <targets>
+              <target mandatory="no">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+   <node name="Num">
+      <sons />
+      <attributes>
+        <attribute name="Value">
+          <type name="Int">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+    <node name="Float">
+      <sons />
+      <attributes>
+        <attribute name="Value">
+          <type name="Float">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+    <node name="Bool">
+      <sons />
+      <attributes>
+        <attribute name="Value">
+          <type name="Bool">
             <targets>
               <target mandatory="yes">
                 <any />

@@ -6,6 +6,7 @@
     <type name="Bool" ctype="bool" init="FALSE" copy="literal" />
     <type name="Float" ctype="float" init="0.0" copy="literal" />
     <type name="BinOp" ctype="binop" init="BO_unknown" copy="literal" />
+    <type name="MonOp" ctype="monop" init="MO_unknown" copy="literal" />
     <type name="TypeDef" ctype="type" init="TYPE_unknown" copy="literal" />
     <type name="Link" ctype="node*" init="NULL" copy="lookup" />
     <type name="CompilerPhase" ctype="compiler_phase_t" init="PH_initial" copy="literal" />
@@ -32,19 +33,31 @@
       <target>
         <node name="FunDec" />
         <node name="FunDef" />
-        <!--<node name="GlobalDec" />
-        <node name="GlobalDef" />-->
+        <node name="GlobalDec" />
+        <node name="GlobalDef" />
       </target>
     </nodeset>
     <nodeset name="Statement">
       <target>
-        <node name="FunCall"/>
-        <node name="Assign"/>
+        <node name="FunCall" />
+        <node name="Assign" />
+        <node name="ConditionIf" />
+        <node name="WhileLoop" />
+        <node name="DoWhileLoop" />
+        <node name="ForLoop" />
       </target>
     </nodeset>
     <nodeset name="Expr">
       <target>
+        <node name="Expr" />
         <node name="BinOp" />
+        <node name="Var" />
+        <node name="Num" />
+        <node name="Float" />
+        <node name="Bool" />
+        <node name="MonOp" />
+        <node name="FunCall" />
+        <node name="Cast" />
       </target>
     </nodeset>
   </nodesets>
@@ -92,6 +105,86 @@
       <attributes />
     </node>
 
+    <node name="GlobalDec">
+      <sons>
+        <son name="Id">
+          <targets>
+            <target mandatory="yes">
+              <node name="VarLet" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
+      <attributes>
+        <attribute name="Type">
+          <type name="TypeDef">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+
+    <node name="GlobalDef">
+      <sons>
+        <son name="Id">
+          <targets>
+            <target mandatory="yes">
+              <node name="VarLet" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        <son name="Expr">
+          <targets>
+            <target mandatory="no">
+              <node name="Expr" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
+      <attributes>
+        <attribute name="Type">
+          <type name="TypeDef">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="Export">
+          <type name="Bool">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+
     <node name="BinOp">
       <sons>
         <son name="Left">
@@ -131,8 +224,65 @@
       </attributes>
     </node>
 
-    <node name="Id">
-        <sons/>
+    <node name="MonOp">
+      <sons>
+        <son name="Right">
+          <targets>
+            <target mandatory="yes">
+              <set name="Expr" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
+      <attributes>
+        <attribute name="Op">
+          <type name="MonOp">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+
+    <node name="Cast">
+      <sons>
+        <son name="Right">
+          <targets>
+            <target mandatory="yes">
+                <set name="Expr" />
+            </target>
+          </targets>
+        </son>
+      </sons>
+      <attributes>
+        <attribute name="Type">
+          <type name="TypeDef">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+
+    <node name="VarLet">
+      <sons>
+      </sons>
+      <attributes>
         <attribute name="Name">
           <type name="String">
             <targets>
@@ -145,20 +295,33 @@
             </targets>
           </type>
         </attribute>
+        <attribute name="Decl">
+          <type name="Link">
+            <targets>
+              <target mandatory="no">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
     </node>
-
-    <node name="Assign">
-        <son name="LetVar">
+     <node name="Assign">
+      <sons>
+        <son name="Let">
           <targets>
-            <target mandatory="yes">
-              <set name="Id" />
+            <target mandatory="no">
+              <node name="VarLet" />
               <phases>
                 <all />
               </phases>
             </target>
           </targets>
         </son>
-        <son name="Right">
+        <son name="Expr">
           <targets>
             <target mandatory="yes">
               <set name="Expr" />
@@ -168,10 +331,231 @@
             </target>
           </targets>
         </son>
+      </sons>
+      <attributes />
+    </node>
+
+    <node name="ConditionIf">
+      <sons>
+        <son name="Expr">
+          <targets>
+            <target mandatory="yes">
+              <set name="Expr" />
+            </target>
+          </targets>
+        </son>
+        <son name="Block">
+          <targets>
+            <target mandatory="yes">
+              <set name="StatementList" />
+            </target>
+          </targets>
+        </son>
+        <son name="ElseBlock">
+          <targets>
+            <target mandatory="no">
+              <set name="StatementList" />
+            </target>
+          </targets>
+        </son>
+      </sons>
+    </node>
+
+    <node name="WhileLoop">
+      <sons>
+        <son name="Expr">
+          <targets>
+            <target mandatory="yes">
+              <set name="Expr" />
+            </target>
+          </targets>
+        </son>
+        <son name="Block">
+          <targets>
+            <target mandatory="yes">
+              <set name="StatementList" />
+            </target>
+          </targets>
+        </son>
+      </sons>
+    </node>
+
+    <node name="DoWhileLoop">
+      <sons>
+        <son name="Block">
+          <targets>
+            <target mandatory="yes">
+              <set name="StatementList" />
+            </target>
+          </targets>
+        </son>
+        <son name="Expr">
+          <targets>
+            <target mandatory="yes">
+              <set name="Expr" />
+            </target>
+          </targets>
+        </son>
+      </sons>
+    </node>
+
+    <node name="ForLoop">
+      <sons>
+        <son name="StartValue">
+          <targets>
+            <target mandatory="yes">
+              <set name="Assign" />
+            </target>
+          </targets>
+        </son>
+        <son name="StopValue">
+          <targets>
+            <target mandatory="yes">
+              <set name="Expr" />
+            </target>
+          </targets>
+        </son>
+        <son name="StepValue">
+          <targets>
+            <target mandatory="no">
+              <set name="Expr" />
+            </target>
+          </targets>
+        </son>
+        <son name="Block">
+          <targets>
+            <target mandatory="yes">
+              <set name="StatementList" />
+            </target>
+          </targets>
+        </son>
+      </sons>
+    </node>
+
+    <node name="Var">
+      <sons>
+      </sons>
+      <attributes>
+        <attribute name="Name">
+          <type name="String">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="Decl">
+          <type name="Link">
+            <targets>
+              <target mandatory="no">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+    <node name="Const">
+      <sons>
+      </sons>
+      <attributes>
+        <attribute name="Name">
+          <type name="String">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+        <attribute name="Decl">
+          <type name="Link">
+            <targets>
+              <target mandatory="no">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+   <node name="Num">
+      <sons />
+      <attributes>
+        <attribute name="Value">
+          <type name="Int">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+    <node name="Float">
+      <sons />
+      <attributes>
+        <attribute name="Value">
+          <type name="Float">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+    <node name="Bool">
+      <sons />
+      <attributes>
+        <attribute name="Value">
+          <type name="Bool">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
     </node>
 
     <node name="FunCall">
       <sons>
+        <son name="Id">
+          <targets>
+            <target mandatory="yes">
+              <node name="VarLet" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
         <son name="Params">
           <targets>
             <target mandatory="yes">
@@ -185,6 +569,7 @@
       </sons>
       <attributes />
     </node>
+
     <node name="FunDef">
       <sons>
         <son name="Header">
@@ -235,7 +620,7 @@
             </target>
           </targets>
         </son>
-        <son name="Expr">
+        <son name="Return">
           <targets>
             <target mandatory="no">
               <set name="Expr" />
@@ -323,6 +708,7 @@
       </sons>
       <attributes />
     </node>
+
     <node name="VarDec">
       <sons>
         <son name="Value">
@@ -335,10 +721,20 @@
             </target>
           </targets>
         </son>
+        <son name="Id">
+          <targets>
+            <target mandatory="yes">
+              <node name="VarLet" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
       </sons>
       <attributes>
         <attribute name="Type">
-          <type name="Type">
+          <type name="TypeDef">
             <targets>
               <target mandatory="yes">
                 <any />
@@ -351,6 +747,7 @@
         </attribute>
       </attributes>
     </node>
+
     <node name="StatementList">
       <sons>
         <son name="Head">
@@ -380,8 +777,19 @@
         <sons/>
         <attributes/>
     </node>
+
     <node name="FunHeader">
       <sons>
+        <son name="Id">
+          <targets>
+            <target mandatory="yes">
+              <node name="VarLet" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
         <son name="Params">
           <targets>
             <target mandatory="yes">
@@ -406,20 +814,9 @@
             </targets>
           </type>
         </attribute>
-        <attribute name="Name">
-          <type name="String">
-            <targets>
-              <target mandatory="yes">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
       </attributes>
     </node>
+
     <node name="ParamList">
       <sons>
         <son name="Head">
@@ -445,8 +842,20 @@
       </sons>
       <attributes/>
     </node>
+
     <node name="Param">
-      <sons/>
+      <sons>
+        <son name="Id">
+          <targets>
+            <target mandatory="yes">
+              <node name="VarLet" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
       <attributes>
         <attribute name="Type">
           <type name="TypeDef">
@@ -460,20 +869,9 @@
             </targets>
           </type>
         </attribute>
-        <attribute name="Name">
-          <type name="String">
-            <targets>
-              <target mandatory="yes">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
       </attributes>
     </node>
+
     <node name="Error">
       <sons>
         <son name="Next">

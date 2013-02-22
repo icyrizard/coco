@@ -35,11 +35,11 @@ struct INFO {
 static info *MakeInfo()
 {
   info *result;
-  
+
   result = MEMmalloc(sizeof(info));
 
   INFO_FIRSTERROR(result) = FALSE;
-  
+
   return result;
 }
 
@@ -55,7 +55,7 @@ static info *FreeInfo( info *info)
 
 /** <!--******************************************************************-->
  *
- * @fn PRTinstr
+ * @fn PRTprogram
  *
  * @brief Prints the node and its sons/attributes
  *
@@ -67,14 +67,14 @@ static info *FreeInfo( info *info)
  ***************************************************************************/
 
 node *
-PRTinstrs (node * arg_node, info * arg_info)
+PRTprogram(node * arg_node, info * arg_info)
 {
-  DBUG_ENTER ("PRTinstrs");
+  DBUG_ENTER ("PRTprogram");
 
-  INSTRS_INSTR( arg_node) = TRAVdo( INSTRS_INSTR( arg_node), arg_info);
-  
-  INSTRS_NEXT( arg_node) = TRAVopt( INSTRS_NEXT( arg_node), arg_info);
-  
+  PROGRAM_HEAD( arg_node) = TRAVdo( PROGRAM_HEAD( arg_node), arg_info);
+
+  PROGRAM_TAIL( arg_node) = TRAVopt( PROGRAM_TAIL( arg_node), arg_info);
+
   DBUG_RETURN (arg_node);
 }
 
@@ -101,11 +101,11 @@ PRTassign (node * arg_node, info * arg_info)
     ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
     printf( " = ");
   }
-  
+
   ASSIGN_EXPR( arg_node) = TRAVdo( ASSIGN_EXPR( arg_node), arg_info);
-  
+
   printf( ";\n");
-  
+
   DBUG_RETURN (arg_node);
 }
 
@@ -187,6 +187,36 @@ PRTbinop (node * arg_node, info * arg_info)
   DBUG_RETURN (arg_node);
 }
 
+node *
+PRTmonop (node * arg_node, info * arg_info)
+{
+  char *tmp;
+
+  DBUG_ENTER ("PRTmonop");
+
+  MONOP_OP( arg_node) = TRAVdo( MONOP_OP( arg_node), arg_info);
+  printf("(");
+
+  switch (MONOP_OP( arg_node)) {
+    case MO_not:
+      tmp = "!";
+      break;
+    case MO_neg:
+      tmp = "-";
+      break;
+    case MO_unknown:
+      DBUG_ASSERT( 0, "unknown minop detected!");
+  }
+
+  printf( " %s ", tmp);
+
+  MONOP_RIGHT( arg_node) = TRAVdo( MONOP_RIGHT( arg_node), arg_info);
+
+  printf(")");
+
+  DBUG_RETURN (arg_node);
+}
+
 
 /** <!--******************************************************************-->
  *
@@ -261,7 +291,7 @@ PRTbool (node * arg_node, info * arg_info)
   else {
     printf( "false");
   }
-  
+
   DBUG_RETURN (arg_node);
 }
 
@@ -366,17 +396,17 @@ PRTerror (node * arg_node, info * arg_info)
 
 /** <!-- ****************************************************************** -->
  * @brief Prints the given syntaxtree
- * 
+ *
  * @param syntaxtree a node structure
- * 
+ *
  * @return the unchanged nodestructure
  ******************************************************************************/
 
-node 
+node
 *PRTdoPrint( node *syntaxtree)
 {
   info *info;
-  
+
   DBUG_ENTER("PRTdoPrint");
 
   DBUG_ASSERT( (syntaxtree!= NULL), "PRTdoPrint called with empty syntaxtree");
@@ -384,7 +414,7 @@ node
   printf( "\n\n------------------------------\n\n");
 
   info = MakeInfo();
-  
+
   TRAVpush( TR_prt);
 
   syntaxtree = TRAVdo( syntaxtree, info);

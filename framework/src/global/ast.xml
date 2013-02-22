@@ -49,7 +49,6 @@
     </nodeset>
     <nodeset name="Expr">
       <target>
-        <node name="Expr" />
         <node name="BinOp" />
         <node name="Var" />
         <node name="Num" />
@@ -149,7 +148,7 @@
         <son name="Expr">
           <targets>
             <target mandatory="no">
-              <node name="Expr" />
+              <set name="Expr" />
               <phases>
                 <all />
               </phases>

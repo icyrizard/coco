@@ -362,6 +362,221 @@ PRTerror (node * arg_node, info * arg_info)
   DBUG_RETURN (arg_node);
 }
 
+node *
+PRTmonop (node * arg_node, info * arg_info)
+{
+  char *tmp;
+
+  DBUG_ENTER ("PRTmonop");
+
+  printf("(");
+
+  switch (MONOP_OP( arg_node)) {
+    case MO_not:
+      tmp = "!";
+      break;
+    case MO_neg:
+      tmp = "-";
+      break;
+    case MO_unknown:
+      DBUG_ASSERT( 0, "unknown minop detected!");
+  }
+
+  printf( " %s ", tmp);
+
+  MONOP_RIGHT( arg_node) = TRAVdo( MONOP_RIGHT( arg_node), arg_info);
+
+  printf(")");
+
+  DBUG_RETURN (arg_node);
+}
+
+
+node *PRTfundec (node * arg_node, info * arg_info)
+{
+    DBUG_ENTER ("PRTfundec");
+
+    printf("extern ");
+
+    FUNDEC_HEADER( arg_node) = TRAVdo( FUNDEC_HEADER( arg_node), arg_info);
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTglobaldec (node * arg_node, info * arg_info)
+{
+    DBUG_ENTER ("PRTglobaldec");
+
+    printf("exern ");
+
+    GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTglobaldef (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTglobaldef");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTcast (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTcast");
+
+    DBUG_RETURN (arg_node);
+
+}
+
+node *PRTconditionif (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTconditionif");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTwhileloop (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTwhileloop");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTdowhileloop (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTdowhileloop");
+
+    DBUG_RETURN (arg_node);
+
+}
+
+node *PRTforloop (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTforloop");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTconst (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTconst");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTfuncall (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTfuncall");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTfundef (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTfundef");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTfunbody (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTfunbody");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTexprlist (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTexprlist");
+
+    DBUG_RETURN (arg_node);
+
+}
+
+node *PRTvardeclist (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTvardeclist");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTvardec (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTvardec");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTstatementlist (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTstatementlist");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTstatement (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTstatement");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTfunheader (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTfunheader");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTparamlist (node * arg_node, info * arg_info)
+{
+    //char *tmp;
+
+    DBUG_ENTER ("PRTparamlist");
+
+    DBUG_RETURN (arg_node);
+}
+
+node *PRTparam (node * arg_node, info * arg_info){
+    //char *tmp;
+
+    DBUG_ENTER ("PRTparam");
+
+    DBUG_RETURN (arg_node);
+}
 
 
 /** <!-- ****************************************************************** -->
@@ -398,135 +613,6 @@ node
   DBUG_RETURN( syntaxtree);
 }
 
-node *
-PRTmonop (node * arg_node, info * arg_info)
-{
-  char *tmp;
-
-  DBUG_ENTER ("PRTmonop");
-
-  printf("(");
-
-  switch (MONOP_OP( arg_node)) {
-    case MO_not:
-      tmp = "!";
-      break;
-    case MO_neg:
-      tmp = "-";
-      break;
-    case MO_unknown:
-      DBUG_ASSERT( 0, "unknown minop detected!");
-  }
-
-  printf( " %s ", tmp);
-
-  MONOP_RIGHT( arg_node) = TRAVdo( MONOP_RIGHT( arg_node), arg_info);
-
-  printf(")");
-
-  DBUG_RETURN (arg_node);
-}
-
-
-node *PRTfundec (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-}
-
-node *PRTglobaldec (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTglobaldef (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTcast (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTconditionif (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTwhileloop (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTdowhileloop (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTforloop (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTconst (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTfuncall (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTfundef (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTfunbody (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTexprlist (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTvardeclist (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTvardec (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTstatementlist (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTstatement (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTfunheader (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTparamlist (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-
-}
-node *PRTparam (node * arg_node, info * arg_info){
-    char *tmp;
-    DBUG_RETURN (arg_node);
-}
 /**
  * @}
  */

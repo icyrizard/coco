@@ -38,30 +38,30 @@ static int yyerror( char *errname);
 %token <id> ID
 
 %type <node> intval floatval boolval constant expr
-%type <node> instrs instr assign varlet program
+%type <node> declaration program assign varlet start
 %type <cbinop> binop
 
-%start program
+%start start
 
 %%
 
-program: instrs 
+start: program
          {
            parseresult = $1;
          }
          ;
 
-instrs: instr instrs
+program: declaration program
         {
-          $$ = TBmakeInstrs( $1, $2);
+          $$ = TBmakeProgram( $1, $2);
         }
-      | instr
+      | declaration
         {
-          $$ = TBmakeInstrs( $1, NULL);
+          $$ = TBmakeProgram( $1, NULL);
         }
         ;
 
-instr: assign
+declaration: assign
        {
          $$ = $1;
        }
@@ -130,6 +130,7 @@ boolval: TRUEVAL
          }
        ;
 
+
 binop: PLUS      { $$ = BO_add; }
      | MINUS     { $$ = BO_sub; }
      | STAR      { $$ = BO_mul; }
@@ -143,12 +144,12 @@ binop: PLUS      { $$ = BO_add; }
      | OR        { $$ = BO_or; }
      | AND       { $$ = BO_and; }
      ;
-      
+
 %%
 
 static int yyerror( char *error)
 {
-  CTIabort( "line %d, col %d\nError parsing source code: %s\n", 
+  CTIabort( "line %d, col %d\nError parsing source code: %s\n",
             global.line, global.col, error);
 
   return( 0);

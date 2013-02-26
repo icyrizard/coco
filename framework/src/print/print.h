@@ -25,13 +25,13 @@ extern node *PRTdoPrint( node *syntaxtree);
 
 extern node *PRTmonop(node * arg_node, info * arg_info);
 extern node *PRTfundec (node * arg_node, info * arg_info);
-
 extern node *PRTglobaldec (node * arg_node, info * arg_info);
 extern node *PRTglobaldef (node * arg_node, info * arg_info);
 extern node *PRTcast (node * arg_node, info * arg_info);
 extern node *PRTconditionif (node * arg_node, info * arg_info);
 extern node *PRTwhileloop (node * arg_node, info * arg_info);
 extern node *PRTdowhileloop (node * arg_node, info * arg_info);
+
 extern node *PRTforloop (node * arg_node, info * arg_info);
 extern node *PRTconst (node * arg_node, info * arg_info);
 extern node *PRTfuncall (node * arg_node, info * arg_info);

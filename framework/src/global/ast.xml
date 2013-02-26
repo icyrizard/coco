@@ -461,6 +461,7 @@
         </attribute>
       </attributes>
     </node>
+
     <node name="Const">
       <sons>
       </sons>
@@ -610,6 +611,7 @@
         </attribute>
       </attributes>
     </node>
+
     <node name="FunBody">
       <sons>
         <son name="Vars">
@@ -775,10 +777,6 @@
       </sons>
       <attributes />
     </node>
-    <node name="Statement">
-        <sons/>
-        <attributes/>
-    </node>
 
     <node name="FunHeader">
       <sons>
@@ -794,7 +792,7 @@
         </son>
         <son name="Params">
           <targets>
-            <target mandatory="yes">
+            <target mandatory="no">
               <node name="ParamList" />
               <phases>
                 <all />

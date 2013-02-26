@@ -346,14 +346,14 @@
         <son name="Block">
           <targets>
             <target mandatory="yes">
-              <set name="StatementList" />
+              <node name="StatementList" />
             </target>
           </targets>
         </son>
         <son name="ElseBlock">
           <targets>
             <target mandatory="no">
-              <set name="StatementList" />
+              <node name="StatementList" />
             </target>
           </targets>
         </son>
@@ -372,7 +372,7 @@
         <son name="Block">
           <targets>
             <target mandatory="yes">
-              <set name="StatementList" />
+              <node name="StatementList" />
             </target>
           </targets>
         </son>
@@ -384,7 +384,7 @@
         <son name="Block">
           <targets>
             <target mandatory="yes">
-              <set name="StatementList" />
+              <node name="StatementList" />
             </target>
           </targets>
         </son>
@@ -403,7 +403,7 @@
         <son name="StartValue">
           <targets>
             <target mandatory="yes">
-              <set name="Assign" />
+              <node name="Assign" />
             </target>
           </targets>
         </son>
@@ -424,7 +424,7 @@
         <son name="Block">
           <targets>
             <target mandatory="yes">
-              <set name="StatementList" />
+              <node name="StatementList" />
             </target>
           </targets>
         </son>
@@ -692,7 +692,7 @@
         <son name="Head">
           <targets>
             <target mandatory="yes">
-              <set name="VarDec" />
+              <node name="VarDec" />
               <phases>
                 <all />
               </phases>

@@ -405,20 +405,10 @@ node *PRTfundec (node * arg_node, info * arg_info)
 
 node *PRTglobaldec (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTglobaldec");
-
-    printf("exern ");
-
-    GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
-
-    DBUG_RETURN (arg_node);
 }
 
 node *PRTglobaldef (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
-    DBUG_ENTER ("PRTglobaldef");
 
     DBUG_RETURN (arg_node);
 }
@@ -563,17 +553,36 @@ node *PRTfunheader (node * arg_node, info * arg_info)
 
 node *PRTparamlist (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTparamlist");
+    char *tmp;
+
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTparam (node * arg_node, info * arg_info){
-    //char *tmp;
+    char *tmp;
 
     DBUG_ENTER ("PRTparam");
+
+    switch (PARAM_TYPE( arg_node)) {
+        case TYPE_bool:
+            tmp = "bool";
+            break;
+        case TYPE_int:
+            tmp = "int"
+            break;
+        case TYPE_float:
+            tmp = "float"
+            break;
+        case TYPE_void:
+            tmp = "void"
+            break;
+        case TYPE_unkown:
+            DBUG_ASSERT( 0, "no or unknown type defined");
+    }
+
+    PARAM_ID( arg_node) = TRAVdo( PARAM_ID( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
 }

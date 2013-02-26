@@ -31,7 +31,6 @@ extern node *PRTcast (node * arg_node, info * arg_info);
 extern node *PRTconditionif (node * arg_node, info * arg_info);
 extern node *PRTwhileloop (node * arg_node, info * arg_info);
 extern node *PRTdowhileloop (node * arg_node, info * arg_info);
-
 extern node *PRTforloop (node * arg_node, info * arg_info);
 extern node *PRTconst (node * arg_node, info * arg_info);
 extern node *PRTfuncall (node * arg_node, info * arg_info);
@@ -41,7 +40,6 @@ extern node *PRTexprlist (node * arg_node, info * arg_info);
 extern node *PRTvardeclist (node * arg_node, info * arg_info);
 extern node *PRTvardec (node * arg_node, info * arg_info);
 extern node *PRTstatementlist (node * arg_node, info * arg_info);
-extern node *PRTstatement (node * arg_node, info * arg_info);
 extern node *PRTfunheader (node * arg_node, info * arg_info);
 extern node *PRTparamlist (node * arg_node, info * arg_info);
 extern node *PRTparam (node * arg_node, info * arg_info);

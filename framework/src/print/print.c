@@ -432,7 +432,7 @@ node *PRTglobaldec (node * arg_node, info * arg_info)
 
     GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
 
-    printf( ";\n");
+    printf(";\n");
 
     DBUG_RETURN (arg_node);
 
@@ -573,52 +573,91 @@ node *PRTforloop (node * arg_node, info * arg_info)
 
     printf("for(");
 
+    FORLOOP_STARTVALUE( arg_node) = TRAVdo( FORLOOP_STARTVALUE( arg_node),
+            arg_info);
 
+    FORLOOP_STOPVALUE( arg_node) = TRAVdo( FORLOOP_STOPVALUE( arg_node),
+                arg_info);
+
+    if(FORLOOP_STEPVALUE( arg_node) != NULL) {
+        printf("; ");
+        FORLOOP_STEPVALUE( arg_node) = TRAVdo( FORLOOP_STEPVALUE( arg_node),
+                arg_info);
+    }
+    printf(")\n");
+
+    FORLOOP_BLOCK( arg_node) = TRAVdo( FORLOOP_BLOCK( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTconst (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTconst");
+
+    printf(" %s ", CONST_NAME( arg_node));
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTfuncall (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTfuncall");
+
+    FUNCALL_ID( arg_node) = TRAVdo( FUNCALL_ID( arg_node), arg_info);
+
+    printf("(");
+
+    FUNCALL_PARAMS( arg_node) = TRAVdo( FUNCALL_PARAMS( arg_node), arg_info);
+
+    printf(");\n");
+
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTfundef (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTfundef");
+
+    if(FUNDEF_EXPORT( arg_node))
+        printf("export ");
+
+    FUNDEF_HEADER( arg_node) = TRAVdo( FUNDEF_HEADER( arg_node), arg_info);
+
+    printf("{\n");
+
+    FUNDEF_BODY( arg_node) = TRAVdo( FUNDEF_BODY( arg_node), arg_info);
+
+    printf("}\n");
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTfunbody (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTfunbody");
+
+    FUNBODY_VARS( arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
+
+    FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
+
+    if(FUNBODY_RETURN( arg_node) != NULL) {
+        printf("return ");
+        FUNBODY_RETURN( arg_node) = TRAVdo( FUNBODY_RETURN( arg_node), arg_info);
+        printf(";\n");
+    }
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTexprlist (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTexprlist");
+
+    EXPRLIST_HEAD( arg_node) = TRAVdo( EXPRLIST_HEAD( arg_node), arg_info);
+
+    EXPRLIST_TAIL( arg_node) = TRAVopt( EXPRLIST_TAIL( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
 
@@ -626,45 +665,96 @@ node *PRTexprlist (node * arg_node, info * arg_info)
 
 node *PRTvardeclist (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTvardeclist");
+
+    VARDECLIST_HEAD( arg_node) = TRAVdo( VARDECLIST_HEAD( arg_node), arg_info);
+
+    VARDECLIST_TAIL( arg_node) = TRAVopt( VARDECLIST_TAIL( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTvardec (node * arg_node, info * arg_info)
 {
-    //char *tmp;
+    char* tmp;
 
     DBUG_ENTER ("PRTvardec");
+
+    switch (VARDEC_TYPE( arg_node)) {
+        case TYPE_bool:
+            tmp = "bool";
+            break;
+        case TYPE_int:
+            tmp = "int";
+            break;
+        case TYPE_float:
+            tmp = "float";
+            break;
+        case TYPE_void:
+            tmp = "void";
+            break;
+        case TYPE_unknown:
+            DBUG_ASSERT( 0, "no or unknown type defined");
+    }
+
+    printf("%s ", tmp);
+
+    VARDEC_ID( arg_node) = TRAVdo( VARDEC_ID( arg_node), arg_info);
+
+    if(VARDEC_VALUE( arg_node) != NULL) {
+        printf(" = ");
+
+        VARDEC_VALUE( arg_node) = TRAVdo( VARDEC_VALUE( arg_node), arg_info);
+    }
+    printf(";\n");
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTstatementlist (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTstatementlist");
 
-    DBUG_RETURN (arg_node);
-}
+    STATEMENTLIST_HEAD( arg_node) = TRAVdo( STATEMENTLIST_HEAD( arg_node), arg_info);
 
-node *PRTstatement (node * arg_node, info * arg_info)
-{
-    //char *tmp;
-
-    DBUG_ENTER ("PRTstatement");
+    STATEMENTLIST_TAIL( arg_node) = TRAVopt( STATEMENTLIST_TAIL( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTfunheader (node * arg_node, info * arg_info)
 {
-    //char *tmp;
+    char* tmp;
 
     DBUG_ENTER ("PRTfunheader");
+
+    switch (PARAM_TYPE( arg_node)) {
+        case TYPE_bool:
+            tmp = "bool";
+            break;
+        case TYPE_int:
+            tmp = "int";
+            break;
+        case TYPE_float:
+            tmp = "float";
+            break;
+        case TYPE_void:
+            tmp = "void";
+            break;
+        case TYPE_unknown:
+            DBUG_ASSERT( 0, "no or unknown type defined");
+    }
+
+    printf("%s ", tmp);
+
+    FUNHEADER_ID( arg_node) = TRAVdo( FUNHEADER_ID( arg_node), arg_info);
+
+    printf("(");
+
+    FUNHEADER_PARAMS( arg_node) = TRAVopt( FUNHEADER_PARAMS( arg_node),
+            arg_info);
+
+    printf(")");
 
     DBUG_RETURN (arg_node);
 }
@@ -672,8 +762,13 @@ node *PRTfunheader (node * arg_node, info * arg_info)
 node *PRTparamlist (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTparamlist");
-    char *tmp;
 
+    STATEMENTLIST_HEAD( arg_node) = TRAVdo( STATEMENTLIST_HEAD( arg_node), arg_info);
+
+    if(STATEMENTLIST_TAIL( arg_node) != NULL) {
+        printf(", ");
+        STATEMENTLIST_TAIL( arg_node) = TRAVopt( STATEMENTLIST_TAIL( arg_node), arg_info);
+    }
 
     DBUG_RETURN (arg_node);
 }
@@ -688,15 +783,15 @@ node *PRTparam (node * arg_node, info * arg_info){
             tmp = "bool";
             break;
         case TYPE_int:
-            tmp = "int"
+            tmp = "int";
             break;
         case TYPE_float:
-            tmp = "float"
+            tmp = "float";
             break;
         case TYPE_void:
-            tmp = "void"
+            tmp = "void";
             break;
-        case TYPE_unkown:
+        case TYPE_unknown:
             DBUG_ASSERT( 0, "no or unknown type defined");
     }
 

@@ -308,6 +308,7 @@
         </attribute>
       </attributes>
     </node>
+
      <node name="Assign">
       <sons>
         <son name="Let">

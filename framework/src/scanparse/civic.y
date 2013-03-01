@@ -13,6 +13,9 @@
 #include "ctinfo.h"
 #include "free.h"
 #include "globals.h"
+#include "mytypes.h"
+
+int yydebug=1;
 
 static node *parseresult = NULL;
 extern int yylex();
@@ -21,118 +24,161 @@ static int yyerror( char *errname);
 %}
 
 %union {
- nodetype            nodetype;
- char               *id;
- int                 cint;
- float               cflt;
- binop               cbinop;
- node               *node;
+    nodetype            nodetype;
+    char               *id;
+    int                 cint;
+    float               cflt;
+    binop               cbinop;
+    monop               cmonop;
+    node               *node;
+    type                ctype;
 }
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
 %token TRUEVAL FALSEVAL LET
 
+/* added tokens */
+%token EXTERNKEY EXPORTKEY VOIDTYPE BOOLTYPE INTTYPE FLOATTYPE
+%token IFCOND ELSECOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
+
 %token <cint> NUM
 %token <cflt> FLOAT
 %token <id> ID
 
 %type <node> intval floatval boolval constant expr
-%type <node> declaration program assign varlet start
+%type <node> declaration program /*assign varlet*/ start
 %type <cbinop> binop
+//%type <type> returntype
+
+/*added nodes */
+%type <ctype> basictype
+%type <cmonop> monop
+%type <node> param paramlist varlet
 
 %start start
 
 %%
 
 start: program
-         {
-           parseresult = $1;
-         }
-         ;
-
-program: declaration program
         {
-          $$ = TBmakeProgram( $1, $2);
-        }
-      | declaration
-        {
-          $$ = TBmakeProgram( $1, NULL);
+            parseresult = $1;
         }
         ;
 
-declaration: assign
-       {
-         $$ = $1;
-       }
-       ;
-
-assign: varlet LET expr SEMICOLON
+program: declaration program
         {
-          $$ = TBmakeAssign( $1, $3);
+            $$ = TBmakeProgram( $1, $2);
+        }
+      | declaration
+        {
+            $$ = TBmakeProgram( $1, NULL);
+        }
+        ;
+
+declaration: expr
+        {
+            $$ = $1;
+        }
+        ;
+
+expr: BRACKET_L expr BRACKET_R
+        {
+            $$ = $2; // TODO check dit op goede volgorde +-*/ enzo
+        }
+        | expr binop expr
+        {
+            $$ = TBmakeBinop( $2, $1, $3);
+        }
+        | expr MINUS expr
+        {
+            $$ = TBmakeBinop( BO_sub, $1, $3);
+        }
+        | MINUS expr
+        {
+            $$ = TBmakeMonop( MO_neg, $2);
+        }
+        | monop expr
+        {
+            $$ = TBmakeMonop( $1, $2);
+        }
+        | BRACKET_L basictype BRACKET_R expr
+        {
+            $$ = TBmakeCast( $2, $4);
+        }
+        | varlet BRACKET_L paramlist BRACKET_R
+        {
+            $$ = TBmakeFuncall( $1, $3);
+        }
+        | varlet
+        {
+            $$ = $1;
+        }
+        | constant
+        {
+            $$ = $1;
+        }
+        ;
+
+paramlist: param COMMA paramlist
+        {
+            $$ = TBmakeParamlist( $1, $3);
+        }
+        | param
+        {
+            $$ = TBmakeParamlist( $1, NULL);
+        }
+        ;
+
+param: basictype varlet
+        {
+            $$ = TBmakeParam( $1, $2);
         }
         ;
 
 varlet: ID
         {
-          $$ = TBmakeVarlet( STRcpy( $1));
+            $$ = TBmakeVarlet( STRcpy( $1));
         }
         ;
 
-
-expr: constant
-      {
-        $$ = $1;
-      }
-    | ID
-      {
-        $$ = TBmakeVar( STRcpy( $1));
-      }
-    | BRACKET_L expr binop expr BRACKET_R
-      {
-        $$ = TBmakeBinop( $3, $2, $4);
-      }
-    ;
-
 constant: floatval
-          {
+        {
             $$ = $1;
-          }
+        }
         | intval
-          {
+        {
             $$ = $1;
-          }
+        }
         | boolval
-          {
+        {
             $$ = $1;
-          }
+        }
         ;
 
 floatval: FLOAT
-           {
+        {
              $$ = TBmakeFloat( $1);
-           }
-         ;
+        }
+        ;
 
 intval: NUM
         {
-          $$ = TBmakeNum( $1);
+            $$ = TBmakeNum( $1);
         }
-      ;
+        ;
 
 boolval: TRUEVAL
-         {
-           $$ = TBmakeBool( TRUE);
-         }
-       | FALSEVAL
-         {
-           $$ = TBmakeBool( FALSE);
-         }
-       ;
-
+        {
+            $$ = TBmakeBool( TRUE);
+        }
+        | FALSEVAL
+        {
+            $$ = TBmakeBool( FALSE);
+        }
+        ;
 
 binop: PLUS      { $$ = BO_add; }
-     | MINUS     { $$ = BO_sub; }
      | STAR      { $$ = BO_mul; }
      | SLASH     { $$ = BO_div; }
      | PERCENT   { $$ = BO_mod; }
@@ -144,6 +190,15 @@ binop: PLUS      { $$ = BO_add; }
      | OR        { $$ = BO_or; }
      | AND       { $$ = BO_and; }
      ;
+
+monop: NOT       { $$ = MO_not; }
+     ;
+
+basictype: BOOLTYPE    { $$ = TYPE_bool; }
+     | INTTYPE         { $$ = TYPE_int; }
+     | FLOATTYPE       { $$ = TYPE_float; }
+     ;
+
 
 %%
 

@@ -18,7 +18,7 @@
   return( token);
 
 #define LINEBUF_SIZE 256
-#define YY_NO_UNPUT
+//#define YY_NO_UNPUT
 
 %}
 
@@ -36,23 +36,37 @@
 
 "-"                        { FILTER( MINUS); }
 "+"                        { FILTER( PLUS);  }
-"*"                        { FILTER( STAR);  } 
-"/"                        { FILTER( SLASH);  } 
-"%"                        { FILTER( PERCENT);  } 
+"*"                        { FILTER( STAR);  }
+"/"                        { FILTER( SLASH);  }
+"%"                        { FILTER( PERCENT);  }
 
 "<="                       { FILTER( LE);    }
-"<"                        { FILTER( LT);    } 
+"<"                        { FILTER( LT);    }
 ">="                       { FILTER( GE);    }
 ">"                        { FILTER( GT);    }
 "=="                       { FILTER( EQ);    }
 "!="                       { FILTER( NE);    }
 "&&"                       { FILTER( AND);    }
 "||"                       { FILTER( OR);    }
+"!"                        { FILTER( NOT);   }
 
 "="                        { FILTER( LET);    }
 
 "true"                     { FILTER( TRUEVAL); }
 "false"                    { FILTER( FALSEVAL); }
+
+"extern"                   { FILTER( EXTERNKEY); }
+"export"                   { FILTER( EXPORTKEY); }
+"void"                     { FILTER( VOIDTYPE); }
+"bool"                     { FILTER( BOOLTYPE); }
+"int"                      { FILTER( INTTYPE); }
+"float"                    { FILTER( FLOATTYPE); }
+"if"                       { FILTER( IFCOND); }
+"else"                     { FILTER( ELSECOND); }
+"while"                    { FILTER( WHILELOOP); }
+"do"                       { FILTER( DOLOOP); }
+"for"                      { FILTER( FORLOOP); }
+"return"                   { FILTER( RETURNSTMT); }
 
 [A-Za-z][A-Za-z0-9_]*      { yylval.id = STRcpy(yytext);
                              FILTER( ID);
@@ -62,10 +76,15 @@
                              FILTER( NUM);
                            }
 
+[0-9]+\.[0-9]+             { yylval.cint=atof(yytext);
+                             FILTER( FLOAT);
+                           }
+
 \n.*                       { global.line += 1;
                              global.col = 0;
                              yyless(1);
                            }
 
 [ \t]                      { global.col += yyleng;
-                           } 
+                           }
+

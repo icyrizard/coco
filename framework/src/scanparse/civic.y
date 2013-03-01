@@ -41,7 +41,8 @@ static int yyerror( char *errname);
 %left LT LE GT GE
 %left PLUS MINUS
 %left MULT DIV MOD
-%right UNARYMINUS NOT
+%left UNARYMINUS
+%right NOT
 %right TYPECAST
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON
@@ -51,7 +52,6 @@ static int yyerror( char *errname);
 /* added tokens */
 %token EXTERNKEY EXPORTKEY VOIDTYPE BOOLTYPE INTTYPE FLOATTYPE
 %token IFCOND ELSECOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
-%token UNARYMINUS
 
 %token <cint> NUM
 %token <cflt> FLOAT
@@ -95,13 +95,13 @@ declaration: expr
 
 expr: BRACKET_L expr BRACKET_R
         {
-            $$ = $2; // TODO check dit op goede volgorde +-*/ enzo
+            $$ = $2;
         }
         | expr binop expr
         {
             $$ = TBmakeBinop( $2, $1, $3);
         }
-        | expr MINUS expr
+        expr MINUS expr
         {
             $$ = TBmakeBinop( BO_sub, $1, $3);
         }

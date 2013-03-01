@@ -36,9 +36,9 @@
 
 "-"                        { FILTER( MINUS); }
 "+"                        { FILTER( PLUS);  }
-"*"                        { FILTER( STAR);  }
-"/"                        { FILTER( SLASH);  }
-"%"                        { FILTER( PERCENT);  }
+"*"                        { FILTER( MULT);  }
+"/"                        { FILTER( DIV);  }
+"%"                        { FILTER( MOD);  }
 
 "<="                       { FILTER( LE);    }
 "<"                        { FILTER( LT);    }

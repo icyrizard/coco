@@ -34,13 +34,24 @@ static int yyerror( char *errname);
     type                ctype;
 }
 
+%right LET
+%left OR
+%left AND
+%left EQ NE
+%left LT LE GT GE
+%left PLUS MINUS
+%left MULT DIV MOD
+%right UNARYMINUS NOT
+%right TYPECAST
+
 %token BRACKET_L BRACKET_R COMMA SEMICOLON
-%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
-%token TRUEVAL FALSEVAL LET
+//%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
+%token TRUEVAL FALSEVAL
 
 /* added tokens */
 %token EXTERNKEY EXPORTKEY VOIDTYPE BOOLTYPE INTTYPE FLOATTYPE
 %token IFCOND ELSECOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
+%token UNARYMINUS
 
 %token <cint> NUM
 %token <cflt> FLOAT
@@ -94,7 +105,7 @@ expr: BRACKET_L expr BRACKET_R
         {
             $$ = TBmakeBinop( BO_sub, $1, $3);
         }
-        | MINUS expr
+        | MINUS expr                  %prec UNARYMINUS
         {
             $$ = TBmakeMonop( MO_neg, $2);
         }
@@ -102,7 +113,7 @@ expr: BRACKET_L expr BRACKET_R
         {
             $$ = TBmakeMonop( $1, $2);
         }
-        | BRACKET_L basictype BRACKET_R expr
+        | BRACKET_L basictype BRACKET_R expr    %prec TYPECAST
         {
             $$ = TBmakeCast( $2, $4);
         }
@@ -179,9 +190,9 @@ boolval: TRUEVAL
         ;
 
 binop: PLUS      { $$ = BO_add; }
-     | STAR      { $$ = BO_mul; }
-     | SLASH     { $$ = BO_div; }
-     | PERCENT   { $$ = BO_mod; }
+     | MULT      { $$ = BO_mul; }
+     | DIV       { $$ = BO_div; }
+     | MOD       { $$ = BO_mod; }
      | LE        { $$ = BO_le; }
      | LT        { $$ = BO_lt; }
      | GE        { $$ = BO_ge; }

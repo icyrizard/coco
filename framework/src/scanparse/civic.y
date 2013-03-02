@@ -37,19 +37,18 @@ static int yyerror( char *errname);
 %right LET
 %left OR
 %left AND
-%left EQ NE
-%left LT LE GT GE
+%nonassoc EQ NE
+%nonassoc LT LE GT GE
 %left PLUS MINUS
 %left MULT DIV MOD
-%left UNARYMINUS
-%right NOT
+%right UNARYMINUS NOT
 %right TYPECAST
+%nonassoc REDUCEBINOP   //TODO Is this at the right spot?
+
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON
-//%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
 %token TRUEVAL FALSEVAL
 
-/* added tokens */
 %token EXTERNKEY EXPORTKEY VOIDTYPE BOOLTYPE INTTYPE FLOATTYPE
 %token IFCOND ELSECOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
 
@@ -58,14 +57,13 @@ static int yyerror( char *errname);
 %token <id> ID
 
 %type <node> intval floatval boolval constant expr
-%type <node> declaration program /*assign varlet*/ start
+%type <node> declaration program start
 %type <cbinop> binop
-//%type <type> returntype
 
-/*added nodes */
 %type <ctype> basictype
 %type <cmonop> monop
 %type <node> param paramlist varlet
+
 
 %start start
 
@@ -104,12 +102,11 @@ expr: BRACKET_L expr BRACKET_R
         {
             $$ = $2;
         }
-        | expr binop expr
+        | expr binop expr             %prec REDUCEBINOP
         {
             $$ = TBmakeBinop( $2, $1, $3);
         }
-        |
-        expr MINUS expr
+        | expr MINUS expr
         {
             $$ = TBmakeBinop( BO_sub, $1, $3);
         }
@@ -117,7 +114,7 @@ expr: BRACKET_L expr BRACKET_R
         {
             $$ = TBmakeMonop( MO_neg, $2);
         }
-        | monop expr
+        | monop expr                  %prec UNARYMINUS
         {
             $$ = TBmakeMonop( $1, $2);
         }

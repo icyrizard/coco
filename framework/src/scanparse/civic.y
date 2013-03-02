@@ -40,10 +40,10 @@ static int yyerror( char *errname);
 %nonassoc EQ NE
 %nonassoc LT LE GT GE
 %left PLUS MINUS
+%nonassoc REDUCEBINOP   //TODO Is this at the right spot?
 %left MULT DIV MOD
 %right UNARYMINUS NOT
 %right TYPECAST
-%nonassoc REDUCEBINOP   //TODO Is this at the right spot?
 
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON

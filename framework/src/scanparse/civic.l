@@ -31,6 +31,8 @@
 
 "("                        { FILTER( BRACKET_L); }
 ")"                        { FILTER( BRACKET_R); }
+"{"                        { FILTER( CBRACKET_L); }
+"}"                        { FILTER( CBRACKET_R); }
 ","                        { FILTER( COMMA); }
 ";"                        { FILTER( SEMICOLON); }
 

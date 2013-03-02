@@ -44,7 +44,7 @@ static int yyerror( char *errname);
 %right TYPECAST
 
 
-%token BRACKET_L BRACKET_R COMMA SEMICOLON
+%token BRACKET_L BRACKET_R CBRACKET_L CBRACKET_R COMMA SEMICOLON
 %token TRUEVAL FALSEVAL
 
 %token EXTERNKEY EXPORTKEY VOIDTYPE BOOLTYPE INTTYPE FLOATTYPE
@@ -56,6 +56,8 @@ static int yyerror( char *errname);
 
 %type <node> intval floatval boolval constant expr
 %type <node> declaration program start
+%type <node> fundec fundef funheader statementlist vardeclist
+%type <node> vardec funbody
 
 %type <ctype> basictype
 %type <cmonop> monop
@@ -67,20 +69,20 @@ static int yyerror( char *errname);
 %%
 
 start: program
-        {
-            parseresult = $1;
-        }
-        ;
+    {
+        parseresult = $1;
+    }
+    ;
 
 program: declaration program
-        {
-            $$ = TBmakeProgram( $1, $2);
-        }
-      | declaration
-        {
-            $$ = TBmakeProgram( $1, NULL);
-        }
-        ;
+    {
+        $$ = TBmakeProgram( $1, $2);
+    }
+    | declaration
+    {
+        $$ = TBmakeProgram( $1, NULL);
+    }
+    ;
 
 // dummy semicolon for shift/reduce conflict
 // processing "a - b" we want:
@@ -90,15 +92,95 @@ program: declaration program
 // "a" -> varlet -> expr -> declaration program
 // "- b" -> .. -> monop expr -> expr -> declaration
 declaration: expr SEMICOLON
-        {
-            $$ = $1;
-        }
-        ;
+    {
+        $$ = $1;
+    }
+    |
+        fundec
+    {
+        $$ = $1;
+    }
+    ;
+
+funheader: basictype varlet BRACKET_L paramlist BRACKET_R
+    {
+        $$ = TBmakeFunheader($1, $2, $4);
+
+    }
+    |  VOIDTYPE varlet BRACKET_L paramlist BRACKET_R
+    {
+
+        $$ = TBmakeFunheader(TYPE_void, $2, $4);
+    }
+    ;
+
+fundec: EXTERNKEY funheader SEMICOLON
+    {
+        $$ = TBmakeFundec($2);
+    }
+    ;
+
+fundef: EXPORTKEY funheader CBRACKET_L funbody CBRACKET_R
+    {
+        $$ = TBmakeFundef(true, $2, $4);
+    }
+    | funheader CBRACKET_L funbody CBRACKET_R
+    {
+        $$ = TBmakeFundef(false, $1, $3);
+    }
+    ;
+
+funbody: vardeclist statementlist RETURNSTMT expr
+    {
+        $$ = TBmakeFunbody($1, $2, $4);
+    }
+    | vardeclist RETURNSTMT expr
+    {
+        $$ = TBmakeFunbody($1, NULL, $3);
+    }
+    | statementlist RETURNSTMT expr
+    {
+        $$ = TBmakeFunbody(NULL, $1, $3);
+
+    }
+    | RETURNSTMT expr
+    {
+        $$ = TBmakeFunbody(NULL, NULL, $2);
+    }
+    ;
+
+vardeclist: vardec vardeclist
+    {
+        $$ = TBmakeVardeclist($1, $2);
+    }
+    | vardec
+    {
+        $$ = TBmakeVardeclist($1, NULL);
+    }
+    ;
+
+vardec: basictype varlet expr
+    {
+        $$ = TBmakeVardec($1, $2, $3);
+    }
+    | basictype varlet
+    {
+        $$ = TBmakeVardec($1, $2, NULL);
+    }
+    ;
+
+statementlist: assign
+    {
+        $$ = TBmakeAssign();
+    }
+    ;
+
 
 expr: BRACKET_L expr BRACKET_R
         {
             $$ = $2;
         }                 /*  all binops  */
+
         | expr PLUS expr    { $$ = TBmakeBinop( BO_add, $1, $3); }
         | expr MINUS expr   { $$ = TBmakeBinop( BO_sub, $1, $3); }
         | expr MULT expr    { $$ = TBmakeBinop( BO_mul, $1, $3); }

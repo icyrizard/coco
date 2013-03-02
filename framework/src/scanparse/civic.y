@@ -87,7 +87,14 @@ program: declaration program
         }
         ;
 
-declaration: expr
+// dummy semicolon for shift/reduce conflict
+// processing "a - b" we want:
+// "a - b" -> .. -> expr binop expr -> expr -> declaration -> program
+
+// but "a - b" could also be seen as two parts  "a" and "- b" on seperate lines
+// "a" -> varlet -> expr -> declaration program
+// "- b" -> .. -> monop expr -> expr -> declaration
+declaration: expr SEMICOLON
         {
             $$ = $1;
         }
@@ -101,6 +108,7 @@ expr: BRACKET_L expr BRACKET_R
         {
             $$ = TBmakeBinop( $2, $1, $3);
         }
+        |
         expr MINUS expr
         {
             $$ = TBmakeBinop( BO_sub, $1, $3);

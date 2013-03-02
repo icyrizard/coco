@@ -625,16 +625,6 @@
             </target>
           </targets>
         </son>
-        <son name="Return">
-          <targets>
-            <target mandatory="no">
-              <set name="Expr" />
-              <phases>
-                <all />
-              </phases>
-            </target>
-          </targets>
-        </son>
         <son name="Statements">
           <targets>
             <target mandatory="no">
@@ -645,21 +635,18 @@
             </target>
           </targets>
         </son>
+        <son name="Return">
+          <targets>
+            <target mandatory="no">
+              <set name="Expr" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
       </sons>
-      <attributes>
-        <attribute name="Export">
-          <type name="Bool">
-            <targets>
-              <target mandatory="yes">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-      </attributes>
+      <attributes />
     </node>
 
     <node name="ExprList">
@@ -716,20 +703,20 @@
 
     <node name="VarDec">
       <sons>
-        <son name="Value">
+        <son name="Id">
           <targets>
-            <target mandatory="no">
-              <set name="Expr" />
+            <target mandatory="yes">
+              <node name="VarLet" />
               <phases>
                 <all />
               </phases>
             </target>
           </targets>
         </son>
-        <son name="Id">
+        <son name="Value">
           <targets>
-            <target mandatory="yes">
-              <node name="VarLet" />
+            <target mandatory="no">
+              <set name="Expr" />
               <phases>
                 <all />
               </phases>

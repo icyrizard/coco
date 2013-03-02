@@ -73,6 +73,9 @@ PRTprogram(node * arg_node, info * arg_info)
 
     PROGRAM_HEAD( arg_node) = TRAVdo( PROGRAM_HEAD( arg_node), arg_info);
 
+    // print newlines between test expressions;
+    printf("\n");
+
     PROGRAM_TAIL( arg_node) = TRAVopt( PROGRAM_TAIL( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
@@ -130,7 +133,7 @@ PRTbinop (node * arg_node, info * arg_info)
 
     DBUG_ENTER ("PRTbinop");
 
-    printf( "( ");
+    printf( "(");
 
     BINOP_LEFT( arg_node) = TRAVdo( BINOP_LEFT( arg_node), arg_info);
 
@@ -773,7 +776,8 @@ node *PRTparamlist (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTparam (node * arg_node, info * arg_info){
+node *PRTparam (node * arg_node, info * arg_info)
+{
     char *tmp;
 
     DBUG_ENTER ("PRTparam");

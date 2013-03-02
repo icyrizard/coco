@@ -731,7 +731,7 @@ node *PRTfunheader (node * arg_node, info * arg_info)
 
     DBUG_ENTER ("PRTfunheader");
 
-    switch (PARAM_TYPE( arg_node)) {
+    switch (FUNHEADER_RETTYPE( arg_node)) {
         case TYPE_bool:
             tmp = "bool";
             break;
@@ -742,6 +742,7 @@ node *PRTfunheader (node * arg_node, info * arg_info)
             tmp = "float";
             break;
         case TYPE_void:
+            printf("got a void!\n");
             tmp = "void";
             break;
         case TYPE_unknown:
@@ -766,11 +767,11 @@ node *PRTparamlist (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTparamlist");
 
-    STATEMENTLIST_HEAD( arg_node) = TRAVdo( STATEMENTLIST_HEAD( arg_node), arg_info);
+    PARAMLIST_HEAD( arg_node) = TRAVdo( PARAMLIST_HEAD( arg_node), arg_info);
 
-    if(STATEMENTLIST_TAIL( arg_node) != NULL) {
+    if(PARAMLIST_TAIL( arg_node) != NULL) {
         printf(", ");
-        STATEMENTLIST_TAIL( arg_node) = TRAVopt( STATEMENTLIST_TAIL( arg_node), arg_info);
+        PARAMLIST_TAIL( arg_node) = TRAVopt( PARAMLIST_TAIL( arg_node), arg_info);
     }
 
     DBUG_RETURN (arg_node);

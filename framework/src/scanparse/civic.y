@@ -28,7 +28,6 @@ static int yyerror( char *errname);
     char               *id;
     int                 cint;
     float               cflt;
-    binop               cbinop;
     monop               cmonop;
     node               *node;
     type                ctype;
@@ -40,7 +39,6 @@ static int yyerror( char *errname);
 %nonassoc EQ NE
 %nonassoc LT LE GT GE
 %left PLUS MINUS
-%nonassoc REDUCEBINOP   //TODO Is this at the right spot?
 %left MULT DIV MOD
 %right UNARYMINUS NOT
 %right TYPECAST
@@ -58,7 +56,6 @@ static int yyerror( char *errname);
 
 %type <node> intval floatval boolval constant expr
 %type <node> declaration program start
-%type <cbinop> binop
 
 %type <ctype> basictype
 %type <cmonop> monop
@@ -102,14 +99,19 @@ expr: BRACKET_L expr BRACKET_R
         {
             $$ = $2;
         }
-        | expr binop expr             %prec REDUCEBINOP
-        {
-            $$ = TBmakeBinop( $2, $1, $3);
-        }
-        | expr MINUS expr
-        {
-            $$ = TBmakeBinop( BO_sub, $1, $3);
-        }
+        | expr PLUS expr { $$ = TBmakeBinop( BO_add, $1, $3); }
+        | expr MINUS expr { $$ = TBmakeBinop( BO_sub, $1, $3); }
+        | expr MULT expr { $$ = TBmakeBinop( BO_mul, $1, $3); }
+        | expr DIV expr { $$ = TBmakeBinop( BO_div, $1, $3); }
+        | expr MOD expr { $$ = TBmakeBinop( BO_mod, $1, $3); }
+        | expr LE expr { $$ = TBmakeBinop( BO_le, $1, $3); }
+        | expr LT  expr { $$ = TBmakeBinop( BO_ge, $1, $3); }
+        | expr GE expr { $$ = TBmakeBinop( BO_ge, $1, $3); }
+        | expr GT expr { $$ = TBmakeBinop( BO_gt, $1, $3); }
+        | expr EQ expr { $$ = TBmakeBinop( BO_eq, $1, $3); }
+        | expr OR expr { $$ = TBmakeBinop( BO_or, $1, $3); }
+        | expr AND expr { $$ = TBmakeBinop( BO_and, $1, $3); }
+
         | MINUS expr                  %prec UNARYMINUS
         {
             $$ = TBmakeMonop( MO_neg, $2);
@@ -194,7 +196,7 @@ boolval: TRUEVAL
         }
         ;
 
-binop: PLUS      { $$ = BO_add; }
+/*binop: PLUS      { $$ = BO_add; }
      | MULT      { $$ = BO_mul; }
      | DIV       { $$ = BO_div; }
      | MOD       { $$ = BO_mod; }
@@ -205,7 +207,7 @@ binop: PLUS      { $$ = BO_add; }
      | EQ        { $$ = BO_eq; }
      | OR        { $$ = BO_or; }
      | AND       { $$ = BO_and; }
-     ;
+     ;*/
 
 monop: NOT       { $$ = MO_not; }
      ;

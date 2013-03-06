@@ -57,7 +57,8 @@ static int yyerror( char *errname);
 %type <node> intval floatval boolval constant expr
 %type <node> declaration program start
 %type <node> fundec fundef funheader statementlist vardeclist
-%type <node> vardec funbody statement
+%type <node> vardec funbody statement returnstatement
+
 
 %type <ctype> basictype
 %type <cmonop> monop
@@ -84,13 +85,6 @@ program: declaration program
     }
     ;
 
-// dummy semicolon for shift/reduce conflict
-// processing "a - b" we want:
-// "a - b" -> .. -> expr binop expr -> expr -> declaration -> program
-
-// but "a - b" could also be seen as two parts  "a" and "- b" on seperate lines
-// "a" -> varlet -> expr -> declaration program
-// "- b" -> .. -> monop expr -> expr -> declaration
 declaration: expr SEMICOLON
     {
         $$ = $1;
@@ -125,49 +119,59 @@ fundec: EXTERNKEY funheader SEMICOLON
 
 fundef: EXPORTKEY funheader CBRACKET_L funbody CBRACKET_R
     {
-        $$ = TBmakeFundef(1, $2, $4);
+        $$ = TBmakeFundef(TRUE, $2, $4);
     }
     | EXPORTKEY funheader CBRACKET_L CBRACKET_R
     {
-        $$ = TBmakeFundef(1, $2, NULL);
+        $$ = TBmakeFundef(TRUE, $2, NULL);
     }
     | funheader CBRACKET_L funbody CBRACKET_R
     {
-        $$ = TBmakeFundef(0, $1, $3);
+        $$ = TBmakeFundef(FALSE, $1, $3);
     }
     | funheader CBRACKET_L CBRACKET_R
     {
-        $$ = TBmakeFundef(0, $1, NULL);
+        $$ = TBmakeFundef(FALSE, $1, NULL);
     }
     ;
 
-funbody: vardeclist statementlist RETURNSTMT expr
+funbody: vardeclist statementlist returnstatement
     {
-        $$ = TBmakeFunbody($1, $2, $4);
+        $$ = TBmakeFunbody($1, $2, $3);
     }
-    | vardeclist statementlist
+    | vardeclist statementlist 
     {
         $$ = TBmakeFunbody($1, $2, NULL);
     }
-    | vardeclist RETURNSTMT expr
+    | vardeclist returnstatement
     {
-        $$ = TBmakeFunbody($1, NULL, $3);
+        $$ = TBmakeFunbody($1, NULL, $2);
     }
     | vardeclist
     {
         $$ = TBmakeFunbody($1, NULL, NULL);
     }
-    | statementlist RETURNSTMT expr
+    | statementlist returnstatement
     {
-        $$ = TBmakeFunbody(NULL, $1, $3);
+        $$ = TBmakeFunbody(NULL, $1, $2);
     }
     | statementlist
     {
         $$ = TBmakeFunbody(NULL, $1, NULL);
     }
-    | RETURNSTMT expr
+    | returnstatement
     {
-        $$ = TBmakeFunbody(NULL, NULL, $2);
+        $$ = TBmakeFunbody(NULL, NULL, $1);
+    } 
+    ;
+
+returnstatement: RETURNSTMT SEMICOLON
+    {
+        $$ = NULL; 
+    }
+    | RETURNSTMT expr SEMICOLON
+    {
+        $$ = $2;
     }
     ;
 

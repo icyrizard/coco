@@ -628,9 +628,9 @@ node *PRTfundef (node * arg_node, info * arg_info)
 
     FUNDEF_HEADER( arg_node) = TRAVdo( FUNDEF_HEADER( arg_node), arg_info);
 
-    printf("{\n");
+    printf("\n{\n");
 
-    FUNDEF_BODY( arg_node) = TRAVdo( FUNDEF_BODY( arg_node), arg_info);
+    FUNDEF_BODY( arg_node) = TRAVopt( FUNDEF_BODY( arg_node), arg_info);
 
     printf("}\n");
 
@@ -688,7 +688,6 @@ node *PRTvardec (node * arg_node, info * arg_info)
             tmp = "bool";
             break;
         case TYPE_int:
-            printf("int!\n\n");
             tmp = "int";
             break;
         case TYPE_float:

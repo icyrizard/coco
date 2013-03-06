@@ -57,7 +57,7 @@ static int yyerror( char *errname);
 %type <node> intval floatval boolval constant expr
 %type <node> declaration program start
 %type <node> fundec fundef funheader statementlist vardeclist
-%type <node> vardec funbody
+%type <node> vardec funbody statement
 
 %type <ctype> basictype
 %type <cmonop> monop
@@ -95,8 +95,11 @@ declaration: expr SEMICOLON
     {
         $$ = $1;
     }
-    |
-        fundec
+    | fundec
+    {
+        $$ = $1;
+    }
+    | fundef
     {
         $$ = $1;
     }
@@ -122,11 +125,19 @@ fundec: EXTERNKEY funheader SEMICOLON
 
 fundef: EXPORTKEY funheader CBRACKET_L funbody CBRACKET_R
     {
-        $$ = TBmakeFundef(true, $2, $4);
+        $$ = TBmakeFundef(1, $2, $4);
+    }
+    | EXPORTKEY funheader CBRACKET_L CBRACKET_R
+    {
+        $$ = TBmakeFundef(1, $2, NULL);
     }
     | funheader CBRACKET_L funbody CBRACKET_R
     {
-        $$ = TBmakeFundef(false, $1, $3);
+        $$ = TBmakeFundef(0, $1, $3);
+    }
+    | funheader CBRACKET_L CBRACKET_R
+    {
+        $$ = TBmakeFundef(0, $1, NULL);
     }
     ;
 
@@ -134,14 +145,25 @@ funbody: vardeclist statementlist RETURNSTMT expr
     {
         $$ = TBmakeFunbody($1, $2, $4);
     }
+    | vardeclist statementlist
+    {
+        $$ = TBmakeFunbody($1, $2, NULL);
+    }
     | vardeclist RETURNSTMT expr
     {
         $$ = TBmakeFunbody($1, NULL, $3);
     }
+    | vardeclist
+    {
+        $$ = TBmakeFunbody($1, NULL, NULL);
+    }
     | statementlist RETURNSTMT expr
     {
         $$ = TBmakeFunbody(NULL, $1, $3);
-
+    }
+    | statementlist
+    {
+        $$ = TBmakeFunbody(NULL, $1, NULL);
     }
     | RETURNSTMT expr
     {
@@ -155,128 +177,137 @@ vardeclist: vardec vardeclist
     }
     | vardec
     {
-        $$ = TBmakeVardeclist($1, NULL);
+        $$ = $1;
     }
     ;
 
-vardec: basictype varlet expr
+vardec: basictype varlet LET expr SEMICOLON
     {
-        $$ = TBmakeVardec($1, $2, $3);
+        $$ = TBmakeVardec($1, $2, $4);
     }
-    | basictype varlet
+    | basictype varlet SEMICOLON
     {
         $$ = TBmakeVardec($1, $2, NULL);
     }
     ;
 
-statementlist: assign
+statementlist: statement statementlist
     {
-        $$ = TBmakeAssign();
+        $$ = TBmakeStatementlist($1, $2);
+    }
+    | statement
+    {
+        $$ = TBmakeStatementlist($1, NULL);
     }
     ;
 
+statement: varlet LET expr
+    {
+        $$ = TBmakeAssign($1, $3);
+    }
+    ;
 
 expr: BRACKET_L expr BRACKET_R
-        {
-            $$ = $2;
-        }                 /*  all binops  */
+    {
+        $$ = $2;
+    }                 /*  all binops  */
 
-        | expr PLUS expr    { $$ = TBmakeBinop( BO_add, $1, $3); }
-        | expr MINUS expr   { $$ = TBmakeBinop( BO_sub, $1, $3); }
-        | expr MULT expr    { $$ = TBmakeBinop( BO_mul, $1, $3); }
-        | expr DIV expr     { $$ = TBmakeBinop( BO_div, $1, $3); }
-        | expr MOD expr     { $$ = TBmakeBinop( BO_mod, $1, $3); }
-        | expr LE expr      { $$ = TBmakeBinop( BO_le, $1, $3); }
-        | expr LT  expr     { $$ = TBmakeBinop( BO_ge, $1, $3); }
-        | expr GE expr      { $$ = TBmakeBinop( BO_ge, $1, $3); }
-        | expr GT expr      { $$ = TBmakeBinop( BO_gt, $1, $3); }
-        | expr EQ expr      { $$ = TBmakeBinop( BO_eq, $1, $3); }
-        | expr OR expr      { $$ = TBmakeBinop( BO_or, $1, $3); }
-        | expr AND expr     { $$ = TBmakeBinop( BO_and, $1, $3); }
-                          /*  end of binops  */
-        | MINUS expr                  %prec UNARYMINUS
-        {
-            $$ = TBmakeMonop( MO_neg, $2);
-        }
-        | monop expr                  %prec UNARYMINUS
-        {
-            $$ = TBmakeMonop( $1, $2);
-        }
-        | BRACKET_L basictype BRACKET_R expr    %prec TYPECAST
-        {
-            $$ = TBmakeCast( $2, $4);
-        }
-        | varlet BRACKET_L paramlist BRACKET_R
-        {
-            $$ = TBmakeFuncall( $1, $3);
-        }
-        | varlet
-        {
-            $$ = $1;
-        }
-        | constant
-        {
-            $$ = $1;
-        }
-        ;
+    | expr PLUS expr    { $$ = TBmakeBinop( BO_add, $1, $3); }
+    | expr MINUS expr   { $$ = TBmakeBinop( BO_sub, $1, $3); }
+    | expr MULT expr    { $$ = TBmakeBinop( BO_mul, $1, $3); }
+    | expr DIV expr     { $$ = TBmakeBinop( BO_div, $1, $3); }
+    | expr MOD expr     { $$ = TBmakeBinop( BO_mod, $1, $3); }
+    | expr LE expr      { $$ = TBmakeBinop( BO_le, $1, $3); }
+    | expr LT  expr     { $$ = TBmakeBinop( BO_ge, $1, $3); }
+    | expr GE expr      { $$ = TBmakeBinop( BO_ge, $1, $3); }
+    | expr GT expr      { $$ = TBmakeBinop( BO_gt, $1, $3); }
+    | expr EQ expr      { $$ = TBmakeBinop( BO_eq, $1, $3); }
+    | expr OR expr      { $$ = TBmakeBinop( BO_or, $1, $3); }
+    | expr AND expr     { $$ = TBmakeBinop( BO_and, $1, $3); }
+                        /*  end of binops  */
+    | MINUS expr                  %prec UNARYMINUS
+    {
+        $$ = TBmakeMonop( MO_neg, $2);
+    }
+    | monop expr                  %prec UNARYMINUS
+    {
+        $$ = TBmakeMonop( $1, $2);
+    }
+    | BRACKET_L basictype BRACKET_R expr    %prec TYPECAST
+    {
+        $$ = TBmakeCast( $2, $4);
+    }
+    | varlet BRACKET_L paramlist BRACKET_R
+    {
+        $$ = TBmakeFuncall( $1, $3);
+    }
+    | varlet
+    {
+        $$ = $1;
+    }
+    | constant
+    {
+        $$ = $1;
+    }
+    ;
 
 paramlist: param COMMA paramlist
-        {
-            $$ = TBmakeParamlist( $1, $3);
-        }
-        | param
-        {
-            $$ = TBmakeParamlist( $1, NULL);
-        }
-        ;
+    {
+        $$ = TBmakeParamlist( $1, $3);
+    }
+    | param
+    {
+        $$ = TBmakeParamlist( $1, NULL);
+    }
+    ;
 
 param: basictype varlet
-        {
-            $$ = TBmakeParam( $1, $2);
-        }
-        ;
+    {
+        $$ = TBmakeParam( $1, $2);
+    }
+    ;
 
 varlet: ID
-        {
-            $$ = TBmakeVarlet( STRcpy( $1));
-        }
-        ;
+    {
+        $$ = TBmakeVarlet( STRcpy( $1));
+    }
+    ;
 
 constant: floatval
-        {
-            $$ = $1;
-        }
-        | intval
-        {
-            $$ = $1;
-        }
-        | boolval
-        {
-            $$ = $1;
-        }
-        ;
+    {
+        $$ = $1;
+    }
+    | intval
+    {
+        $$ = $1;
+    }
+    | boolval
+    {
+        $$ = $1;
+    }
+    ;
 
 floatval: FLOAT
-        {
-             $$ = TBmakeFloat( $1);
-        }
-        ;
+    {
+            $$ = TBmakeFloat( $1);
+    }
+    ;
 
 intval: NUM
-        {
-            $$ = TBmakeNum( $1);
-        }
-        ;
+    {
+        $$ = TBmakeNum( $1);
+    }
+    ;
 
 boolval: TRUEVAL
-        {
-            $$ = TBmakeBool( TRUE);
-        }
-        | FALSEVAL
-        {
-            $$ = TBmakeBool( FALSE);
-        }
-        ;
+    {
+        $$ = TBmakeBool( TRUE);
+    }
+    | FALSEVAL
+    {
+        $$ = TBmakeBool( FALSE);
+    }
+    ;
 
 /*binop: PLUS      { $$ = BO_add; }
      | MULT      { $$ = BO_mul; }

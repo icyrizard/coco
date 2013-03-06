@@ -688,6 +688,7 @@ node *PRTvardec (node * arg_node, info * arg_info)
             tmp = "bool";
             break;
         case TYPE_int:
+            printf("int!\n\n");
             tmp = "int";
             break;
         case TYPE_float:

@@ -261,12 +261,12 @@ statement: varlet LET expr SEMICOLON
     | FORLOOP BRACKET_L INTTYPE varlet LET expr COMMA expr COMMA expr BRACKET_R
     block
     {
-        $$ = TBmakeForloop($4, $6, $8, $10, $12);
+        $$ = TBmakeForloop( TBmakeAssign($4, $6), $8, $10, $12);
     }
     | FORLOOP BRACKET_L INTTYPE varlet LET expr COMMA expr BRACKET_R
     block
     {
-        $$ = TBmakeForloop($4, $6, $8, NULL, $10);
+        $$ = TBmakeForloop( TBmakeAssign( $4, $6), $8, NULL, $10);
     }
     ;
 

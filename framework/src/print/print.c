@@ -588,10 +588,7 @@ node *PRTforloop (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTforloop");
 
-    printf("for(int ");
-    FORLOOP_ID( arg_node) = TRAVdo( FORLOOP_ID( arg_node), arg_info);
-    printf(" = ");
-
+    printf("for(");
 
     FORLOOP_STARTVALUE( arg_node) = TRAVdo( FORLOOP_STARTVALUE( arg_node),
             arg_info);
@@ -702,6 +699,7 @@ node *PRTvardeclist (node * arg_node, info * arg_info)
     DBUG_ENTER ("PRTvardeclist");
 
     VARDECLIST_HEAD( arg_node) = TRAVdo( VARDECLIST_HEAD( arg_node), arg_info);
+    printf(";\n");
 
     VARDECLIST_TAIL( arg_node) = TRAVopt( VARDECLIST_TAIL( arg_node), arg_info);
 
@@ -741,7 +739,6 @@ node *PRTvardec (node * arg_node, info * arg_info)
 
         VARDEC_VALUE( arg_node) = TRAVdo( VARDEC_VALUE( arg_node), arg_info);
     }
-    printf(";\n");
 
     DBUG_RETURN (arg_node);
 }

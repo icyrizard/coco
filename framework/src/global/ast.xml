@@ -560,7 +560,7 @@
             </target>
           </targets>
         </son>
-        <son name="Params">
+        <son name="Arguments">
           <targets>
             <target mandatory="yes">
               <node name="ExprList" />

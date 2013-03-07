@@ -93,6 +93,13 @@
 [ \t]                      { global.col += yyleng;
                            }
 
+"//".*\n                      { global.line += 1;
+                             global.col = 0;
+                           }
+
 "/*"                       { BEGIN(C_COMMENT); }
 <C_COMMENT>"*/"            { BEGIN(INITIAL); }
+<C_COMMENT>\n              { global.line +=1;
+                             global.col = 0;
+                           }
 <C_COMMENT>.               { global.col += yyleng; }

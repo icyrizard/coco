@@ -28,7 +28,18 @@
  */
 struct INFO {
     bool firsterror;
+    int indent;
 };
+
+void print_indent( int n)
+{
+    int i = 0;
+
+    for(; i < n; i++)
+        printf("    ");
+
+}
+
 
 #define INFO_FIRSTERROR(n) ((n)->firsterror)
 
@@ -37,6 +48,7 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
+    result->indent = 0;
 
     INFO_FIRSTERROR(result) = FALSE;
 
@@ -73,9 +85,6 @@ PRTprogram(node * arg_node, info * arg_info)
 
     PROGRAM_HEAD( arg_node) = TRAVdo( PROGRAM_HEAD( arg_node), arg_info);
 
-    // print newlines between test expressions;
-    printf("\n");
-
     PROGRAM_TAIL( arg_node) = TRAVopt( PROGRAM_TAIL( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
@@ -99,6 +108,8 @@ node *
 PRTassign (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTassign");
+
+    print_indent(arg_info->indent);
 
     if (ASSIGN_LET( arg_node) != NULL) {
         ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
@@ -641,15 +652,20 @@ node *PRTfunbody (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTfunbody");
 
+    arg_info->indent += 1;
     FUNBODY_VARS( arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
+    printf("\n");
 
     FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
+    printf("\n");
 
     if(FUNBODY_RETURN( arg_node) != NULL) {
+        print_indent(arg_info->indent);
         printf("return ");
         FUNBODY_RETURN( arg_node) = TRAVdo( FUNBODY_RETURN( arg_node), arg_info);
         printf(";\n");
     }
+    arg_info->indent -= 1;
 
     DBUG_RETURN (arg_node);
 }
@@ -700,6 +716,7 @@ node *PRTvardec (node * arg_node, info * arg_info)
             DBUG_ASSERT( 0, "no or unknown type defined");
     }
 
+    print_indent(arg_info->indent);
     printf("%s ", tmp);
 
     VARDEC_ID( arg_node) = TRAVdo( VARDEC_ID( arg_node), arg_info);

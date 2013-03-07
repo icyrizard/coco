@@ -60,7 +60,7 @@ static int yyerror( char *errname);
 %type <node> declaration program start
 %type <node> fundec fundef funheader statementlist vardeclist
 %type <node> vardec funbody statement returnstatement block
-%type <node> globaldec globaldef
+%type <node> globaldec globaldef exprlist
 
 %type <ctype> basictype
 %type <cmonop> monop
@@ -234,12 +234,11 @@ statementlist: statement statementlist
         $$ = TBmakeStatementlist( $1, NULL);
     }
     ;
-
 statement: varlet LET expr SEMICOLON
     {
         $$ = TBmakeAssign( $1, $3);
     }
-    | varlet BRACKET_L paramlist BRACKET_R SEMICOLON
+    | varlet BRACKET_L exprlist BRACKET_R SEMICOLON
     {
         $$ = TBmakeFuncall( $1, $3);
     }
@@ -283,6 +282,21 @@ block: CBRACKET_L statementlist CBRACKET_R
         $$ = TBmakeStatementlist( $1, NULL);
     }
     ;
+
+exprlist:  /* empty */
+    {
+        $$ = TBmakeExprlist( NULL, NULL);
+    }
+    | expr COMMA exprlist
+    {
+        $$ = TBmakeExprlist( $1, $3);
+    }
+    | expr
+    {
+        $$ = TBmakeExprlist( $1, NULL);
+    }
+    ;
+
 
 expr: BRACKET_L expr BRACKET_R
     {

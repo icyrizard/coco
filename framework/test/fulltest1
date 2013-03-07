@@ -1,0 +1,26 @@
+extern void ex_fun1();
+extern int ex_fun2();
+extern float ex_fun3();
+extern bool ex_fun4();
+
+int glob_i;
+export float glob_f;
+
+void myfunc() {}
+
+export int main(int argc, int argv)
+{
+    int i = 0;
+
+    j = 0;
+
+    fun(i);
+
+    fun( fun ( 1 ), fun (2) );
+
+    fun333();
+
+    k = 1 + 3 * 3 /(a + b);
+
+    return 0;
+}

@@ -329,7 +329,7 @@ expr: BRACKET_L expr BRACKET_R
     {
         $$ = TBmakeCast( $2, $4);
     }
-    | varlet BRACKET_L paramlist BRACKET_R
+    | varlet BRACKET_L exprlist BRACKET_R
     {
         $$ = TBmakeFuncall( $1, $3);
     }

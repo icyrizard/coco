@@ -109,7 +109,6 @@ PRTassign (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTassign");
 
-    print_indent(arg_info->indent);
 
     if (ASSIGN_LET( arg_node) != NULL) {
         ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
@@ -117,8 +116,6 @@ PRTassign (node * arg_node, info * arg_info)
     }
 
     ASSIGN_EXPR( arg_node) = TRAVdo( ASSIGN_EXPR( arg_node), arg_info);
-
-    printf( ";\n");
 
     DBUG_RETURN (arg_node);
 }
@@ -555,18 +552,23 @@ node *PRTwhileloop (node * arg_node, info * arg_info)
 
     printf(")\n");
 
-    if(WHILELOOP_BLOCK( arg_node) != NULL)
+    if(WHILELOOP_BLOCK( arg_node) != NULL) {
+        print_indent(arg_info->indent);
+        printf("{\n");
+
         WHILELOOP_BLOCK( arg_node) = TRAVdo( WHILELOOP_BLOCK( arg_node), arg_info);
-    else
+
+        print_indent(arg_info->indent);
+        printf("}\n");
+    } else {
         printf(";\n");
+    }
 
     DBUG_RETURN (arg_node);
 }
 
 node *PRTdowhileloop (node * arg_node, info * arg_info)
 {
-    //char *tmp;
-
     DBUG_ENTER ("PRTdowhileloop");
 
     printf("do\n");
@@ -620,14 +622,13 @@ node *PRTfuncall (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTfuncall");
 
-    print_indent( arg_info->indent);
     FUNCALL_ID( arg_node) = TRAVdo( FUNCALL_ID( arg_node), arg_info);
 
     printf("(");
 
-    FUNCALL_PARAMS( arg_node) = TRAVopt( FUNCALL_PARAMS( arg_node), arg_info);
+    FUNCALL_ARGUMENTS( arg_node) = TRAVopt( FUNCALL_ARGUMENTS( arg_node), arg_info);
 
-    printf(");\n");
+    printf(")");
 
 
     DBUG_RETURN (arg_node);
@@ -677,9 +678,12 @@ node *PRTexprlist (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTexprlist");
 
-    EXPRLIST_HEAD( arg_node) = TRAVdo( EXPRLIST_HEAD( arg_node), arg_info);
+    EXPRLIST_HEAD( arg_node) = TRAVopt( EXPRLIST_HEAD( arg_node), arg_info);
 
-    EXPRLIST_TAIL( arg_node) = TRAVopt( EXPRLIST_TAIL( arg_node), arg_info);
+    if(EXPRLIST_TAIL( arg_node) != NULL){
+        printf(", ");
+        EXPRLIST_TAIL( arg_node) = TRAVdo( EXPRLIST_TAIL( arg_node), arg_info);
+    }
 
     DBUG_RETURN (arg_node);
 
@@ -738,7 +742,9 @@ node *PRTstatementlist (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTstatementlist");
 
+    print_indent( arg_info->indent);
     STATEMENTLIST_HEAD( arg_node) = TRAVdo( STATEMENTLIST_HEAD( arg_node), arg_info);
+    printf(";\n");
 
     STATEMENTLIST_TAIL( arg_node) = TRAVopt( STATEMENTLIST_TAIL( arg_node), arg_info);
 

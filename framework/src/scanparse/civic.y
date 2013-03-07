@@ -337,6 +337,10 @@ paramlist: param COMMA paramlist
     {
         $$ = TBmakeParamlist( $1, NULL);
     }
+    |
+    {
+        $$ = NULL;
+    }
     ;
 
 param: basictype varlet

@@ -14,6 +14,13 @@ export int main(int argc, int argv)
 
     j = 0;
 
+    for(int i = 0, 5)
+        i = 0;
+
+    while(TRUE) {
+        i = 0;
+    }
+
     fun(i);
 
     fun( fun ( 1 ), fun (2) );

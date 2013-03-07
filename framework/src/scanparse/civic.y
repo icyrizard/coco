@@ -258,18 +258,15 @@ statement: varlet LET expr SEMICOLON
     {
         $$ = TBmakeDowhileloop( $2, $5);
     }
-    /*TODO waarom wordt varlet niet opgeslagen bij forloops?!
-                TBmakeForloop(node * StartValue, node * StopValue,
-                              node * StepValue, node * Block) */
     | FORLOOP BRACKET_L INTTYPE varlet LET expr COMMA expr COMMA expr BRACKET_R
     block
     {
-        $$ = TBmakeForloop( $6, $8, $10, $12);
+        $$ = TBmakeForloop($4, $6, $8, $10, $12);
     }
     | FORLOOP BRACKET_L INTTYPE varlet LET expr COMMA expr BRACKET_R
     block
     {
-        $$ = TBmakeForloop( $6, $8, NULL, $10);
+        $$ = TBmakeForloop($4, $6, $8, NULL, $10);
     }
     ;
 

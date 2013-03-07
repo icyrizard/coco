@@ -109,7 +109,6 @@ PRTassign (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTassign");
 
-
     if (ASSIGN_LET( arg_node) != NULL) {
         ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
         printf( " = ");
@@ -553,12 +552,12 @@ node *PRTwhileloop (node * arg_node, info * arg_info)
     printf(")\n");
 
     if(WHILELOOP_BLOCK( arg_node) != NULL) {
-        print_indent(arg_info->indent);
+        print_indent(arg_info->indent++);
         printf("{\n");
 
         WHILELOOP_BLOCK( arg_node) = TRAVdo( WHILELOOP_BLOCK( arg_node), arg_info);
 
-        print_indent(arg_info->indent);
+        print_indent(--arg_info->indent);
         printf("}\n");
     } else {
         printf(";\n");
@@ -589,10 +588,15 @@ node *PRTforloop (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTforloop");
 
-    printf("for(");
+    printf("for(int ");
+    FORLOOP_ID( arg_node) = TRAVdo( FORLOOP_ID( arg_node), arg_info);
+    printf(" = ");
+
 
     FORLOOP_STARTVALUE( arg_node) = TRAVdo( FORLOOP_STARTVALUE( arg_node),
             arg_info);
+
+    printf(", ");
 
     FORLOOP_STOPVALUE( arg_node) = TRAVdo( FORLOOP_STOPVALUE( arg_node),
                 arg_info);
@@ -603,8 +607,12 @@ node *PRTforloop (node * arg_node, info * arg_info)
                 arg_info);
     }
     printf(")\n");
-
+    print_indent(arg_info->indent++);
+    printf("{\n");
     FORLOOP_BLOCK( arg_node) = TRAVdo( FORLOOP_BLOCK( arg_node), arg_info);
+    print_indent(--arg_info->indent);
+    printf("}\n");
+
 
     DBUG_RETURN (arg_node);
 }

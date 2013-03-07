@@ -401,6 +401,16 @@
 
     <node name="ForLoop">
       <sons>
+        <son name="Id">
+          <targets>
+            <target mandatory="yes">
+              <node name="VarLet" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
         <son name="StartValue">
           <targets>
             <target mandatory="yes">

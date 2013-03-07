@@ -235,7 +235,7 @@ statementlist: statement statementlist
     }
     ;
 
-statement: varlet LET expr
+statement: varlet LET expr SEMICOLON
     {
         $$ = TBmakeAssign( $1, $3);
     }
@@ -405,7 +405,7 @@ basictype: BOOLTYPE    { $$ = TYPE_bool; }
 static int yyerror( char *error)
 {
   CTIabort( "line %d, col %d\nError parsing source code: %s\n",
-            global.line, global.col, error);
+            global.line + 1, global.col, error);
 
   return( 0);
 }

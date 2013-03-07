@@ -43,12 +43,14 @@ static int yyerror( char *errname);
 %right UNARYMINUS NOT
 %right TYPECAST
 
+%nonassoc IFX
+%nonassoc ELSECOND
 
 %token BRACKET_L BRACKET_R CBRACKET_L CBRACKET_R COMMA SEMICOLON
 %token TRUEVAL FALSEVAL
 
 %token EXTERNKEY EXPORTKEY VOIDTYPE BOOLTYPE INTTYPE FLOATTYPE
-%token IFCOND ELSECOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
+%token IFCOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
 
 %token <cint> NUM
 %token <cflt> FLOAT
@@ -214,14 +216,14 @@ statement: varlet LET expr
         $$ = TBmakeFuncall( $1, $3);
     }
     // TODO: shift/reduce conflict   iSeS
-    /*|  IFCOND BRACKET_L expr BRACKET_R block
+    |  IFCOND BRACKET_L expr BRACKET_R block    %prec IFX
     {
         $$ = TBmakeConditionif( $3, $5, NULL);
     }
     |  IFCOND BRACKET_L expr BRACKET_R block ELSECOND block
     {
         $$ = TBmakeConditionif( $3, $5, $7);
-    }*/
+    }
     | WHILELOOP BRACKET_L expr BRACKET_R block
     {
         $$ = TBmakeWhileloop( $3, $5);
@@ -270,6 +272,7 @@ expr: BRACKET_L expr BRACKET_R
     | expr GE expr      { $$ = TBmakeBinop( BO_ge, $1, $3); }
     | expr GT expr      { $$ = TBmakeBinop( BO_gt, $1, $3); }
     | expr EQ expr      { $$ = TBmakeBinop( BO_eq, $1, $3); }
+    | expr NE expr      { $$ = TBmakeBinop( BO_ne, $1, $3); }
     | expr OR expr      { $$ = TBmakeBinop( BO_or, $1, $3); }
     | expr AND expr     { $$ = TBmakeBinop( BO_and, $1, $3); }
                         /*  end of binops  */

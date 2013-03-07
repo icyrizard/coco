@@ -611,7 +611,7 @@ node *PRTfuncall (node * arg_node, info * arg_info)
 
     printf("(");
 
-    FUNCALL_PARAMS( arg_node) = TRAVdo( FUNCALL_PARAMS( arg_node), arg_info);
+    FUNCALL_PARAMS( arg_node) = TRAVopt( FUNCALL_PARAMS( arg_node), arg_info);
 
     printf(");\n");
 

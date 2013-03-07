@@ -24,9 +24,8 @@
 
 %p 6000 /* set positions to 6000 */
 %e 2000 /* set nodes to 1100 */
+%x C_COMMENT
 %option noyywrap
-
-
 %%
 
 "("                        { FILTER( BRACKET_L); }
@@ -70,12 +69,16 @@
 "for"                      { FILTER( FORLOOP); }
 "return"                   { FILTER( RETURNSTMT); }
 
+
+
+
 [A-Za-z][A-Za-z0-9_]*      { yylval.id = STRcpy(yytext);
                              FILTER( ID);
                            }
 
 [0-9]+                     { yylval.cint=atoi(yytext);
                              FILTER( NUM);
+                             printf("NUM FOUND: %s\n", yytext);
                            }
 
 [0-9]+\.[0-9]+             { yylval.cint=atof(yytext);
@@ -90,3 +93,6 @@
 [ \t]                      { global.col += yyleng;
                            }
 
+"/*"                       { BEGIN(C_COMMENT); }
+<C_COMMENT>"*/"            { BEGIN(INITIAL); }
+<C_COMMENT>.               { global.col += yyleng; }

@@ -391,19 +391,6 @@ boolval: TRUEVAL
     }
     ;
 
-/*binop: PLUS      { $$ = BO_add; }
-     | MULT      { $$ = BO_mul; }
-     | DIV       { $$ = BO_div; }
-     | MOD       { $$ = BO_mod; }
-     | LE        { $$ = BO_le; }
-     | LT        { $$ = BO_lt; }
-     | GE        { $$ = BO_ge; }
-     | GT        { $$ = BO_gt; }
-     | EQ        { $$ = BO_eq; }
-     | OR        { $$ = BO_or; }
-     | AND       { $$ = BO_and; }
-     ;*/
-
 monop: NOT       { $$ = MO_not; }
      ;
 

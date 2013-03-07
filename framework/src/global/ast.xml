@@ -50,7 +50,7 @@
     <nodeset name="Expr">
       <target>
         <node name="BinOp" />
-        <node name="Var" />
+        <node name="VarLet" />
         <node name="Num" />
         <node name="Float" />
         <node name="Bool" />

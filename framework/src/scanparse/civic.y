@@ -60,7 +60,7 @@ static int yyerror( char *errname);
 %type <node> declaration program start
 %type <node> fundec fundef funheader statementlist vardeclist
 %type <node> vardec funbody statement returnstatement block
-
+%type <node> globaldec globaldef
 
 %type <ctype> basictype
 %type <cmonop> monop
@@ -87,15 +87,19 @@ program: declaration program
     }
     ;
 
-declaration: /*expr SEMICOLON
-    {
-        $$ = $1;
-    }
-    |*/ fundec
+declaration: fundec
     {
         $$ = $1;
     }
     | fundef
+    {
+        $$ = $1;
+    }
+    | globaldec
+    {
+        $$ = $1;
+    }
+    | globaldef
     {
         $$ = $1;
     }
@@ -134,6 +138,30 @@ fundef: EXPORTKEY funheader CBRACKET_L funbody CBRACKET_R
     | funheader CBRACKET_L CBRACKET_R
     {
         $$ = TBmakeFundef(FALSE, $1, NULL);
+    }
+    ;
+
+globaldec: EXTERNKEY basictype varlet
+    {
+        $$ = TBmakeGlobaldec( $2, $3);
+    }
+    ;
+
+globaldef: EXPORTKEY basictype varlet LET expr SEMICOLON
+    {
+        $$ = TBmakeGlobaldef($2, TRUE, $3, $5);
+    }
+    | EXPORTKEY basictype varlet SEMICOLON
+    {
+        $$ = TBmakeGlobaldef($2, TRUE, $3, NULL);
+    }
+    | basictype varlet LET expr SEMICOLON
+    {
+        $$ = TBmakeGlobaldef($1, FALSE, $2, $4);
+    }
+    | basictype varlet SEMICOLON
+    {
+        $$ = TBmakeGlobaldef($1, FALSE, $2, NULL);
     }
     ;
 
@@ -215,7 +243,6 @@ statement: varlet LET expr
     {
         $$ = TBmakeFuncall( $1, $3);
     }
-    // TODO: shift/reduce conflict   iSeS
     |  IFCOND BRACKET_L expr BRACKET_R block    %prec IFX
     {
         $$ = TBmakeConditionif( $3, $5, NULL);

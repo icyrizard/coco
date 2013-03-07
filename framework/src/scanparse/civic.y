@@ -57,7 +57,7 @@ static int yyerror( char *errname);
 %type <node> intval floatval boolval constant expr
 %type <node> declaration program start
 %type <node> fundec fundef funheader statementlist vardeclist
-%type <node> vardec funbody statement returnstatement
+%type <node> vardec funbody statement returnstatement block
 
 
 %type <ctype> basictype
@@ -85,11 +85,11 @@ program: declaration program
     }
     ;
 
-declaration: expr SEMICOLON
+declaration: /*expr SEMICOLON
     {
         $$ = $1;
     }
-    | fundec
+    |*/ fundec
     {
         $$ = $1;
     }
@@ -139,7 +139,7 @@ funbody: vardeclist statementlist returnstatement
     {
         $$ = TBmakeFunbody($1, $2, $3);
     }
-    | vardeclist statementlist 
+    | vardeclist statementlist
     {
         $$ = TBmakeFunbody($1, $2, NULL);
     }
@@ -153,21 +153,21 @@ funbody: vardeclist statementlist returnstatement
     }
     | statementlist returnstatement
     {
-        $$ = TBmakeFunbody(NULL, $1, $2);
+        $$ = TBmakeFunbody( NULL, $1, $2);
     }
     | statementlist
     {
-        $$ = TBmakeFunbody(NULL, $1, NULL);
+        $$ = TBmakeFunbody( NULL, $1, NULL);
     }
     | returnstatement
     {
-        $$ = TBmakeFunbody(NULL, NULL, $1);
-    } 
+        $$ = TBmakeFunbody( NULL, NULL, $1);
+    }
     ;
 
 returnstatement: RETURNSTMT SEMICOLON
     {
-        $$ = NULL; 
+        $$ = NULL;
     }
     | RETURNSTMT expr SEMICOLON
     {
@@ -177,37 +177,81 @@ returnstatement: RETURNSTMT SEMICOLON
 
 vardeclist: vardec vardeclist
     {
-        $$ = TBmakeVardeclist($1, $2);
+        $$ = TBmakeVardeclist( $1, $2);
     }
     | vardec
     {
-        $$ = $1;
+        $$ = TBmakeVardeclist( $1, NULL);
     }
     ;
 
 vardec: basictype varlet LET expr SEMICOLON
     {
-        $$ = TBmakeVardec($1, $2, $4);
+        $$ = TBmakeVardec( $1, $2, $4);
     }
     | basictype varlet SEMICOLON
     {
-        $$ = TBmakeVardec($1, $2, NULL);
+        $$ = TBmakeVardec( $1, $2, NULL);
     }
     ;
 
 statementlist: statement statementlist
     {
-        $$ = TBmakeStatementlist($1, $2);
+        $$ = TBmakeStatementlist( $1, $2);
     }
     | statement
     {
-        $$ = TBmakeStatementlist($1, NULL);
+        $$ = TBmakeStatementlist( $1, NULL);
     }
     ;
 
 statement: varlet LET expr
     {
-        $$ = TBmakeAssign($1, $3);
+        $$ = TBmakeAssign( $1, $3);
+    }
+    | varlet BRACKET_L paramlist BRACKET_R SEMICOLON
+    {
+        $$ = TBmakeFuncall( $1, $3);
+    }
+    // TODO: shift/reduce conflict   iSeS
+    /*|  IFCOND BRACKET_L expr BRACKET_R block
+    {
+        $$ = TBmakeConditionif( $3, $5, NULL);
+    }
+    |  IFCOND BRACKET_L expr BRACKET_R block ELSECOND block
+    {
+        $$ = TBmakeConditionif( $3, $5, $7);
+    }*/
+    | WHILELOOP BRACKET_L expr BRACKET_R block
+    {
+        $$ = TBmakeWhileloop( $3, $5);
+    }
+    | DOLOOP block WHILELOOP BRACKET_L expr BRACKET_R SEMICOLON
+    {
+        $$ = TBmakeDowhileloop( $2, $5);
+    }
+    /*TODO waarom wordt varlet niet opgeslagen bij forloops?!
+                TBmakeForloop(node * StartValue, node * StopValue,
+                              node * StepValue, node * Block) */
+    | FORLOOP BRACKET_L INTTYPE varlet LET expr COMMA expr COMMA expr BRACKET_R
+    block
+    {
+        $$ = TBmakeForloop( $6, $8, $10, $12);
+    }
+    | FORLOOP BRACKET_L INTTYPE varlet LET expr COMMA expr BRACKET_R
+    block
+    {
+        $$ = TBmakeForloop( $6, $8, NULL, $10);
+    }
+    ;
+
+block: CBRACKET_L statementlist CBRACKET_R
+    {
+        $$ = $2;
+    }
+    | statement
+    {
+        $$ = TBmakeStatementlist( $1, NULL);
     }
     ;
 

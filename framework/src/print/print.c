@@ -414,6 +414,8 @@ node *PRTfundec (node * arg_node, info * arg_info)
 
     FUNDEC_HEADER( arg_node) = TRAVdo( FUNDEC_HEADER( arg_node), arg_info);
 
+    printf(";\n");
+
     DBUG_RETURN (arg_node);
 }
 
@@ -425,7 +427,7 @@ node *PRTglobaldec (node * arg_node, info * arg_info)
 
     printf("exern ");
 
-    switch (GLOBALDEF_TYPE( arg_node)) {
+    switch (GLOBALDEC_TYPE( arg_node)) {
       case TYPE_bool:
         tmp = "bool";
         break;
@@ -442,7 +444,7 @@ node *PRTglobaldec (node * arg_node, info * arg_info)
         DBUG_ASSERT( 0, "unknown type detected!");
     }
 
-    printf(" %s ", tmp);
+    printf("%s ", tmp);
 
     GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
 
@@ -478,11 +480,11 @@ node *PRTglobaldef (node * arg_node, info * arg_info)
         DBUG_ASSERT( 0, "unknown type detected!");
     }
 
-    printf(" %s ", tmp);
+    printf("%s ", tmp);
 
     GLOBALDEF_ID( arg_node) = TRAVdo( GLOBALDEF_ID( arg_node), arg_info);
 
-    if(GLOBALDEF_ID( arg_node) != NULL) {
+    if(GLOBALDEF_EXPR( arg_node) != NULL) {
         printf(" = ");
         GLOBALDEF_EXPR( arg_node) = TRAVdo( GLOBALDEF_EXPR( arg_node), arg_info);
     }
@@ -618,6 +620,7 @@ node *PRTfuncall (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTfuncall");
 
+    print_indent( arg_info->indent);
     FUNCALL_ID( arg_node) = TRAVdo( FUNCALL_ID( arg_node), arg_info);
 
     printf("(");
@@ -643,7 +646,7 @@ node *PRTfundef (node * arg_node, info * arg_info)
 
     FUNDEF_BODY( arg_node) = TRAVopt( FUNDEF_BODY( arg_node), arg_info);
 
-    printf("}\n");
+    printf("}\n\n");
 
     DBUG_RETURN (arg_node);
 }
@@ -759,7 +762,6 @@ node *PRTfunheader (node * arg_node, info * arg_info)
             tmp = "float";
             break;
         case TYPE_void:
-            printf("got a void!\n");
             tmp = "void";
             break;
         case TYPE_unknown:
@@ -817,6 +819,7 @@ node *PRTparam (node * arg_node, info * arg_info)
             DBUG_ASSERT( 0, "no or unknown type defined");
     }
 
+    printf("%s ", tmp);
     PARAM_ID( arg_node) = TRAVdo( PARAM_ID( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);

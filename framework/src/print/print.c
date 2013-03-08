@@ -672,7 +672,7 @@ node *PRTfunbody (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTfunbody");
 
-    arg_info->indent += 1;
+    arg_info->indent++;
 
     if(FUNBODY_VARS( arg_node) != NULL) {
         FUNBODY_VARS( arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
@@ -684,12 +684,15 @@ node *PRTfunbody (node * arg_node, info * arg_info)
     }
 
     if(FUNBODY_RETURN( arg_node) != NULL) {
+        printf("\n");
         print_indent(arg_info->indent);
-        printf("\nreturn ");
+        printf("return ");
+
         FUNBODY_RETURN( arg_node) = TRAVdo( FUNBODY_RETURN( arg_node), arg_info);
+
         printf(";\n");
     }
-    arg_info->indent -= 1;
+    arg_info->indent--;
 
     DBUG_RETURN (arg_node);
 }

@@ -6,16 +6,8 @@
 #include "traverse.h"
 #include "globals.h"
 
-#define INFO_FIRSTERROR(n) ((n)->firsterror)
-
-struct ass_list {
-    node *this;
-    node *next;
-};
-
 struct INFO {
-    bool firsterror;
-    struct ass_list *root;
+    node *statementlist;
 };
 
 static info *MakeInfo()
@@ -23,9 +15,8 @@ static info *MakeInfo()
     info *result;
 
     result = MEMmalloc(sizeof(info));
-    result->root = MEMmalloc(sizeof(struct ass_list));
 
-    INFO_FIRSTERROR(result) = FALSE;
+    result->statementlist = NULL;
 
     return result;
 }
@@ -37,38 +28,36 @@ static info *FreeInfo( info *info)
     return info;
 }
 
-node *
-INITprogram(node * arg_node, info * arg_info)
+
+/***************************************************/
+
+node *INITglobaldef (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("INITprogram");
+    node *new_head;
 
-    PROGRAM_HEAD( arg_node) = TRAVdo( PROGRAM_HEAD( arg_node), arg_info);
+    DBUG_ENTER ("INITglobaldef");
 
-    PROGRAM_TAIL( arg_node) = TRAVopt( PROGRAM_TAIL( arg_node), arg_info);
+    if (GLOBALDEF_EXPR( arg_node) == NULL)
+        DBUG_RETURN (arg_node);
+
+    new_head = TBmakeAssign( GLOBALDEF_ID( arg_node), GLOBALDEF_EXPR( arg_node));
+
+    arg_info->statementlist = TBmakeStatementlist( new_head, arg_info->statementlist);
+
+    GLOBALDEF_EXPR( arg_node) = NULL;
 
     DBUG_RETURN (arg_node);
 }
 
-node *INITglobaldef (node * arg_node, info * arg_info)
+void add_init(node *syntaxtree, info *info)
 {
-    DBUG_ENTER ("INITglobaldef");
+    node *header, *body, *__init;
 
-    //if (GLOBALDEF_EXPORT( arg_node))
+    header = TBmakeFunheader( TYPE_void , TBmakeVarlet("__init"), NULL);
+    body   = TBmakeFunbody( NULL, info->statementlist, NULL);
+    __init = TBmakeFundef( FALSE, header, body);
 
-    //switch (GLOBALDEF_TYPE( arg_node)) {
-    //  case TYPE_unknown:
-    //    DBUG_ASSERT( 0, "unknown type detected!");
-   // }
-
-
-    GLOBALDEF_ID( arg_node) = TRAVdo( GLOBALDEF_ID( arg_node), arg_info);
-
-//    if(GLOBALDEF_EXPR( arg_node) != NULL) {
-//        printf(" = ");
-//        GLOBALDEF_EXPR( arg_node) = TRAVdo( GLOBALDEF_EXPR( arg_node), arg_info);
-//    }
-
-    DBUG_RETURN (arg_node);
+    PROGRAM_HEAD(syntaxtree) = TBmakeProgram(__init, PROGRAM_HEAD(syntaxtree));
 }
 
 node * DSPdoInit(node *syntaxtree)
@@ -84,6 +73,9 @@ node * DSPdoInit(node *syntaxtree)
     TRAVpush(TR_init);
 
     syntaxtree = TRAVdo(syntaxtree, info);
+
+    /* create init function and add all the assignments */
+    add_init(syntaxtree, info);
 
     TRAVpop();
 

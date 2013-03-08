@@ -525,17 +525,30 @@ node *PRTconditionif (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTconditionif");
 
+    print_indent(arg_info->indent);
     printf("if(");
 
     CONDITIONIF_EXPR( arg_node) = TRAVdo( CONDITIONIF_EXPR( arg_node), arg_info);
-    CONDITIONIF_BLOCK( arg_node) = TRAVdo( CONDITIONIF_BLOCK( arg_node), arg_info);
 
     printf(")\n");
+    print_indent(arg_info->indent++);
+    printf("{\n");
+
+    CONDITIONIF_BLOCK( arg_node) = TRAVdo( CONDITIONIF_BLOCK( arg_node), arg_info);
+
+    print_indent(--arg_info->indent);
+    printf("}\n");
 
     if(CONDITIONIF_ELSEBLOCK( arg_node) != NULL) {
-        printf(" else ");
+        print_indent(arg_info->indent);
+        printf("else\n");
+        print_indent(arg_info->indent++);
+        printf("{\n");
+
         CONDITIONIF_ELSEBLOCK( arg_node) = TRAVdo(CONDITIONIF_ELSEBLOCK(\
                     arg_node), arg_info);
+        print_indent(--arg_info->indent);
+        printf("}\n");
     }
 
     DBUG_RETURN (arg_node);
@@ -559,8 +572,6 @@ node *PRTwhileloop (node * arg_node, info * arg_info)
 
         print_indent(--arg_info->indent);
         printf("}\n");
-    } else {
-        printf(";\n");
     }
 
     DBUG_RETURN (arg_node);
@@ -662,15 +673,19 @@ node *PRTfunbody (node * arg_node, info * arg_info)
     DBUG_ENTER ("PRTfunbody");
 
     arg_info->indent += 1;
-    FUNBODY_VARS( arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
-    printf("\n");
 
-    FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
-    printf("\n");
+    if(FUNBODY_VARS( arg_node) != NULL) {
+        FUNBODY_VARS( arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
+        printf("\n");
+    }
+
+    if(FUNBODY_STATEMENTS( arg_node) != NULL) {
+        FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
+    }
 
     if(FUNBODY_RETURN( arg_node) != NULL) {
         print_indent(arg_info->indent);
-        printf("return ");
+        printf("\nreturn ");
         FUNBODY_RETURN( arg_node) = TRAVdo( FUNBODY_RETURN( arg_node), arg_info);
         printf(";\n");
     }
@@ -747,7 +762,8 @@ node *PRTstatementlist (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTstatementlist");
 
-    print_indent( arg_info->indent);
+    if(NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) != N_conditionif)
+        print_indent( arg_info->indent);
     STATEMENTLIST_HEAD( arg_node) = TRAVdo( STATEMENTLIST_HEAD( arg_node), arg_info);
 
     if((NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_funcall) || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_assign) || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_dowhileloop))

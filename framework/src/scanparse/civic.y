@@ -33,10 +33,12 @@ static int yyerror( char *errname);
     type                ctype;
 }
 
+%error-verbose
+
 %right LET
 %left OR
-%left AND
-%nonassoc EQ NE
+%left AND "&&"
+%nonassoc EQ " 123123" NE "54545"
 %nonassoc LT LE GT GE
 %left PLUS MINUS
 %left MULT DIV MOD
@@ -49,7 +51,7 @@ static int yyerror( char *errname);
 %token BRACKET_L BRACKET_R CBRACKET_L CBRACKET_R COMMA SEMICOLON
 %token TRUEVAL FALSEVAL
 
-%token EXTERNKEY EXPORTKEY VOIDTYPE BOOLTYPE INTTYPE FLOATTYPE
+%token EXTERNKEY EXPORTKEY VOIDTYPE "void" BOOLTYPE INTTYPE FLOATTYPE
 %token IFCOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
 
 %token <cint> NUM

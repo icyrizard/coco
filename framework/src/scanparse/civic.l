@@ -20,6 +20,11 @@
 #define LINEBUF_SIZE 256
 //#define YY_NO_UNPUT
 
+void yyerror(char *s)
+{
+    fprintf(stderr, "%s\n", s);
+}
+
 %}
 
 %p 6000 /* set positions to 6000 */
@@ -93,7 +98,7 @@
 [ \t]                      { global.col += yyleng;
                            }
 
-"//".*\n                      { global.line += 1;
+"//".*\n                   { global.line += 1;
                              global.col = 0;
                            }
 
@@ -103,3 +108,9 @@
                              global.col = 0;
                            }
 <C_COMMENT>.               { global.col += yyleng; }
+
+
+.                          { global.col += 1;
+                             CTIerror("stray '%s' in program",
+                             STRcpy(yytext));
+                           }

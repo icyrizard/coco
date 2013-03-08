@@ -7,7 +7,8 @@
 #include "globals.h"
 
 struct INFO {
-    node *statementlist;
+    node *head;
+    node *tail;
 };
 
 static info *MakeInfo()
@@ -16,7 +17,8 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
 
-    result->statementlist = NULL;
+    result->head = TBmakeStatementlist(NULL, NULL);
+    result->tail = result->head;
 
     return result;
 }
@@ -33,16 +35,18 @@ static info *FreeInfo( info *info)
 
 node *INITglobaldef (node * arg_node, info * arg_info)
 {
-    node *new_head;
+    node *assign, *new_tail;
 
     DBUG_ENTER ("INITglobaldef");
 
     if (GLOBALDEF_EXPR( arg_node) == NULL)
         DBUG_RETURN (arg_node);
 
-    new_head = TBmakeAssign( GLOBALDEF_ID( arg_node), GLOBALDEF_EXPR( arg_node));
+    assign = TBmakeAssign( GLOBALDEF_ID( arg_node), GLOBALDEF_EXPR( arg_node));
+    new_tail = TBmakeStatementlist( assign, NULL);
 
-    arg_info->statementlist = TBmakeStatementlist( new_head, arg_info->statementlist);
+    STATEMENTLIST_TAIL(arg_info->tail) = new_tail;
+    arg_info->tail = new_tail;
 
     GLOBALDEF_EXPR( arg_node) = NULL;
 
@@ -54,7 +58,7 @@ void add_init(node *syntaxtree, info *info)
     node *header, *body, *__init;
 
     header = TBmakeFunheader( TYPE_void , TBmakeVarlet("__init"), NULL);
-    body   = TBmakeFunbody( NULL, info->statementlist, NULL);
+    body   = TBmakeFunbody( NULL, STATEMENTLIST_TAIL(info->head), NULL);
     __init = TBmakeFundef( FALSE, header, body);
 
     PROGRAM_HEAD(syntaxtree) = TBmakeProgram(__init, PROGRAM_HEAD(syntaxtree));

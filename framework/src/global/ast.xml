@@ -22,6 +22,12 @@
          include the include file needed for the traversal
     -->
     <general>
+      <traversal id="INIT" name="Init Desugar Phase" default="sons" include="desug_init.h" >
+        <travuser>
+            <node name="GlobalDef"/>
+            <node name="Program"/>
+        </travuser>
+        </traversal>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />
       <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h" />

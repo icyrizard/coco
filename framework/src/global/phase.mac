@@ -14,39 +14,52 @@ PHASE( ld,
 
 SUBPHASE( cpp,
           "Running C preprocessor",
-          SPdoRunPreProcessor, 
+          SPdoRunPreProcessor,
           NEVER,
           ld)
 
 SUBPHASE( scp,
           "Reading input file",
-          SPdoScanParse, 
+          SPdoScanParse,
           ALWAYS,
           ld)
 
-ENDPHASE( ld) 
+ENDPHASE( ld)
 
 
 /******************************************************************************/
 
+PHASE( desugarphase,
+       "Desugar code",
+       ALWAYS)
+
+SUBPHASE( desug_init,
+          "Globaldef to __init func",
+          DSPdoInit,
+          ALWAYS,
+          desugarphase)
+
+ENDPHASE( desugarphase)
+
+/******************************************************************************/
 
 PHASE( cg,
        "Generating Code",
        ALWAYS)
 
-SUBPHASE( prt, 
+SUBPHASE( prt,
           "Generating byte code",
-          PRTdoPrint, 
-          ALWAYS,
-          cg)      
-
-SUBPHASE( frtr, 
-          "De-allocating syntax tree representation",
-          FREEdoFreeTree, 
+          PRTdoPrint,
           ALWAYS,
           cg)
 
-ENDPHASE( cg) 
+SUBPHASE( frtr,
+          "De-allocating syntax tree representation",
+          FREEdoFreeTree,
+          ALWAYS,
+          cg)
+
+ENDPHASE( cg)
 
 
 /******************************************************************************/

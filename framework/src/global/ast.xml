@@ -79,7 +79,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="Program" />
@@ -666,7 +666,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="ExprList" />
@@ -692,7 +692,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="VarDecList" />
@@ -757,7 +757,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="StatementList" />
@@ -822,7 +822,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="ParamList" />

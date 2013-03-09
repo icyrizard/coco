@@ -45,7 +45,7 @@ node *INITglobaldef (node * arg_node, info * arg_info)
     assign = TBmakeAssign( GLOBALDEF_ID( arg_node), GLOBALDEF_EXPR( arg_node));
     new_tail = TBmakeStatementlist( assign, NULL);
 
-    STATEMENTLIST_TAIL(arg_info->tail) = new_tail;
+    STATEMENTLIST_NEXT(arg_info->tail) = new_tail;
     arg_info->tail = new_tail;
 
     GLOBALDEF_EXPR( arg_node) = NULL;
@@ -58,7 +58,7 @@ void add_init(node *syntaxtree, info *info)
     node *header, *body, *__init;
 
     header = TBmakeFunheader( TYPE_void , TBmakeVarlet("__init"), NULL);
-    body   = TBmakeFunbody( NULL, STATEMENTLIST_TAIL(info->head), NULL);
+    body   = TBmakeFunbody( NULL, STATEMENTLIST_NEXT(info->head), NULL);
     __init = TBmakeFundef( FALSE, header, body);
 
     PROGRAM_HEAD(syntaxtree) = TBmakeProgram(__init, PROGRAM_HEAD(syntaxtree));

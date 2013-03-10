@@ -7,6 +7,18 @@
 #include "globals.h"
 #include "str.h"
 
+/***********************   INFO   ***********************/
+/* INFO object containing two linked list.
+ *
+ * The first one, head and tail, is used to store the global variable
+ * initializations as assignmnents.
+ *
+ * The second one, fun_head and fun_tail, is used to store the local
+ * variable initializations as assignments. This linked list has to be
+ * 'emptied' ever time a function desugering is done
+ *
+ * NOTE: we do not support nested functions and arrays yet
+ */
 struct INFO {
     node *head,
          *tail,
@@ -14,6 +26,10 @@ struct INFO {
          *fun_tail;
 };
 
+/* MakeInfo allocates a new info 'object'
+ *
+ * The two linked list are initialized with a empty head node
+ */
 static info *MakeInfo()
 {
     info *result;
@@ -33,11 +49,42 @@ static info *FreeInfo( info *info)
 {
     info = MEMfree( info);
 
+    /* TODO free the two heads nodes */
+
     return info;
 }
 
+void empty_info_funlist(info *arg_info)
+{
+    STATEMENTLIST_NEXT( arg_info->fun_head) = NULL;
+    arg_info->fun_tail = arg_info->fun_head;
+}
 
-/***************************************************/
+/**************** Traverse Help Functions ***************/
+
+/* Creates a new assign node based on the given ID and EXPR
+ * The assign node is then placed inside a statementlist with
+ * empty NEXT so it can be used as the tail of the assign
+ * statementlist
+ *
+ * Returns a pointer to the statementlist
+ *
+ */
+node* create_new_assign_statement_list(node *id, node *expr)
+{
+    node *new_varlet, *assign;
+
+    /* Create a copy of the varlet for the new assignment node */
+    new_varlet = TBmakeVarlet( STRcpy( VARLET_NAME( id)));
+
+    /* Create a new assign node and store it in a statmentlist */
+    assign = TBmakeAssign( new_varlet, expr);
+
+    return TBmakeStatementlist( assign, NULL);
+}
+
+
+/*********************   Traverse   *********************/
 
 /* Remove the expressions of global variable definitions.
  * Store the expressions the info struct for later uses when
@@ -48,7 +95,7 @@ static info *FreeInfo( info *info)
  **/
 node *INITglobaldef (node * arg_node, info * arg_info)
 {
-    node *assign, *new_tail, *new_varlet;
+    node *new_tail;
 
     DBUG_ENTER ("INITglobaldef");
 
@@ -56,12 +103,9 @@ node *INITglobaldef (node * arg_node, info * arg_info)
     if (GLOBALDEF_EXPR( arg_node) == NULL)
         DBUG_RETURN (arg_node);
 
-    /* Create a copy of the varlet for the new assignment node */
-    new_varlet = TBmakeVarlet( STRcpy( VARLET_NAME( GLOBALDEF_ID( arg_node))));
-
     /* Create a new assign node and store it in a statmentlist */
-    assign = TBmakeAssign( new_varlet, GLOBALDEF_EXPR( arg_node));
-    new_tail = TBmakeStatementlist( assign, NULL);
+    new_tail = create_new_assign_statement_list(GLOBALDEF_ID( arg_node),
+                    GLOBALDEF_EXPR( arg_node));
 
     /* Add the new assign to the info node statmentlist */
     STATEMENTLIST_NEXT(arg_info->tail) = new_tail;
@@ -74,6 +118,7 @@ node *INITglobaldef (node * arg_node, info * arg_info)
 }
 
 
+
 node *INITfunbody(node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("INITfunbody");
@@ -83,16 +128,15 @@ node *INITfunbody(node * arg_node, info * arg_info)
     if(FUNBODY_VARS( arg_node) != NULL)
         FUNBODY_VARS( arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
 
-
-    /* Append funbody statements to the assignment list */
+    /* Append funbody statements to the initialization assignment list */
     STATEMENTLIST_NEXT( arg_info->fun_tail) = FUNBODY_STATEMENTS( arg_node);
 
     /* Set statements of the function to new assignments + old statements */
     FUNBODY_STATEMENTS( arg_node) = STATEMENTLIST_NEXT( arg_info->fun_head);
 
-    /* Reset the info fun_head and fun_tail for next function */
-    STATEMENTLIST_NEXT( arg_info->fun_head) = NULL;
-    arg_info->fun_tail = arg_info->fun_head;
+    /* Reset the info fun_head and fun_tail inorder to let the next function
+     * use it */
+    empty_info_funlist(arg_info);
 
     DBUG_RETURN( arg_node);
 }
@@ -100,19 +144,16 @@ node *INITfunbody(node * arg_node, info * arg_info)
 
 node *INITvardec(node * arg_node, info * arg_info)
 {
-    node *assign, *new_tail, *new_varlet;
+    node *new_tail;
 
     DBUG_ENTER ("INITvardeclist");
 
     if (VARDEC_VALUE( arg_node) == NULL)
         DBUG_RETURN (arg_node);
 
-    /* Create a copy of the varlet for the new assignment node */
-    new_varlet = TBmakeVarlet( STRcpy( VARLET_NAME( VARDEC_ID( arg_node))));
-
     /* Create a new assign node and store it in a statmentlist */
-    assign = TBmakeAssign( new_varlet, VARDEC_VALUE( arg_node));
-    new_tail = TBmakeStatementlist( assign, NULL);
+    new_tail = create_new_assign_statement_list( VARDEC_ID( arg_node),
+                    VARDEC_VALUE( arg_node));
 
     /* Add the new assign to the info node statmentlist */
     STATEMENTLIST_NEXT(arg_info->fun_tail) = new_tail;

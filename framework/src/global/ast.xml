@@ -25,6 +25,8 @@
       <traversal id="INIT" name="Init Desugar Phase" default="sons" include="desug_init.h" >
         <travuser>
             <node name="GlobalDef"/>
+            <node name="FunBody"/>
+            <node name="VarDec"/>
         </travuser>
         </traversal>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />

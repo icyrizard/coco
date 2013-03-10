@@ -25,7 +25,8 @@
       <traversal id="INIT" name="Init Desugar Phase" default="sons" include="desug_init.h" >
         <travuser>
             <node name="GlobalDef"/>
-            <node name="Program"/>
+            <node name="FunBody"/>
+            <node name="VarDec"/>
         </travuser>
         </traversal>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
@@ -80,7 +81,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="Program" />
@@ -667,7 +668,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="ExprList" />
@@ -693,7 +694,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="VarDecList" />
@@ -758,7 +759,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="StatementList" />
@@ -823,7 +824,7 @@
             </target>
           </targets>
         </son>
-        <son name="Tail">
+        <son name="Next">
           <targets>
             <target mandatory="no">
               <node name="ParamList" />

@@ -43,7 +43,7 @@ static info *FreeInfo( info *info)
  **/
 node *INITglobaldef (node * arg_node, info * arg_info)
 {
-    node *assign, *new_tail;
+    node *assign, *new_tail, *new_varlet;
 
     DBUG_ENTER ("INITglobaldef");
 
@@ -51,8 +51,11 @@ node *INITglobaldef (node * arg_node, info * arg_info)
     if (GLOBALDEF_EXPR( arg_node) == NULL)
         DBUG_RETURN (arg_node);
 
+    /* Create a copy of the varlet for the new assignment node */
+    new_varlet = TBmakeVarlet( STRcpy( VARLET_NAME( GLOBALDEF_ID( arg_node))));
+
     /* Create a new assign node and store it in a statmentlist */
-    assign = TBmakeAssign( GLOBALDEF_ID( arg_node), GLOBALDEF_EXPR( arg_node));
+    assign = TBmakeAssign( new_varlet, GLOBALDEF_EXPR( arg_node));
     new_tail = TBmakeStatementlist( assign, NULL);
 
     /* Add the new assign to the info node statmentlist */
@@ -79,8 +82,8 @@ node* create_init_fundef(info* info)
 
 
     header = TBmakeFunheader( TYPE_void , TBmakeVarlet(STRcpy("__init")), NULL);
-    //body   = TBmakeFunbody( NULL, STATEMENTLIST_NEXT(info->head), NULL);
-    body   = TBmakeFunbody( NULL, NULL, NULL);
+    body   = TBmakeFunbody( NULL, STATEMENTLIST_NEXT(info->head), NULL);
+    //body   = TBmakeFunbody( NULL, NULL, NULL);
 
     return TBmakeFundef( FALSE, header, body);
 }

@@ -39,6 +39,12 @@ SUBPHASE( desug_init,
           ALWAYS,
           desugarphase)
 
+SUBPHASE( desug_for,
+          "Remove varlet from forloops and rename",
+          DSPdoFor,
+          ALWAYS,
+          desugarphase)
+
 ENDPHASE( desugarphase)
 
 /******************************************************************************/

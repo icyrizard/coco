@@ -76,5 +76,5 @@ scanparse   = civic.tab.o civic.lex.o
 
 print       = print.o
 
-desugar = desug_init.o
+desugar = desug_init.o desug_for.o
 

@@ -1,5 +1,4 @@
 
-                        :
 /**
  * @file print.c
  *
@@ -600,7 +599,7 @@ node *PRTforloop (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTforloop");
 
-    printf("for(");
+    printf("for( ");
 
     FORLOOP_STARTVALUE( arg_node) = TRAVdo( FORLOOP_STARTVALUE( arg_node),
             arg_info);

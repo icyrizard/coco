@@ -8,8 +8,16 @@
 #include "str.h"
 
 
+/* using a list of strings */
+struct var_list {
+  char *var_name;
+  struct var_list *tail;
+};
+
+/* INFO obj */
 struct INFO {
     int nest_level;
+    struct *var_list; // varlist of strings
 };
 
 /* MakeInfo allocates a new info 'object'
@@ -22,6 +30,7 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
     result->nest_level = 0;
+    result->var_list = NULL;
 
     return result;
 }
@@ -36,6 +45,7 @@ static info *FreeInfo( info *info)
 node *FORforloop(node *arg_node, info *arg_info){
     DBUG_ENTER("FORforloop");
     printf("forloop\n");
+    type t_int = TYPE_INT;
 
     arg_info->nest_level++;
 
@@ -48,33 +58,35 @@ node *FORforloop(node *arg_node, info *arg_info){
 
 node *FORassign(node *arg_node, info *arg_info){
     DBUG_ENTER("FORassign");
-    printf("assign\n");
+    node *vardec;
 
     ASSIGN_LET( arg_node) = TRAVdo(ASSIGN_LET(arg_node), arg_info);
+    //vardec = TBmakeVarDec("int", ASSIGN_LET(arg_node));
     DBUG_RETURN(arg_node);
 }
 
 node *FORvarlet(node *arg_node, info *arg_info){
     DBUG_ENTER("FORvarlet");
-    printf("forvarlet\n");
-    char *tmp = "_";
+    char *tmp = "";
     int i;
 
-    for(i = 1; i < arg_info->nest_level; i++){
+    for(i = 0; i < arg_info->nest_level; i++){
         tmp = STRcat("_", STRcpy(tmp));
     }
 
-    //VARLET_NAME(arg_node ) = TBmakeVarlet( STRcat(tmp, (const char *)STRcpy(VARLET_NAME(arg_node))));
+    tmp = (char *)STRcat(tmp, STRcpy(VARLET_NAME(arg_node)));
+    arg_info->vars->tail = tmp;
+
+    VARLET_NAME(arg_node ) = tmp;
     DBUG_RETURN(arg_node);
 }
 
 node *FORfunbody(node * arg_node, info * arg_info)
 {
     DBUG_ENTER("FORfunbody");
-    printf("funbody\n");
-    if(FUNBODY_STATEMENTS( arg_node) != NULL) {
-        FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
-    }
+    FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
+
+    // info object
     DBUG_RETURN(arg_node);
 }
 

@@ -51,6 +51,7 @@ static info *MakeInfo()
     result->nest_level = 0;
     result->vars = NULL;
 
+    /* initialize var dec list with a dummy head */
     result->decs_head = TBmakeVardeclist(NULL, NULL);
     result->decs_tail = result->decs_head;
 
@@ -61,7 +62,7 @@ static info *FreeInfo( info *info)
 {
     info = MEMfree( info);
 
-    /* TODO free the two heads nodes */
+    /* TODO free the dummy head node */
 
     return info;
 }
@@ -97,6 +98,24 @@ void push(node *forloop, info *arg_info)
     arg_info->vars = new;
 }
 
+/* pop the top identifier name rewrite rule of the rule list. */
+void pop(info *arg_info)
+{
+    arg_info->vars = arg_info->vars->next;
+
+}
+
+void reset_info( info *arg_info)
+{
+    /* empty vardec list */
+    VARDECLIST_NEXT( arg_info->decs_tail) = NULL;
+    arg_info->decs_tail = arg_info->decs_head;
+
+    /* remove all rules */
+    /* TODO MEMfree all allocated strings in arg_info->vars */
+    arg_info->vars = NULL;
+}
+
 
 /*********************   Traverse   *********************/
 
@@ -109,6 +128,10 @@ node *FORfunbody(node *arg_node, info *arg_info)
     /* add the vardecs to head of vardecs */
     VARDECLIST_NEXT( arg_info->decs_tail) = FUNBODY_VARS( arg_node);
     FUNBODY_VARS( arg_node) = VARDECLIST_NEXT( arg_info->decs_head);
+
+    /* reset info struct by emptying the vardec list
+     * and removing all the rules */
+    reset_info(arg_info);
 
     DBUG_RETURN( arg_node);
 }
@@ -149,7 +172,7 @@ node *FORforloop(node *arg_node, info *arg_info)
     arg_info->nest_level--;
 
     /* remove the current forloop rewrite rule */
-    //pop(arg_info);
+    pop(arg_info);
 
     DBUG_RETURN( arg_node);
 }

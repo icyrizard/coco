@@ -289,7 +289,7 @@ PRTbool (node * arg_node, info * arg_info)
  *
  ***************************************************************************/
 
-node *
+/*node *
 PRTvar (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTvar");
@@ -297,7 +297,7 @@ PRTvar (node * arg_node, info * arg_info)
     printf( "%s", VAR_NAME( arg_node));
 
     DBUG_RETURN (arg_node);
-}
+}*/
 
 
 /** <!--******************************************************************-->

@@ -446,7 +446,7 @@
       </sons>
     </node>
 
-    <node name="Var">
+    <!--    <node name="Var">
       <sons>
       </sons>
       <attributes>
@@ -475,7 +475,7 @@
           </type>
         </attribute>
       </attributes>
-    </node>
+  </node>-->
 
     <node name="Const">
       <sons>

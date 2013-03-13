@@ -24,18 +24,17 @@
     <general>
       <traversal id="INIT" name="Init Desugar Phase" default="sons" include="desug_init.h" >
         <travuser>
-            <node name="GlobalDef"/>
-            <node name="FunBody"/>
-            <node name="VarDec"/>
+            <node name="GlobalDef" />
+            <node name="FunBody" />
+            <node name="VarDec" />
         </travuser>
       </traversal>
       <traversal id="FOR" name="Forloop Desugar Phase" default="sons" include="desug_for.h" >
-        <travuser>
-            <node name="FunBody"/>
-            <node name="ForLoop"/>
-            <node name="Assign"/>
-            <node name="VarLet"/>
-        </travuser>
+          <travuser>
+              <node name="FunBody" />
+              <node name="ForLoop" />
+              <node name="VarLet" />
+          </travuser>
       </traversal>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />

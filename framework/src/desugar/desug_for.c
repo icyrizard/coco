@@ -86,7 +86,7 @@ char* apply_rules(char* id, info *arg_info)
     return id;
 }
 
-
+/* pushes a new identifier name rewrite rule to the rule list. */
 void push(node *forloop, info *arg_info)
 {
     struct var_list *new = MEMmalloc( sizeof(struct var_list));
@@ -94,7 +94,7 @@ void push(node *forloop, info *arg_info)
     new->var_name = STRcpy( VARLET_NAME( ASSIGN_LET(FORLOOP_STARTVALUE( forloop))));
     new->num = arg_info->nest_level;
     new->next = arg_info->vars;
-    arg_info->vars= new;
+    arg_info->vars = new;
 }
 
 
@@ -106,6 +106,10 @@ node *FORfunbody(node *arg_node, info *arg_info)
 
     FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
 
+    /* add the vardecs to head of vardecs */
+    VARDECLIST_NEXT( arg_info->decs_tail) = FUNBODY_VARS( arg_node);
+    FUNBODY_VARS( arg_node) = VARDECLIST_NEXT( arg_info->decs_head);
+
     DBUG_RETURN( arg_node);
 }
 
@@ -114,9 +118,6 @@ node *FORforloop(node *arg_node, info *arg_info)
     node *new_var_dec;
 
     DBUG_ENTER("FORfunbody");
-
-
-    /* add new variable dec to be created  */
 
     /* new loop adds one to nest count */
     arg_info->nest_level++;
@@ -140,11 +141,14 @@ node *FORforloop(node *arg_node, info *arg_info)
     VARLET_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))) = STRcat(VARLET_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))), STRcat( "$", STRitoa( arg_info->nest_level)));
 
     /* create a new var dec */
-    //new_var_dec = TBmakeVardec(TYPE_int, VARLET_NAME( ASSIGN_LET (FORLOOP_STARTVALUE( arg_node))));
+    new_var_dec = TBmakeVardeclist( TBmakeVardec(TYPE_int, TBmakeVarlet( STRcpy(VARLET_NAME( ASSIGN_LET (FORLOOP_STARTVALUE( arg_node))))), NULL), NULL);
+    VARDECLIST_NEXT( arg_info->decs_tail) = new_var_dec;
+    arg_info->decs_tail = new_var_dec;
 
     /* leaving the loop means one less nested count */
     arg_info->nest_level--;
 
+    /* remove the current forloop rewrite rule */
     //pop(arg_info);
 
     DBUG_RETURN( arg_node);
@@ -153,8 +157,6 @@ node *FORforloop(node *arg_node, info *arg_info)
 node *FORvarlet(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("FORvarlet");
-
-    //printf("Varlet: %s\n", VARLET_NAME( arg_node));
 
     if(arg_info->nest_level == 0)
         DBUG_RETURN( arg_node);

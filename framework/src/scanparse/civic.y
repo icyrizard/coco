@@ -37,8 +37,8 @@ static int yyerror( char *errname);
 
 %right LET
 %left OR
-%left AND "&&"
-%nonassoc EQ " 123123" NE "54545"
+%left AND
+%nonassoc EQ NE
 %nonassoc LT LE GT GE
 %left PLUS MINUS
 %left MULT DIV MOD

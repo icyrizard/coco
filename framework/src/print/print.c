@@ -1,20 +1,3 @@
-
-/**
- * @file print.c
- *
- * Functions needed by print traversal.
- *
- */
-
-/**
- * @defgroup print Print Functions.
- *
- * Functions needed by print traversal.
- *
- * @{
- */
-
-
 #include "print.h"
 #include "traverse.h"
 #include "tree_basic.h"
@@ -23,22 +6,11 @@
 #include "globals.h"
 
 
-/*
- * INFO structure
- */
+/***********************   INFO   ***********************/
 struct INFO {
     bool firsterror;
     int indent;
 };
-
-void print_indent( int n)
-{
-    int i = 0;
-
-    for(; i < n; i++)
-        printf("    ");
-
-}
 
 
 #define INFO_FIRSTERROR(n) ((n)->firsterror)
@@ -63,23 +35,18 @@ static info *FreeInfo( info *info)
     return info;
 }
 
+/*****************   Helper Functions   *****************/
+void print_indent( int n)
+{
+    int i = 0;
+
+    for(; i < n; i++)
+        printf("    ");
+}
 
 
-/** <!--******************************************************************-->
- *
- * @fn PRTprogram
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node BinOp node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
-
-node *
-PRTprogram(node * arg_node, info * arg_info)
+/*********************   Traverse   *********************/
+node *PRTprogram(node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTprogram");
 
@@ -90,22 +57,7 @@ PRTprogram(node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-
-/** <!--******************************************************************-->
- *
- * @fn PRTinstr
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node BinOp node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
-
-node *
-PRTassign (node * arg_node, info * arg_info)
+node *PRTassign (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTassign");
 
@@ -119,22 +71,7 @@ PRTassign (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-
-/** <!--******************************************************************-->
- *
- * @fn PRTbinop
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node BinOp node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
-
-node *
-PRTbinop (node * arg_node, info * arg_info)
+node *PRTbinop (node * arg_node, info * arg_info)
 {
     char *tmp;
 
@@ -197,22 +134,7 @@ PRTbinop (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-
-/** <!--******************************************************************-->
- *
- * @fn PRTfloat
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node Float node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
-
-node *
-PRTfloat (node * arg_node, info * arg_info)
+node *PRTfloat (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTfloat");
 
@@ -221,23 +143,7 @@ PRTfloat (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-
-
-/** <!--******************************************************************-->
- *
- * @fn PRTnum
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node Num node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
-
-node *
-PRTnum (node * arg_node, info * arg_info)
+node *PRTnum (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTnum");
 
@@ -246,22 +152,7 @@ PRTnum (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-
-/** <!--******************************************************************-->
- *
- * @fn PRTboolean
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node Boolean node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
-
-node *
-PRTbool (node * arg_node, info * arg_info)
+node *PRTbool (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTbool");
 
@@ -287,19 +178,6 @@ node *PRTvar (node * arg_node, info * arg_info)
 
     DBUG_RETURN (arg_node);
 }
-
-/** <!--******************************************************************-->
- *
- * @fn PRTerror
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node letrec node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
 
 node *PRTerror (node * arg_node, info * arg_info)
 {
@@ -822,16 +700,8 @@ node *PRTparam (node * arg_node, info * arg_info)
 }
 
 
-/** <!-- ****************************************************************** -->
- * @brief Prints the given syntaxtree
- *
- * @param syntaxtree a node structure
- *
- * @return the unchanged nodestructure
- ******************************************************************************/
-
-node
-*PRTdoPrint( node *syntaxtree)
+/******************   START of phase   ******************/
+node *PRTdoPrint( node *syntaxtree)
 {
     info *info;
 
@@ -855,7 +725,3 @@ node
 
     DBUG_RETURN( syntaxtree);
 }
-
-/**
- * @}
- */

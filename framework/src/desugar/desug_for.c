@@ -67,7 +67,7 @@ static info *FreeInfo( info *info)
     return info;
 }
 
-/******************   Help Functions   ******************/
+/*****************   Helper Functions   *****************/
 char* apply_rules(char* id, info *arg_info)
 {
     char *result;
@@ -118,7 +118,6 @@ void reset_info( info *arg_info)
 
 
 /*********************   Traverse   *********************/
-
 node *FORfunbody(node *arg_node, info *arg_info)
 {
     DBUG_ENTER( "FORfunbody");

@@ -1,37 +1,37 @@
 /* ---------------------------------------------------------------------------
- * 
+ *
  * SAC Compiler Construction Framework
- * 
+ *
  * ---------------------------------------------------------------------------
- * 
+ *
  * SAC COPYRIGHT NOTICE, LICENSE, AND DISCLAIMER
- * 
+ *
  * (c) Copyright 1994 - 2011 by
- * 
+ *
  *   SAC Development Team
  *   SAC Research Foundation
- * 
+ *
  *   http://www.sac-home.org
  *   email:info@sac-home.org
- * 
+ *
  *   All rights reserved
- * 
+ *
  * ---------------------------------------------------------------------------
- * 
- * The SAC compiler construction framework, all accompanying 
+ *
+ * The SAC compiler construction framework, all accompanying
  * software and documentation (in the following named this software)
  * is developed by the SAC Development Team (in the following named
  * the developer) which reserves all rights on this software.
- * 
+ *
  * Permission to use this software is hereby granted free of charge
- * exclusively for the duration and purpose of the course 
- *   "Compilers and Operating Systems" 
+ * exclusively for the duration and purpose of the course
+ *   "Compilers and Operating Systems"
  * of the MSc programme Grid Computing at the University of Amsterdam.
  * Redistribution of the software or any parts thereof as well as any
- * alteration  of the software or any parts thereof other than those 
+ * alteration  of the software or any parts thereof other than those
  * required to use the compiler construction framework for the purpose
  * of the above mentioned course are not permitted.
- * 
+ *
  * The developer disclaims all warranties with regard to this software,
  * including all implied warranties of merchantability and fitness.  In no
  * event shall the developer be liable for any special, indirect or
@@ -41,18 +41,18 @@
  * performance of this software. The entire risk as to the quality and
  * performance of this software is with you. Should this software prove
  * defective, you assume the cost of all servicing, repair, or correction.
- * 
+ *
  * ---------------------------------------------------------------------------
- */ 
+ */
 
 
 
 /**
  *
- * @file 
+ * @file
  *
  * This file provides the interface for producing any kind of output during
- * compilation. 
+ * compilation.
  *
  * We have 4 levels of verbosity controlled by the command line option -v
  * and the global variable verbose_level.
@@ -60,21 +60,21 @@
  * Verbose level 0:
  *
  * Only error messages are printed.
- * 
+ *
  * Verbose level 1:
  *
  * Error messages and warnings are printed.
- * 
+ *
  * Verbose level 2:
  *
  * Error messages, warnings and basic compile time information, e.g. compiler
  * phases,  are printed.
- * 
+ *
  * Verbose level 3:
  *
  * Error messages, warnings and full compile time information are printed.
- * 
- * 
+ *
+ *
  * Default values are 1 for the product version and 3 for the developer version.
  *
  */
@@ -92,15 +92,16 @@
 #include "globals.h"
 
 #include "ctinfo.h"
+#include "tree_basic.h"
 
 
 static char *message_buffer=NULL;
 static int message_buffer_size=0;
 static int message_line_length=76;
 
-static char *abort_message_header = "ABORT: ";
-static char *error_message_header = "ERROR: ";
-static char *warn_message_header = "WARNING: ";
+static char *abort_message_header = "abort: ";
+static char *error_message_header = "error: ";
+static char *warn_message_header = "warning: ";
 static char *state_message_header = "";
 static char *note_message_header = "  ";
 
@@ -120,7 +121,7 @@ static int warnings=0;
  *
  *           '@' characters are inserted into the buffer to represent line
  *           breaks.
- *           
+ *
  *   @param buffer  message buffer
  *   @param line_length maximum line length
  *
@@ -136,7 +137,7 @@ void ProcessMessage( char *buffer, int line_length)
   index=0;
   last_space=0;
   column=0;
-  
+
   while (buffer[index]!='\0') {
     if (buffer[index]=='\t') {
       buffer[index]=' ';
@@ -165,7 +166,7 @@ void ProcessMessage( char *buffer, int line_length)
     index++;
     column++;
   }
-  
+
   DBUG_VOID_RETURN;
 }
 
@@ -250,7 +251,7 @@ char *CTIgetErrorMessageVA( int line, const char *format, va_list arg_p)
 
   DBUG_ENTER( "CTIgetErrorMessageVA");
   Format2Buffer( format, arg_p);
-  ProcessMessage( message_buffer, 
+  ProcessMessage( message_buffer,
                   message_line_length - strlen( error_message_header));
 
   first_line = (char *)MEMmalloc( 32 * sizeof( char));
@@ -267,14 +268,14 @@ char *CTIgetErrorMessageVA( int line, const char *format, va_list arg_p)
  *
  * @fn void PrintMessage( const char *header, const char *format, va_list arg_p)
  *
- *   @brief prints message 
+ *   @brief prints message
  *
  *          The message specified by format string and variable number
  *          of arguments is "printed" into the global message buffer.
  *          It is taken care of buffer overflows. Afterwards, the message
  *          is formatted to fit a certain line length and is printed to
  *          stderr.
- *           
+ *
  *   @param header  string which precedes each line of the message, e.g.
                     ERROR or WARNING.
  *   @param format  format string like in printf family of functions
@@ -283,21 +284,21 @@ char *CTIgetErrorMessageVA( int line, const char *format, va_list arg_p)
 
 static
 void PrintMessage( const char *header, const char *format, va_list arg_p)
-{                                                                        
+{
   char *line;
-  
+
   DBUG_ENTER("PrintMessage");
 
   Format2Buffer( format, arg_p);
 
   ProcessMessage( message_buffer, message_line_length - strlen( header));
 
-  line = strtok( message_buffer, "@");                 
-                                                                         
+  line = message_buffer;//strtok( message_buffer, "");
+
   while (line != NULL) {
-    fprintf( stderr, "%s%s\n", header, line);                                      
-    line = strtok( NULL, "@");                                      
-  }                                                                      
+    fprintf( stderr, "%s%s\n", header, line);
+    line = strtok( NULL, "@");
+  }
 
   DBUG_VOID_RETURN;
 }
@@ -308,7 +309,7 @@ void PrintMessage( const char *header, const char *format, va_list arg_p)
  * @fn static void CleanUp()
  *
  *   @brief  does som clean up upon termination
- *           
+ *
  *
  ******************************************************************************/
 
@@ -316,7 +317,7 @@ static
 void CleanUp()
 {
   DBUG_ENTER("CleanUp");
-  
+
   DBUG_VOID_RETURN;
 }
 
@@ -334,9 +335,9 @@ void AbortCompilation()
 {
   DBUG_ENTER("AbortCompilation");
 
-  fprintf( stderr, "\n*** Compilation failed ***\n");               
-  fprintf( stderr, "*** %d Error(s), %d Warning(s)\n\n",            
-           errors, warnings);                 
+  fprintf( stderr, "\n\n*** Compilation failed ***\n");
+  fprintf( stderr, "*** %d Error(s), %d Warning(s)\n\n",
+           errors, warnings);
 
   CleanUp();
 
@@ -355,10 +356,10 @@ void AbortCompilation()
  *
  *           An error message is produced and a bug report is created which
  *           may be sent via email to an appropriate address.
- *           Temporary files are deleted and the compilation process 
+ *           Temporary files are deleted and the compilation process
  *           terminated.
- *           
- *           DBUG_ENTER/RETURN are omitted on purpose to reduce risk of 
+ *
+ *           DBUG_ENTER/RETURN are omitted on purpose to reduce risk of
  *           creating more errors during error handling.
  *
  *   @param sig  signal causing interrupt
@@ -368,7 +369,7 @@ void AbortCompilation()
 static
 void InternalCompilerErrorBreak( int sig)
 {
-  fprintf( stderr, 
+  fprintf( stderr,
            "\n\n"
            "OOOPS your program crashed the compiler 8-((\n\n");
 
@@ -384,12 +385,12 @@ void InternalCompilerErrorBreak( int sig)
  *
  *   @brief  interrupt handler for user-forced breaks like CTRL-C
  *
- *           Temporary files are deleted and the compilation process 
+ *           Temporary files are deleted and the compilation process
  *           terminated.
- *           
- *           DBUG_ENTER/RETURN are omitted on purpose to reduce risk of 
+ *
+ *           DBUG_ENTER/RETURN are omitted on purpose to reduce risk of
  *           creating more errors during error handling.
- *           
+ *
  *   @param sig  signal causing interrupt
  *
  ******************************************************************************/
@@ -434,7 +435,7 @@ void CTIinstallInterruptHandlers( void)
  ******************************************************************************/
 
 void CTIerror( const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIerror");
@@ -446,7 +447,7 @@ void CTIerror( const char *format, ...)
 
   va_end(arg_p);
 
-  errors++; 
+  errors++;
 
   DBUG_VOID_RETURN;
 }
@@ -458,14 +459,14 @@ void CTIerror( const char *format, ...)
  *
  *   @brief  produces an error message preceded by file name and line number.
  *
- *           
+ *
  *   @param line  line number
  *   @param format  format string like in printf
  *
  ******************************************************************************/
 
 void CTIerrorLine( int line, const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIerrorLine");
@@ -473,13 +474,13 @@ void CTIerrorLine( int line, const char *format, ...)
   va_start( arg_p, format);
 
   fprintf( stderr, "\n");
-  fprintf( stderr, "%sline %d\n", 
+  fprintf( stderr, "%sline %d\n",
            error_message_header, line);
   PrintMessage( error_message_header, format, arg_p);
 
   va_end(arg_p);
 
-  errors++; 
+  errors++;
 
   DBUG_VOID_RETURN;
 }
@@ -491,26 +492,26 @@ void CTIerrorLine( int line, const char *format, ...)
  *
  *   @brief  produces an error message preceded by file name and line number.
  *
- *         
+ *
  *   @param line  line number
  *   @param format  format string like in printf
  *
  ******************************************************************************/
 
 void CTIerrorLineVA( int line, const char *format, va_list arg_p)
-{ 
+{
   DBUG_ENTER("CTIerrorLineVA");
- 
+
   fprintf( stderr, "\n");
   fprintf( stderr, "%sline %d\n",
            error_message_header, line);
   PrintMessage( error_message_header, format, arg_p);
 
-  errors++; 
+  errors++;
 
   DBUG_VOID_RETURN;
 }
-  
+
 
 
 
@@ -525,7 +526,7 @@ void CTIerrorLineVA( int line, const char *format, va_list arg_p)
  ******************************************************************************/
 
 void CTIerrorContinued( const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIerrorContinued");
@@ -553,7 +554,7 @@ void CTIerrorContinued( const char *format, ...)
 int CTIgetErrorMessageLineLength( void)
 {
   DBUG_ENTER("CTIgetErrorMessageLineLength");
-  
+
   DBUG_RETURN( message_line_length - strlen( error_message_header));
 }
 
@@ -598,14 +599,14 @@ void CTIabortOnBottom( char *err_msg)
  *
  *   @brief   produces an error message without file name and line number
  *            and terminates the compilation process.
- *           
+ *
  *   @param line  line number
  *   @param format  format string like in printf
  *
  ******************************************************************************/
 
 void CTIabort( const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIabort");
@@ -617,7 +618,7 @@ void CTIabort( const char *format, ...)
 
   va_end(arg_p);
 
-  errors++; 
+  errors++;
 
   AbortCompilation();
 
@@ -631,14 +632,14 @@ void CTIabort( const char *format, ...)
  *
  *   @brief   produces an error message preceded by file name and line number
  *            and terminates the compilation process.
- *           
+ *
  *   @param line  line number
  *   @param format  format string like in printf
  *
  ******************************************************************************/
 
 void CTIabortLine( int line, const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIabortLine");
@@ -652,7 +653,7 @@ void CTIabortLine( int line, const char *format, ...)
 
   va_end(arg_p);
 
-  errors++; 
+  errors++;
 
   AbortCompilation();
 
@@ -675,7 +676,7 @@ void CTIabortOnError( void)
   if (errors > 0) {
     AbortCompilation();
   }
-  
+
   DBUG_VOID_RETURN;
 }
 
@@ -686,14 +687,14 @@ void CTIabortOnError( void)
  * @fn void CTIwarnLine( int line, const char *format, ...)
  *
  *   @brief   produces a warning message preceded by file name and line number.
- *           
+ *
  *   @param line  line number
  *   @param format  format string like in printf
  *
  ******************************************************************************/
 
 void CTIwarnLine( int line, const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIwarnLine");
@@ -706,9 +707,9 @@ void CTIwarnLine( int line, const char *format, ...)
 
     va_end(arg_p);
 
-    warnings++; 
+    warnings++;
   }
-  
+
   DBUG_VOID_RETURN;
 }
 
@@ -725,7 +726,7 @@ void CTIwarnLine( int line, const char *format, ...)
  ******************************************************************************/
 
 void CTIwarn( const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIwarn");
@@ -737,9 +738,9 @@ void CTIwarn( const char *format, ...)
 
     va_end(arg_p);
 
-    warnings++; 
+    warnings++;
   }
-  
+
   DBUG_VOID_RETURN;
 }
 
@@ -755,7 +756,7 @@ void CTIwarn( const char *format, ...)
  ******************************************************************************/
 
 void CTIwarnContinued( const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIwarnContinued");
@@ -767,7 +768,7 @@ void CTIwarnContinued( const char *format, ...)
 
     va_end(arg_p);
   }
-  
+
   DBUG_VOID_RETURN;
 }
 
@@ -785,7 +786,7 @@ void CTIwarnContinued( const char *format, ...)
 int CTIgetWarnMessageLineLength( )
 {
   DBUG_ENTER("CTIgetWarnMessageLineLength");
-  
+
   DBUG_RETURN( message_line_length - strlen( warn_message_header));
 }
 
@@ -802,7 +803,7 @@ int CTIgetWarnMessageLineLength( )
  ******************************************************************************/
 
 void CTIstate( const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTIstate");
@@ -814,7 +815,7 @@ void CTIstate( const char *format, ...)
 
     va_end(arg_p);
   }
-  
+
   DBUG_VOID_RETURN;
 }
 
@@ -830,7 +831,7 @@ void CTIstate( const char *format, ...)
  ******************************************************************************/
 
 void CTInote( const char *format, ...)
-{ 
+{
   va_list arg_p;
 
   DBUG_ENTER("CTInote");
@@ -842,7 +843,7 @@ void CTInote( const char *format, ...)
 
     va_end(arg_p);
   }
-  
+
   DBUG_VOID_RETURN;
 }
 
@@ -859,15 +860,15 @@ void CTInote( const char *format, ...)
 void CTIterminateCompilation( node *syntax_tree)
 {
   DBUG_ENTER("CTIterminateCompilation");
-  
+
   /*
    *  At last, we display a success message.
    */
 
   CTIstate( " ");
   CTIstate( "*** Evaluation successful ***");
-  
-  CTIstate( "*** 0 error(s), %d warning(s)", warnings);     
+
+  CTIstate( "*** 0 error(s), %d warning(s)", warnings);
   CTIstate( " ");
 
   exit( 0);
@@ -882,31 +883,31 @@ void CTIterminateCompilation( node *syntax_tree)
  * @fn void CTIabortOutOfMemory( unsigned int request)
  *
  *   @brief   produces a specific "out of memory" error message
- *            without file name and line number and terminates the 
+ *            without file name and line number and terminates the
  *            compilation process.
- * 
- *            This very special function is needed because the normal 
+ *
+ *            This very special function is needed because the normal
  *            procedure of formatting a message may require further
  *            allocation of memory, which in this very case generates
  *            a vicious circle of error messages instead of terminating
  *            compilation properly.
- *           
+ *
  *   @param request size of requested memory
  *
  ******************************************************************************/
 
 void CTIabortOutOfMemory( unsigned int request)
-{ 
+{
   DBUG_ENTER("CTIabortOutOfMemory");
 
   fprintf( stderr,
 	   "\n"
 	   "%sOut of memory:\n"
 	   "%s %u bytes requested\n",
-	   abort_message_header, 
+	   abort_message_header,
 	   abort_message_header, request);
 
-  errors++; 
+  errors++;
 
   AbortCompilation();
 
@@ -914,3 +915,27 @@ void CTIabortOutOfMemory( unsigned int request)
 }
 
 
+/** <!--********************************************************************-->
+ *
+ * @fn void CTIcustomError( const char *format, ...)
+ *
+ *   @brief  produces an error message with file name and line number.
+ *
+ *   @param format  format string like in printf
+ *
+ ******************************************************************************/
+
+void CTIcustomError(node *n, const char *format, char *name)
+{
+  DBUG_ENTER("CTIerror");
+
+  if(errors == 0)
+      printf("\n");
+
+  fprintf( stderr, "%s:%d: ", global.infile, NODE_LINE(n));
+  fprintf( stderr, format, name);
+
+  errors++;
+
+  DBUG_VOID_RETURN;
+}

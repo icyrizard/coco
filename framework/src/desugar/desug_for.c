@@ -209,7 +209,5 @@ node * DSPdoFor(node *syntaxtree)
 
     info = FreeInfo( info);
 
-    printf("\n\n-------------------------------------\n\n");
-
     DBUG_RETURN( syntaxtree);
 }

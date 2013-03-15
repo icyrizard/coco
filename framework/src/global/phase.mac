@@ -30,7 +30,7 @@ ENDPHASE( ld)
 /******************************************************************************/
 
 PHASE( desugarphase,
-       "Desugar code",
+       "Desugar Code",
        ALWAYS)
 
 SUBPHASE( desug_init,
@@ -49,6 +49,19 @@ ENDPHASE( desugarphase)
 
 /******************************************************************************/
 
+PHASE( contextphase,
+       "Context Analysis",
+       ALWAYS)
+
+SUBPHASE( linkfunctions,
+          "Linking functioncalls with their declaration",
+          CTPdoLinkFun,
+          ALWAYS,
+          contextphase)
+
+ENDPHASE( contextphase)
+
+/******************************************************************************/
 PHASE( cg,
        "Generating Code",
        ALWAYS)

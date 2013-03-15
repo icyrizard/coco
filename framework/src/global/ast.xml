@@ -33,7 +33,7 @@
         <travuser>
           <node name="FunBody" />
           <node name="ForLoop" />
-          <node name="VarLet" />
+          <node name="Var" />
         </travuser>
       </traversal>
 
@@ -51,7 +51,7 @@
           <node name="Param" />
           <node name="FunCall" />
           <node name="VarDec" />
-          <node name="VarLet" />
+          <node name="Var" />
         </travuser>
       </traversal>
 
@@ -83,7 +83,7 @@
     <nodeset name="Expr">
       <target>
         <node name="BinOp" />
-        <node name="VarLet" />
+        <node name="Var" />
         <node name="Num" />
         <node name="Float" />
         <node name="Bool" />
@@ -142,7 +142,7 @@
         <son name="Id">
           <targets>
             <target mandatory="yes">
-              <node name="VarLet" />
+              <node name="Var" />
               <phases>
                 <all />
               </phases>
@@ -171,7 +171,7 @@
         <son name="Id">
           <targets>
             <target mandatory="yes">
-              <node name="VarLet" />
+              <node name="Var" />
               <phases>
                 <all />
               </phases>
@@ -311,7 +311,7 @@
       </attributes>
     </node>
 
-    <node name="VarLet">
+    <node name="Var">
       <sons>
       </sons>
       <attributes>
@@ -347,7 +347,7 @@
         <son name="Let">
           <targets>
             <target mandatory="no">
-              <node name="VarLet" />
+              <node name="Var" />
               <phases>
                 <all />
               </phases>
@@ -465,37 +465,6 @@
       </sons>
     </node>
 
-    <!--    <node name="Var">
-      <sons>
-      </sons>
-      <attributes>
-        <attribute name="Name">
-          <type name="String">
-            <targets>
-              <target mandatory="yes">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-        <attribute name="Decl">
-          <type name="Link">
-            <targets>
-              <target mandatory="no">
-                <any />
-                <phases>
-                  <all />
-                </phases>
-              </target>
-            </targets>
-          </type>
-        </attribute>
-      </attributes>
-  </node>-->
-
     <node name="Const">
       <sons>
       </sons>
@@ -586,7 +555,7 @@
         <son name="Id">
           <targets>
             <target mandatory="yes">
-              <node name="VarLet" />
+              <node name="Var" />
               <phases>
                 <all />
               </phases>
@@ -739,7 +708,7 @@
         <son name="Id">
           <targets>
             <target mandatory="yes">
-              <node name="VarLet" />
+              <node name="Var" />
               <phases>
                 <all />
               </phases>
@@ -804,7 +773,7 @@
         <son name="Id">
           <targets>
             <target mandatory="yes">
-              <node name="VarLet" />
+              <node name="Var" />
               <phases>
                 <all />
               </phases>
@@ -869,7 +838,7 @@
         <son name="Id">
           <targets>
             <target mandatory="yes">
-              <node name="VarLet" />
+              <node name="Var" />
               <phases>
                 <all />
               </phases>

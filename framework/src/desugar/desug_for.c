@@ -92,7 +92,7 @@ void push(node *forloop, info *arg_info)
 {
     struct var_list *new = MEMmalloc( sizeof(struct var_list));
 
-    new->var_name = STRcpy( VARLET_NAME( ASSIGN_LET(FORLOOP_STARTVALUE( forloop))));
+    new->var_name = STRcpy( VAR_NAME( ASSIGN_LET(FORLOOP_STARTVALUE( forloop))));
     new->num = arg_info->nest_level;
     new->next = arg_info->vars;
     arg_info->vars = new;
@@ -161,10 +161,10 @@ node *FORforloop(node *arg_node, info *arg_info)
 
     /* apply rule to loop variable initialization */
     /* TODO wrapper funtion with FREE calls */
-    VARLET_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))) = STRcat(VARLET_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))), STRcat( "$", STRitoa( arg_info->nest_level)));
+    VAR_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))) = STRcat(VAR_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))), STRcat( "$", STRitoa( arg_info->nest_level)));
 
     /* create a new var dec */
-    new_var_dec = TBmakeVardeclist( TBmakeVardec(TYPE_int, TBmakeVarlet( STRcpy(VARLET_NAME( ASSIGN_LET (FORLOOP_STARTVALUE( arg_node))))), NULL), NULL);
+    new_var_dec = TBmakeVardeclist( TBmakeVardec(TYPE_int, TBmakeVar( STRcpy(VAR_NAME( ASSIGN_LET (FORLOOP_STARTVALUE( arg_node))))), NULL), NULL);
     VARDECLIST_NEXT( arg_info->decs_tail) = new_var_dec;
     arg_info->decs_tail = new_var_dec;
 
@@ -177,14 +177,14 @@ node *FORforloop(node *arg_node, info *arg_info)
     DBUG_RETURN( arg_node);
 }
 
-node *FORvarlet(node *arg_node, info *arg_info)
+node *FORvar(node *arg_node, info *arg_info)
 {
-    DBUG_ENTER("FORvarlet");
+    DBUG_ENTER("FORvar");
 
     if(arg_info->nest_level == 0)
         DBUG_RETURN( arg_node);
 
-    VARLET_NAME( arg_node) = apply_rules( VARLET_NAME( arg_node), arg_info);
+    VAR_NAME( arg_node) = apply_rules( VAR_NAME( arg_node), arg_info);
 
 
     DBUG_RETURN( arg_node);

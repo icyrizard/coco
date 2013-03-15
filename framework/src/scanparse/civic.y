@@ -66,7 +66,7 @@ static int yyerror( char *errname);
 
 %type <ctype> basictype
 %type <cmonop> monop
-%type <node> param paramlist varlet
+%type <node> param paramlist var
 
 
 %start start
@@ -107,12 +107,12 @@ declaration: fundec
     }
     ;
 
-funheader: basictype varlet BRACKET_L paramlist BRACKET_R
+funheader: basictype var BRACKET_L paramlist BRACKET_R
     {
         $$ = TBmakeFunheader($1, $2, $4);
 
     }
-    |  VOIDTYPE varlet BRACKET_L paramlist BRACKET_R
+    |  VOIDTYPE var BRACKET_L paramlist BRACKET_R
     {
 
         $$ = TBmakeFunheader(TYPE_void, $2, $4);
@@ -143,25 +143,25 @@ fundef: EXPORTKEY funheader CBRACKET_L funbody CBRACKET_R
     }
     ;
 
-globaldec: EXTERNKEY basictype varlet SEMICOLON
+globaldec: EXTERNKEY basictype var SEMICOLON
     {
         $$ = TBmakeGlobaldec( $2, $3);
     }
     ;
 
-globaldef: EXPORTKEY basictype varlet LET expr SEMICOLON
+globaldef: EXPORTKEY basictype var LET expr SEMICOLON
     {
         $$ = TBmakeGlobaldef($2, TRUE, $3, $5);
     }
-    | EXPORTKEY basictype varlet SEMICOLON
+    | EXPORTKEY basictype var SEMICOLON
     {
         $$ = TBmakeGlobaldef($2, TRUE, $3, NULL);
     }
-    | basictype varlet LET expr SEMICOLON
+    | basictype var LET expr SEMICOLON
     {
         $$ = TBmakeGlobaldef($1, FALSE, $2, $4);
     }
-    | basictype varlet SEMICOLON
+    | basictype var SEMICOLON
     {
         $$ = TBmakeGlobaldef($1, FALSE, $2, NULL);
     }
@@ -217,11 +217,11 @@ vardeclist: vardec vardeclist
     }
     ;
 
-vardec: basictype varlet LET expr SEMICOLON
+vardec: basictype var LET expr SEMICOLON
     {
         $$ = TBmakeVardec( $1, $2, $4);
     }
-    | basictype varlet SEMICOLON
+    | basictype var SEMICOLON
     {
         $$ = TBmakeVardec( $1, $2, NULL);
     }
@@ -236,11 +236,11 @@ statementlist: statement statementlist
         $$ = TBmakeStatementlist( $1, NULL);
     }
     ;
-statement: varlet LET expr SEMICOLON
+statement: var LET expr SEMICOLON
     {
         $$ = TBmakeAssign( $1, $3);
     }
-    | varlet BRACKET_L exprlist BRACKET_R SEMICOLON
+    | var BRACKET_L exprlist BRACKET_R SEMICOLON
     {
         $$ = TBmakeFuncall( $1, $3);
     }
@@ -260,12 +260,12 @@ statement: varlet LET expr SEMICOLON
     {
         $$ = TBmakeDowhileloop( $2, $5);
     }
-    | FORLOOP BRACKET_L INTTYPE varlet LET expr COMMA expr COMMA expr BRACKET_R
+    | FORLOOP BRACKET_L INTTYPE var LET expr COMMA expr COMMA expr BRACKET_R
     block
     {
         $$ = TBmakeForloop( TBmakeAssign($4, $6), $8, $10, $12);
     }
-    | FORLOOP BRACKET_L INTTYPE varlet LET expr COMMA expr BRACKET_R
+    | FORLOOP BRACKET_L INTTYPE var LET expr COMMA expr BRACKET_R
     block
     {
         $$ = TBmakeForloop( TBmakeAssign( $4, $6), $8, NULL, $10);
@@ -328,11 +328,11 @@ expr: BRACKET_L expr BRACKET_R
     {
         $$ = TBmakeCast( $2, $4);
     }
-    | varlet BRACKET_L exprlist BRACKET_R
+    | var BRACKET_L exprlist BRACKET_R
     {
         $$ = TBmakeFuncall( $1, $3);
     }
-    | varlet
+    | var
     {
         $$ = $1;
     }
@@ -356,15 +356,15 @@ paramlist: param COMMA paramlist
     }
     ;
 
-param: basictype varlet
+param: basictype var
     {
         $$ = TBmakeParam( $1, $2);
     }
     ;
 
-varlet: ID
+var: ID
     {
-        $$ = TBmakeVarlet( STRcpy( $1));
+        $$ = TBmakeVar( STRcpy( $1));
     }
     ;
 

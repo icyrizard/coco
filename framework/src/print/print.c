@@ -275,54 +275,15 @@ PRTbool (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-
-/** <!--******************************************************************-->
- *
- * @fn PRTvar
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node letrec node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
-
-/*node *
-PRTvar (node * arg_node, info * arg_info)
+node *PRTvar (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTvar");
 
+    /* print var as string */
     printf( "%s", VAR_NAME( arg_node));
 
-    DBUG_RETURN (arg_node);
-}*/
-
-
-/** <!--******************************************************************-->
- *
- * @fn PRTvarlet
- *
- * @brief Prints the node and its sons/attributes
- *
- * @param arg_node letrec node to process
- * @param arg_info pointer to info structure
- *
- * @return processed node
- *
- ***************************************************************************/
-
-node *
-PRTvarlet (node * arg_node, info * arg_info)
-{
-    DBUG_ENTER ("PRTvarlet");
-
-    /* print varlet as string */
-    printf( "%s", VARLET_NAME( arg_node));
-
-    /* print varlet as its declaration pointer */
-    printf( "<%p>", VARLET_DECL( arg_node));
+    /* print var as its declaration pointer */
+    printf( "<%p>", VAR_DECL( arg_node));
 
     DBUG_RETURN (arg_node);
 }
@@ -340,8 +301,7 @@ PRTvarlet (node * arg_node, info * arg_info)
  *
  ***************************************************************************/
 
-node *
-PRTerror (node * arg_node, info * arg_info)
+node *PRTerror (node * arg_node, info * arg_info)
 {
     bool first_error;
 

@@ -72,13 +72,13 @@ void empty_info_funlist(info *arg_info)
  */
 node* create_new_assign_statement_list(node *id, node *expr)
 {
-    node *new_varlet, *assign;
+    node *new_var, *assign;
 
-    /* Create a copy of the varlet for the new assignment node */
-    new_varlet = TBmakeVarlet( STRcpy( VARLET_NAME( id)));
+    /* Create a copy of the varfor the new assignment node */
+    new_var= TBmakeVar( STRcpy( VAR_NAME( id)));
 
     /* Create a new assign node and store it in a statmentlist */
-    assign = TBmakeAssign( new_varlet, expr);
+    assign = TBmakeAssign( new_var, expr);
 
     return TBmakeStatementlist( assign, NULL);
 }
@@ -176,7 +176,7 @@ node* create_init_fundef(info* info)
 {
     node *header, *body;
 
-    header = TBmakeFunheader( TYPE_void , TBmakeVarlet(STRcpy("__init")), NULL);
+    header = TBmakeFunheader( TYPE_void , TBmakeVar(STRcpy("__init")), NULL);
     body   = TBmakeFunbody( NULL, STATEMENTLIST_NEXT(info->head), NULL);
 
     return TBmakeFundef( FALSE, header, body);

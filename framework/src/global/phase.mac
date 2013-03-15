@@ -59,6 +59,12 @@ SUBPHASE( linkfunctions,
           ALWAYS,
           contextphase)
 
+SUBPHASE( linkvariables,
+          "Linking variables with their declaration",
+          CTPdoLinkVar,
+          ALWAYS,
+          contextphase)
+
 ENDPHASE( contextphase)
 
 /******************************************************************************/

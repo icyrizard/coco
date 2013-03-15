@@ -41,14 +41,14 @@ static int yyerror( char *errname);
 %nonassoc EQ NE
 %nonassoc LT LE GT GE
 %left PLUS MINUS
-%left MULT DIV MOD
+%left MULT "*" DIV "/"  MOD "%"
 %right UNARYMINUS NOT
 %right TYPECAST
 
 %nonassoc IFX
 %nonassoc ELSECOND
 
-%token BRACKET_L BRACKET_R CBRACKET_L CBRACKET_R COMMA SEMICOLON
+%token BRACKET_L BRACKET_R CBRACKET_L CBRACKET_R COMMA SEMICOLON ";"
 %token TRUEVAL FALSEVAL
 
 %token EXTERNKEY EXPORTKEY VOIDTYPE "void" BOOLTYPE INTTYPE FLOATTYPE
@@ -143,7 +143,7 @@ fundef: EXPORTKEY funheader CBRACKET_L funbody CBRACKET_R
     }
     ;
 
-globaldec: EXTERNKEY basictype varlet
+globaldec: EXTERNKEY basictype varlet SEMICOLON
     {
         $$ = TBmakeGlobaldec( $2, $3);
     }

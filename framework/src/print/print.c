@@ -319,10 +319,10 @@ PRTvarlet (node * arg_node, info * arg_info)
     DBUG_ENTER ("PRTvarlet");
 
     /* print varlet as string */
-    printf( "%s_", VARLET_NAME( arg_node));
+    printf( "%s", VARLET_NAME( arg_node));
 
     /* print varlet as its declaration pointer */
-    printf( "%p", VARLET_DECL( arg_node));
+    printf( "<%p>", VARLET_DECL( arg_node));
 
     DBUG_RETURN (arg_node);
 }

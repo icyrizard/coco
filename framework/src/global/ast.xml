@@ -41,16 +41,19 @@
         <travuser>
           <node name="FunHeader" />
           <node name="FunCall" />
-          <node name="GlobalDec" />
+        </travuser>
+      </traversal>
+      <traversal id="LVAR" name="Context Analysis" default="sons" include="link_variables.h">
+        <travuser>
           <node name="GlobalDef" />
+          <node name="GlobalDec" />
+          <node name="FunDef" />
+          <node name="Param" />
+          <node name="FunCall" />
+          <node name="VarDec" />
           <node name="VarLet" />
         </travuser>
       </traversal>
-      <!--<traversal id="LVAR" name="Context Analysis" default="sons" include="link_variables.h">
-        <travuser>
-
-        </travuser>
-    </traversal>-->
 
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />

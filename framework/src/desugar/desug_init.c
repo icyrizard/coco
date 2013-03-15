@@ -189,11 +189,20 @@ node* create_init_fundef(info* info)
  * Returns the new root node
  *
  **/
-node* add_init( node *syntaxtree, info *info)
+void add_init( node *syntaxtree, info *info)
 {
+    node *curr;
     node *__init = create_init_fundef( info);
 
-    return TBmakeProgram( __init, syntaxtree);
+    curr = syntaxtree;
+
+    while(PROGRAM_NEXT(curr) != NULL) {
+        curr = PROGRAM_NEXT(curr);
+    }
+
+    PROGRAM_NEXT(curr) = TBmakeProgram(__init, NULL);
+
+    //return TBmakeProgram( __init, syntaxtree);
 }
 
 node * DSPdoInit(node *syntaxtree)
@@ -210,7 +219,7 @@ node * DSPdoInit(node *syntaxtree)
 
     syntaxtree = TRAVdo( syntaxtree, info);
 
-    syntaxtree = add_init( syntaxtree, info);
+    add_init( syntaxtree, info);
 
     TRAVpop();
 

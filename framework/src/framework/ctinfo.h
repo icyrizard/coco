@@ -83,6 +83,7 @@ extern void CTIabortOutOfMemory( unsigned int request);
 
 extern void CTIerrorLineVA( int line, const char *format, va_list arg_p);
 extern void CTIcustomError(node *n, const char *format, char *name);
+extern void CTIcustomErrorI(int line, const char *format, char *name);
 
 
 #endif   /* _SAC_CTINFO_H_ */

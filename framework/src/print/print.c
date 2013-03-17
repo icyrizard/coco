@@ -1,3 +1,5 @@
+/***   Print tree phase for debugging purposes   ***/
+
 #include "print.h"
 #include "traverse.h"
 #include "tree_basic.h"
@@ -178,6 +180,7 @@ node *PRTvar (node * arg_node, info * arg_info)
 
     DBUG_RETURN (arg_node);
 }
+
 
 node *PRTerror (node * arg_node, info * arg_info)
 {
@@ -709,7 +712,7 @@ node *PRTdoPrint( node *syntaxtree)
 
     DBUG_ASSERT( (syntaxtree!= NULL), "PRTdoPrint called with empty syntaxtree");
 
-    printf( "\n\n------------------------------\n\n");
+    fprintf(stderr, "\n\n------------------------------\n\n");
 
     info = MakeInfo();
 
@@ -721,7 +724,7 @@ node *PRTdoPrint( node *syntaxtree)
 
     info = FreeInfo(info);
 
-    printf( "\n\n------------------------------\n\n");
+    fprintf(stderr, "\n\n------------------------------\n\n");
 
     DBUG_RETURN( syntaxtree);
 }

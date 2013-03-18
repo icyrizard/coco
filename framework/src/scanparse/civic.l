@@ -83,10 +83,9 @@ void yyerror(char *s)
 
 [0-9]+                     { yylval.cint=atoi(yytext);
                              FILTER( NUM);
-                             printf("NUM FOUND: %s\n", yytext);
                            }
 
-[0-9]+\.[0-9]+             { yylval.cint=atof(yytext);
+[0-9]+\.[0-9]+             { yylval.cflt=atof(yytext);
                              FILTER( FLOAT);
                            }
 

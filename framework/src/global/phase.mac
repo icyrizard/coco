@@ -52,7 +52,7 @@ PHASE( contextphase,
        "Context Analysis",
        ALWAYS)
 
-/*SUBPHASE( linkfunctions,
+SUBPHASE( linkfunctions,
           "Linking functioncalls with their declaration",
           CTPdoLinkFun,
           ALWAYS,
@@ -62,7 +62,7 @@ SUBPHASE( linkvariables,
           "Linking variables with their declaration",
           CTPdoLinkVar,
           ALWAYS,
-          contextphase)*/
+          contextphase)
 
 SUBPHASE( typechecking,
           "type checking",

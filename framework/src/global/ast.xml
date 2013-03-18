@@ -36,6 +36,24 @@
           <node name="Var" />
         </travuser>
       </traversal>
+      <traversal id="LFUN" name="Context Analysis" default="sons" include="link_functions.h">
+        <travuser>
+          <node name="FunHeader" />
+          <node name="FunCall" />
+        </travuser>
+      </traversal>
+      <traversal id="LVAR" name="Context Analysis" default="sons" include="link_variables.h">
+        <travuser>
+          <node name="GlobalDef" />
+          <node name="GlobalDec" />
+          <node name="FunDef" />
+          <node name="FunHeader" />
+          <node name="Param" />
+          <node name="FunCall" />
+          <node name="VarDec" />
+          <node name="Var" />
+        </travuser>
+      </traversal>
       <traversal id="TCHECK" name="Context Analysis" default="sons" include="contextphase_type.h">
         <travuser>
           <node name="Assign"/>

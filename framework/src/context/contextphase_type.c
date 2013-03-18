@@ -51,18 +51,13 @@ node *TCHECKassign(node *arg_node, info *arg_info)
 
 node *TCHECKvar(node *arg_node, info *arg_info)
 {
-    DBUG_ENTER("TCHECKvardec");
-    DBUG_RETURN(arg_node);
-}
-
-node *TCHECKvar(node *arg_node, info *arg_info)
-{
     DBUG_ENTER("TCHECKvar");
     type t = VARDEC_TYPE(VAR_DECL(arg_node));
 
-    if (arg_info->t != NULL){
-        if (arg_info->t != t)
+    if (arg_info->t != TYPE_unknown){
+        if (arg_info->t != t){
             DBUG_ASSERT(0, "type mismatch");
+        }
 
         arg_info->t = t;
     }
@@ -80,7 +75,7 @@ node * CTPdoTypeCheck(node *syntaxtree)
 
     info = MakeInfo();
 
-    TRAVpush(TR_typecheck);
+    TRAVpush(TR_tcheck);
 
     syntaxtree = TRAVdo( syntaxtree, info);
 

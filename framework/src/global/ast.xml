@@ -47,6 +47,7 @@
           <node name="GlobalDef" />
           <node name="GlobalDec" />
           <node name="FunDef" />
+          <node name="FunHeader" />
           <node name="Param" />
           <node name="FunCall" />
           <node name="VarDec" />

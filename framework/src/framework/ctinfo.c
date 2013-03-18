@@ -102,7 +102,7 @@ static int message_line_length=76;
 static char *abort_message_header = "abort: ";
 static char *error_message_header = "error: ";
 static char *warn_message_header = "warning: ";
-static char *state_message_header = "";
+//static char *state_message_header = "";
 static char *note_message_header = "  ";
 
 
@@ -293,7 +293,7 @@ void PrintMessage( const char *header, const char *format, va_list arg_p)
 
   ProcessMessage( message_buffer, message_line_length - strlen( header));
 
-  line = message_buffer;//strtok( message_buffer, "");
+  line = strtok( message_buffer, "");
 
   while (line != NULL) {
     fprintf( stderr, "%s%s\n", header, line);
@@ -438,12 +438,14 @@ void CTIerror( const char *format, ...)
 {
   va_list arg_p;
 
+  if(errors == 0)
+      fprintf( stderr, "\n\n");
+
   DBUG_ENTER("CTIerror");
 
   va_start( arg_p, format);
 
-  fprintf( stderr, "\n");
-  PrintMessage( error_message_header, format, arg_p);
+  PrintMessage( global.infile, format, arg_p);
 
   va_end(arg_p);
 
@@ -811,7 +813,7 @@ void CTIstate( const char *format, ...)
   if (global.verbosity >= 3) {
     va_start( arg_p, format);
 
-    PrintMessage( state_message_header, format, arg_p);
+    PrintMessage( global.infile, format, arg_p);
 
     va_end(arg_p);
   }
@@ -933,6 +935,21 @@ void CTIcustomError(node *n, const char *format, char *name)
       printf("\n");
 
   fprintf( stderr, "%s:%d: ", global.infile, NODE_LINE(n));
+  fprintf( stderr, format, name);
+
+  errors++;
+
+  DBUG_VOID_RETURN;
+}
+
+void CTIcustomErrorI(int line, const char *format, char *name)
+{
+  DBUG_ENTER("CTIerror");
+
+  if(errors == 0)
+      printf("\n");
+
+  fprintf( stderr, "%s:%d: ", global.infile, line);
   fprintf( stderr, format, name);
 
   errors++;

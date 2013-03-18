@@ -35,33 +35,69 @@ static int yyerror( char *errname);
 
 %error-verbose
 
+/* some token declaration for error printing */
+%token LET "="
+%token OR "||"
+%token AND "&&"
+%token EQ "=="
+%token NE "!="
+%token LT "<"
+%token LE "<="
+%token GT ">"
+%token GE ">="
+%token PLUS "+"
+%token MINUS "-"
+%token MULT "*"
+%token DIV "/"
+%token MOD "%"
+%token UNARYMINUS
+%token TYPECAST "cast"
+%token BRACKET_L "("
+%token BRACKET_R ")"
+%token CBRACKET_L "{"
+%token CBRACKET_R "}"
+%token COMMA ","
+%token SEMICOLON ";"
+%token TRUEVAL "true"
+%token FALSEVAL "false"
+%token EXTERNKEY "extern"
+%token EXPORTKEY "export"
+%token VOIDTYPE "void"
+%token BOOLTYPE "bool"
+%token INTTYPE "int"
+%token FLOATTYPE "float"
+
+%token IFCOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
+%token <cint> NUM
+%token <cflt> FLOAT
+%token <id> ID "identifier"
+
 %right LET
 %left OR
 %left AND
 %nonassoc EQ NE
 %nonassoc LT LE GT GE
 %left PLUS MINUS
-%left MULT "*" DIV "/"  MOD "%"
-%right UNARYMINUS NOT
+%left MULT DIV  MOD
+%right UNARYMINUS NOT "!"
 %right TYPECAST
 
 %nonassoc IFX
 %nonassoc ELSECOND
 
-%token BRACKET_L BRACKET_R CBRACKET_L CBRACKET_R COMMA SEMICOLON ";"
-%token TRUEVAL FALSEVAL
 
-%token EXTERNKEY EXPORTKEY VOIDTYPE "void" BOOLTYPE INTTYPE FLOATTYPE
-%token IFCOND WHILELOOP DOLOOP FORLOOP RETURNSTMT NOT
 
-%token <cint> NUM
-%token <cflt> FLOAT
-%token <id> ID
 
-%type <node> intval floatval boolval constant expr
-%type <node> declaration program start
-%type <node> fundec fundef funheader statementlist vardeclist
-%type <node> vardec funbody statement returnstatement block
+%type <node> intval floatval boolval constant
+%type <node> expr "expression"
+%type <node> declaration "declaration"
+%type <node> program start
+%type <node> fundec "function declaration"
+%type <node> fundef "function definition"
+%type <node> funheader "function header"
+%type <node> statementlist vardeclist
+%type <node> vardec "variable declaratoin"
+%type <node> funbody statement returnstatement block
 %type <node> globaldec globaldef exprlist
 
 %type <ctype> basictype
@@ -417,8 +453,8 @@ basictype: BOOLTYPE    { $$ = TYPE_bool; }
 
 static int yyerror( char *error)
 {
-  CTIabort( "line %d, col %d\nError parsing source code: %s\n",
-            global.line + 1, global.col, error);
+  CTIcustomErrorI(global.line + 1, "%s\n",
+            error);
 
   return( 0);
 }

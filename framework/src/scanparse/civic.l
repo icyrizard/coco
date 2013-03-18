@@ -111,6 +111,6 @@ void yyerror(char *s)
 
 
 .                          { global.col += 1;
-                             CTIerror("stray '%s' in program",
-                             STRcpy(yytext));
+                             CTIerror(":%d: error: stray '%s' in program",
+                              global.line, STRcpy(yytext));
                            }

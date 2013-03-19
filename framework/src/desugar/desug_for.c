@@ -8,7 +8,7 @@
 #include "str.h"
 #include "string.h"
 
-/* TODO create wrapper functions!!! */
+/* TODO use custom list structure */
 
 /***********************   INFO   ***********************/
 /* INFO object containing two linked list.
@@ -124,9 +124,9 @@ node *FORfunbody(node *arg_node, info *arg_info)
 
     FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
 
-    /* add the vardecs to head of vardecs */
-    VARDECLIST_NEXT( arg_info->decs_tail) = FUNBODY_VARS( arg_node);
-    FUNBODY_VARS( arg_node) = VARDECLIST_NEXT( arg_info->decs_head);
+    /* add the local vardecs to tail of forloop vardecs */
+    VARDECLIST_NEXT(arg_info->decs_tail) = FUNBODY_VARS( arg_node);
+    FUNBODY_VARS(arg_node) = VARDECLIST_NEXT( arg_info->decs_head);
 
     /* reset info struct by emptying the vardec list
      * and removing all the rules */
@@ -184,7 +184,6 @@ node *FORvar(node *arg_node, info *arg_info)
         DBUG_RETURN( arg_node);
 
     VAR_NAME( arg_node) = apply_rules( VAR_NAME( arg_node), arg_info);
-
 
     DBUG_RETURN( arg_node);
 }

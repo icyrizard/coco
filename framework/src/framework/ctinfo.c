@@ -154,7 +154,7 @@ void ProcessMessage( char *buffer, int line_length)
     else {
       if (column==line_length) {
         if (buffer[last_space]==' ') {
-          buffer[last_space]='@';
+          buffer[last_space]=' ';
           column=index-last_space;
         }
         else {
@@ -293,12 +293,13 @@ void PrintMessage( const char *header, const char *format, va_list arg_p)
 
   ProcessMessage( message_buffer, message_line_length - strlen( header));
 
-  line = strtok( message_buffer, "");
+  //line = strtok( message_buffer, "@");
+  line = message_buffer;
 
-  while (line != NULL) {
+  //while (line != NULL) {
     fprintf( stderr, "%s%s\n", header, line);
-    line = strtok( NULL, "@");
-  }
+    //line = strtok( NULL, "@");
+  //}
 
   DBUG_VOID_RETURN;
 }

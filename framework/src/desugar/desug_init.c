@@ -134,7 +134,7 @@ node *INITfunbody(node * arg_node, info * arg_info)
     /* Traverse all local variable declarations of the function.
      * Assignment will be removed and stored in the info structure */
     if(FUNBODY_VARS( arg_node) != NULL)
-        FUNBODY_VARS( arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
+        FUNBODY_VARS(arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
 
     if(!list_length(arg_info->local_assigns) == 0) {
         FUNBODY_STATEMENTS( arg_node) = concat_statements(

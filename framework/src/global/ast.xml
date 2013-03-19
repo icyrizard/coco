@@ -36,14 +36,13 @@
           <node name="Var" />
         </travuser>
       </traversal>
-
-      <traversal id="LFUN" name="Context Analysis" default="sons" include="link_functions.h">
+      <traversal id="LFUN" name="Link Functions" default="sons" include="link_functions.h">
         <travuser>
           <node name="FunHeader" />
           <node name="FunCall" />
         </travuser>
       </traversal>
-      <traversal id="LVAR" name="Context Analysis" default="sons" include="link_variables.h">
+      <traversal id="LVAR" name="Link Variables" default="sons" include="link_variables.h">
         <travuser>
           <node name="GlobalDef" />
           <node name="GlobalDec" />
@@ -55,7 +54,24 @@
           <node name="Var" />
         </travuser>
       </traversal>
-
+      <traversal id="TYPE" name="Type Checking" default="sons" include="type_check.h">
+        <travnone>
+          <node name="Funheader" />
+        </travnone>
+        <travuser>
+          <node name="FunDef" />
+          <node name="FunHeader" />
+          <node name="FunBody" />
+          <node name="FunCall" />
+          <node name="BinOp" />
+          <node name="Assign" />
+          <node name="Var" />
+          <node name="Num" />
+          <node name="Float" />
+          <node name="Bool" />
+          <node name="ConditionIf" />
+        </travuser>
+      </traversal>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />
       <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h" />
@@ -565,7 +581,7 @@
         </son>
         <son name="Arguments">
           <targets>
-            <target mandatory="yes">
+            <target mandatory="no">
               <node name="ExprList" />
               <phases>
                 <all />

@@ -79,5 +79,5 @@ print       = print.o
 
 desugar 		= desug_init.o desug_for.o
 
-context 		= link_functions.o link_variables.o
+context 		= link_functions.o link_variables.o type_check.o
 

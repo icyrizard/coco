@@ -45,6 +45,7 @@ SUBPHASE( desug_for,
           ALWAYS,
           desugarphase)
 
+
 ENDPHASE( desugarphase)
 
 /******************************************************************************/
@@ -54,15 +55,21 @@ PHASE( contextphase,
        ALWAYS)
 
 SUBPHASE( linkfunctions,
-          "Linking functioncalls with their declaration",
+          "Linking functions",
           CTPdoLinkFun,
-          ALWAYS,
+          NEVER,
           contextphase)
 
 SUBPHASE( linkvariables,
-          "Linking variables with their declaration",
+          "Linking variables",
           CTPdoLinkVar,
-          ALWAYS,
+          NEVER,
+          contextphase)
+
+SUBPHASE( typecheck,
+          "Type checking",
+          CTPdoType,
+          NEVER,
           contextphase)
 
 ENDPHASE( contextphase)

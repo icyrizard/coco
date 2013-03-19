@@ -149,7 +149,7 @@ node *PRTnum (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("PRTnum");
 
-    printf( "%i", NUM_VALUE( arg_node));
+    printf("%d", NUM_VALUE( arg_node));
 
     DBUG_RETURN (arg_node);
 }
@@ -176,7 +176,7 @@ node *PRTvar (node * arg_node, info * arg_info)
     printf( "%s", VAR_NAME( arg_node));
 
     /* print var as its declaration pointer */
-    printf( "<%p>", VAR_DECL( arg_node));
+    //printf( "<%p>", VAR_DECL( arg_node));
 
     DBUG_RETURN (arg_node);
 }
@@ -340,7 +340,7 @@ node *PRTcast (node * arg_node, info * arg_info)
 
     DBUG_ENTER ("PRTcast");
 
-    printf("(");
+    printf("((");
 
     switch (CAST_TYPE( arg_node)) {
       case TYPE_bool:
@@ -358,12 +358,13 @@ node *PRTcast (node * arg_node, info * arg_info)
       case TYPE_unknown:
         DBUG_ASSERT( 0, "unknown type detected!");
     }
-    printf(")");
+    printf("%s)", tmp);
 
     CAST_RIGHT( arg_node) = TRAVdo( CAST_RIGHT( arg_node), arg_info);
 
-    DBUG_RETURN (arg_node);
+    printf(")");
 
+    DBUG_RETURN (arg_node);
 }
 
 node *PRTconditionif (node * arg_node, info * arg_info)

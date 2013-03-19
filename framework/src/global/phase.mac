@@ -45,7 +45,6 @@ SUBPHASE( desug_for,
           ALWAYS,
           desugarphase)
 
-
 ENDPHASE( desugarphase)
 
 /******************************************************************************/
@@ -72,9 +71,16 @@ SUBPHASE( typecheck,
           NEVER,
           contextphase)
 
+SUBPHASE( typechecking,
+          "type checking",
+          CTPdoTypeCheck,
+          NEVER,
+          contextphase)
+
 ENDPHASE( contextphase)
 
 /******************************************************************************/
+
 PHASE( cg,
        "Generating Code",
        ALWAYS)

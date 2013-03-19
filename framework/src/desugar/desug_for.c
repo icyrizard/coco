@@ -1,5 +1,5 @@
 #include "types.h"
-#include "desug_init.h"
+#include "desug_for.h"
 #include "memory.h"
 #include "dbug.h"
 #include "tree_basic.h"
@@ -7,6 +7,7 @@
 #include "globals.h"
 #include "str.h"
 #include "string.h"
+#include "list_hash.h"
 
 /* TODO use custom list structure */
 
@@ -33,9 +34,11 @@ struct var_list {
 struct INFO {
     int nest_level;
 
-    struct var_list *vars;
-    node *decs_head,
-         *decs_tail;
+    //struct var_list *vars;
+    //node *decs_head,
+    //     *decs_tail;
+    list *vardeclist;
+    hashmap *hashvars;
 };
 
 /* MakeInfo allocates a new info 'object'
@@ -48,12 +51,14 @@ static info *MakeInfo()
 
     /* alloc info object and initialize it */
     result = MEMmalloc(sizeof(info));
-    result->nest_level = 0;
-    result->vars = NULL;
+    //result->nest_level = 0;
+    //result->vars = NULL;
+    result->vardeclist = list_create();
+    result->hashvars = hashmap_create();
 
     /* initialize var dec list with a dummy head */
-    result->decs_head = TBmakeVardeclist(NULL, NULL);
-    result->decs_tail = result->decs_head;
+    //result->decs_head = TBmakeVardeclist(NULL, NULL);
+    //result->decs_tail = result->decs_head;
 
     return result;
 }
@@ -70,17 +75,11 @@ static info *FreeInfo( info *info)
 /*****************   Helper Functions   *****************/
 char* apply_rules(char* id, info *arg_info)
 {
-    char *result;
-    struct var_list *curr = arg_info->vars;
-
-    while(curr != NULL) {
-        if(!strcmp(curr->var_name, id)) {
-            result = STRcat(id, STRcat( "$", STRitoa( curr->num)));
-            MEMfree(id);
-            return result;
-        }
-
-        curr = curr->next;
+    char *result, *rename;
+    //rename = hashmap_get(arg_info->hashvars, id);
+    if((rename = hashmap_get(arg_info->hashvars, id)) != NULL) {
+        result = STRcpy(rename);
+        return result;
     }
 
     /* no match found */
@@ -90,30 +89,69 @@ char* apply_rules(char* id, info *arg_info)
 /* pushes a new identifier name rewrite rule to the rule list. */
 void push(node *forloop, info *arg_info)
 {
-    struct var_list *new = MEMmalloc( sizeof(struct var_list));
+    char *varname = STRcpy( VAR_NAME( ASSIGN_LET(FORLOOP_STARTVALUE( forloop))));
+    char *rename = STRcpy(STRcat(varname, STRcat("$", STRitoa(arg_info->nest_level))));
 
-    new->var_name = STRcpy( VAR_NAME( ASSIGN_LET(FORLOOP_STARTVALUE( forloop))));
-    new->num = arg_info->nest_level;
-    new->next = arg_info->vars;
-    arg_info->vars = new;
+    printf("rename: %s to %s \n", varname, rename);
+    hashmap_add(arg_info->hashvars, varname, rename);
+    //struct var_list *new = MEMmalloc( sizeof(struct var_list));
+    //new->num = arg_info->nest_level;
+    //new->next = arg_info->vars;
+    //arg_info->vars = new;
 }
 
 /* pop the top identifier name rewrite rule of the rule list. */
 void pop(info *arg_info)
 {
-    arg_info->vars = arg_info->vars->next;
+    hashmap_pop(arg_info->hashvars);
+    //arg_info->vars = arg_info->vars->next;
 
 }
 
 void reset_info( info *arg_info)
 {
+    /*empty list*/
+    list_empty(arg_info->vardeclist);
+    /*empty hashmap*/
+    hashmap_empty(arg_info->hashvars);
+
     /* empty vardec list */
-    VARDECLIST_NEXT( arg_info->decs_tail) = NULL;
-    arg_info->decs_tail = arg_info->decs_head;
+    //VARDECLIST_NEXT( arg_info->decs_tail) = NULL;
+    //arg_info->decs_tail = arg_info->decs_head;
 
     /* remove all rules */
     /* TODO MEMfree all allocated strings in arg_info->vars */
-    arg_info->vars = NULL;
+}
+
+
+/**
+ * Create vardeclist nodes from list nodes.
+ */
+node *create_vardeclist(list *vardecs)
+{
+    node *vardeclist = NULL;
+
+    while((vardecs = vardecs->next)){
+        vardeclist = TBmakeVardeclist(vardecs->value, vardeclist);
+    }
+
+    return vardeclist;
+}
+
+/**
+ * Concatenate vardeclist nodes and append original vardeclist
+ * of Funbody
+ */
+node *concat_vardeclist(node *vars, list *vardecs){
+    node *vardec_list = create_vardeclist(vardecs);
+    node *tail = vardec_list;
+
+    while(VARDECLIST_NEXT(tail)){
+        tail = VARDECLIST_NEXT(tail);
+    }
+
+    VARDECLIST_NEXT(tail) = vars;
+    return vardec_list;
 }
 
 
@@ -125,9 +163,11 @@ node *FORfunbody(node *arg_node, info *arg_info)
     FUNBODY_STATEMENTS( arg_node) = TRAVopt( FUNBODY_STATEMENTS( arg_node), arg_info);
 
     /* add the local vardecs to tail of forloop vardecs */
-    VARDECLIST_NEXT(arg_info->decs_tail) = FUNBODY_VARS( arg_node);
-    FUNBODY_VARS(arg_node) = VARDECLIST_NEXT( arg_info->decs_head);
-
+    if(!list_length(arg_info->vardeclist) == 0) {
+        FUNBODY_VARS(arg_node) =
+            concat_vardeclist(FUNBODY_VARS(arg_node), arg_info->vardeclist);
+        list_empty(arg_info->vardeclist);
+    }
     /* reset info struct by emptying the vardec list
      * and removing all the rules */
     reset_info(arg_info);
@@ -163,16 +203,14 @@ node *FORforloop(node *arg_node, info *arg_info)
     VAR_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))) = STRcat(VAR_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))), STRcat( "$", STRitoa( arg_info->nest_level)));
 
     /* create a new var dec */
-    new_var_dec = TBmakeVardeclist( TBmakeVardec(TYPE_int, TBmakeVar( STRcpy(VAR_NAME( ASSIGN_LET (FORLOOP_STARTVALUE( arg_node))))), NULL), NULL);
-    VARDECLIST_NEXT( arg_info->decs_tail) = new_var_dec;
-    arg_info->decs_tail = new_var_dec;
+    new_var_dec = TBmakeVardec(TYPE_int, TBmakeVar( STRcpy(VAR_NAME( ASSIGN_LET (FORLOOP_STARTVALUE( arg_node))))), NULL);
 
+    list_addtoend(arg_info->vardeclist, new_var_dec);
     /* leaving the loop means one less nested count */
     arg_info->nest_level--;
 
     /* remove the current forloop rewrite rule */
     pop(arg_info);
-
     DBUG_RETURN( arg_node);
 }
 

@@ -1,5 +1,5 @@
 #include "types.h"
-#include "context_type.h"
+#include "contextphase_type.h"
 #include "memory.h"
 #include "dbug.h"
 #include "tree_basic.h"
@@ -35,12 +35,6 @@ static info *FreeInfo( info *info)
     return info;
 }
 
-node *TYPEassign(node *arg_node, node *arg_info){
-    DBUG_ENTER ("TYPEassign");
-    type t_expected = VARDEC_TYPE(VAR_DECL(ASSIGN_LET(arg_node)));
-    TRAVdo(ASSIGN_EXPR(arg_node));
-    DBUG_RETURN(arg_node);
-}
 
 void type_to_string(type t, char *type_str){
      switch (VARDEC_TYPE( arg_node)) {
@@ -66,14 +60,50 @@ node *TYPEvar(node *arg_node, info *arg_info){
     type t = VARDEC_TYPE(VAR_DECL(arg_node));
 
     /* compare to expected type */
-    if(t != arg_info->t){
-        DBUG_ASSERT(0, "type mismatch %s and %s",
-                type_to_string(t, type_str), type_to_string(arg_info->t, type_str);
+    if (arg_info->t != TYPE_unknown){
+        if(t != arg_info->t){
+            DBUG_ASSERT(0, "type mismatch %s and %s",
+                    type_to_string(t, type_str), type_to_string(arg_info->t, type_str);
+        }
+
+        arg_info->t = t;
     }
 
     DBUG_RETURN(arg_node);
 }
+node *TCHECKassign(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("TCHECKassign");
+    type t_expected = VARDEC_TYPE(VAR_DECL(ASSIGN_LET(arg_node)));
+    arg_info->t = t_expected;
 
+    /*default type*/
+    type tdef = TYPE_unknown;
+
+    /*traverse tree*/
+    TRAVdo(ASSIGN_EXPR(arg_node), arg_info);
+
+    /*set back to default*/
+    arg_info->t = tdef;
+
+    DBUG_RETURN(arg_node);
+}
+
+node *TCHECKvar(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("TCHECKvar");
+    type t = VARDEC_TYPE(VAR_DECL(arg_node));
+
+    if (arg_info->t != TYPE_unknown){
+        if (arg_info->t != t){
+            DBUG_ASSERT(0, "type mismatch");
+        }
+
+        arg_info->t = t;
+    }
+
+    DBUG_RETURN(arg_node);
+}
 
 node * CTPdoTypeCheck(node *syntaxtree)
 {
@@ -85,7 +115,7 @@ node * CTPdoTypeCheck(node *syntaxtree)
 
     info = MakeInfo();
 
-    TRAVpush(TR_typecheck);
+    TRAVpush(TR_tcheck);
 
     syntaxtree = TRAVdo( syntaxtree, info);
 

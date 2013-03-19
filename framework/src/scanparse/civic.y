@@ -320,7 +320,8 @@ block: CBRACKET_L statementlist CBRACKET_R
 
 exprlist:  /* empty */
     {
-        $$ = TBmakeExprlist( NULL, NULL);
+        //$$ = TBmakeExprlist( NULL, NULL);
+        $$ = NULL;
     }
     | expr COMMA exprlist
     {

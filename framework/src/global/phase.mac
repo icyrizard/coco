@@ -44,7 +44,6 @@ SUBPHASE( desug_for,
           DSPdoFor,
           ALWAYS,
           desugarphase)
-
 ENDPHASE( desugarphase)
 
 /******************************************************************************/
@@ -65,9 +64,16 @@ SUBPHASE( linkvariables,
           ALWAYS,
           contextphase)
 
+SUBPHASE( typechecking,
+          "type checking",
+          CTPdoTypeCheck,
+          ALWAYS,
+          contextphase)
+
 ENDPHASE( contextphase)
 
 /******************************************************************************/
+
 PHASE( cg,
        "Generating Code",
        ALWAYS)

@@ -53,6 +53,7 @@ static info *MakeInfo()
     result = MEMmalloc(sizeof(info));
     result->vardeclist = list_create();
     result->hashvars = hashmap_create();
+    result->nest_level = 0;
 
     /* initialize var dec list with a dummy head */
 
@@ -174,7 +175,6 @@ node *FORforloop(node *arg_node, info *arg_info)
     stop = FORLOOP_STOPVALUE(arg_node);
     step = FORLOOP_STEPVALUE(arg_node);
 
-
     /* traverse loop intialization, stopvalue and stepvalue expressions
      * to apply the id renaming rules of outer loops
      */
@@ -185,13 +185,12 @@ node *FORforloop(node *arg_node, info *arg_info)
     /* add new rewrite rule of current for loop */
     push(arg_node, arg_info);
 
-    /* traverse the statements inside the loop and apply all id renamin rules
-     * */
+    /* traverse the statements inside the loop and apply all id renamin rules */
     FORLOOP_BLOCK ( arg_node) = TRAVopt( FORLOOP_BLOCK( arg_node), arg_info);
 
     /* apply rule to loop variable initialization */
     /* TODO wrapper funtion with FREE calls */
-    VAR_NAME ( ASSIGN_LET ( FORLOOP_STARTVALUE( arg_node))) = STRcat(VAR_NAME ( ASSIGN_LET ( start)), STRcat( "$", STRitoa( arg_info->nest_level)));
+    VAR_NAME ( ASSIGN_LET ( start)) = STRcat(VAR_NAME ( ASSIGN_LET ( start)), STRcat( "$", STRitoa( arg_info->nest_level)));
 
     /* create a new var dec */
     if(!list_contains_fun(arg_info->vardeclist, VAR_NAME( ASSIGN_LET (start)), check_dup_decl)) {

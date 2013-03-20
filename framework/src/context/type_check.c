@@ -447,6 +447,9 @@ node *TYPEforloop(node *arg_node, info *arg_info)
                 NODE_LINE(ASSIGN_EXPR(FORLOOP_STOPVALUE(arg_node))));
     }
 
+    /* type check the statements in the forloop */
+    TRAVdo(FORLOOP_BLOCK(arg_node), arg_info);
+
     DBUG_RETURN(arg_node);
 }
 

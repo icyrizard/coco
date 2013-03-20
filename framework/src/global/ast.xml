@@ -55,9 +55,6 @@
         </travuser>
       </traversal>
       <traversal id="TYPE" name="Type Checking" default="sons" include="type_check.h">
-        <travnone>
-          <node name="Funheader" />
-        </travnone>
         <travuser>
           <node name="FunDef" />
           <node name="FunHeader" />
@@ -76,10 +73,8 @@
           <node name="ForLoop" />
         </travuser>
       </traversal>
-      <traversal id="TCHECK" name="Context Analysis" default="sons" include="contextphase_type.h">
+      <traversal id="LOGIC" name="Type Checking" default="sons" include="logic.h">
         <travuser>
-          <node name="Assign"/>
-          <node name="Var"/>
         </travuser>
       </traversal>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />

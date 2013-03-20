@@ -79,4 +79,4 @@ print       = print.o
 
 desugar 	  = desug_init.o desug_for.o
 
-context 		= link_functions.o link_variables.o type_check.o contextphase_type.o
+context 		= link_functions.o link_variables.o type_check.o logic.o

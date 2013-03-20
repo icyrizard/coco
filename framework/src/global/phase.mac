@@ -71,10 +71,10 @@ SUBPHASE( typecheck,
           ALWAYS,
           contextphase)
 
-SUBPHASE( typechecking,
-          "type checking",
-          CTPdoTypeCheck,
-          NEVER,
+SUBPHASE( logic,
+          "Logic Replacement",
+          CTPdoLogic,
+          ALWAYS,
           contextphase)
 
 ENDPHASE( contextphase)

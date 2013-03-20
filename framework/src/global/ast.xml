@@ -46,6 +46,7 @@
         <travuser>
           <node name="GlobalDef" />
           <node name="GlobalDec" />
+          <node name="FunDec" />
           <node name="FunDef" />
           <node name="FunHeader" />
           <node name="Param" />
@@ -75,6 +76,7 @@
       </traversal>
       <traversal id="LOGIC" name="Type Checking" default="sons" include="logic.h">
         <travuser>
+          <node name="Assign" />
         </travuser>
       </traversal>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />

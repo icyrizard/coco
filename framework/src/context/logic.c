@@ -39,6 +39,18 @@ static info *FreeInfo( info *info)
 
 /******************   Help Functions   ******************/
 
+
+
+/*********************   Traverse   *********************/
+extern node *LOGICassign(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("LOGICassign");
+
+
+    DBUG_RETURN(arg_node);
+}
+
+
 extern node *CTPdoLogic(node *syntaxtree)
 {
     info *info;

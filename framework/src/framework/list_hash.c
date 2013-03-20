@@ -121,6 +121,15 @@ int list_contains(list *head, void *value)
     return 0;
 }
 
+int list_contains_fun(list *head, void *value, int (*fun)(void *, void *))
+{
+    RETURN_NULL(head);
+
+    while((head = head->next))
+        if(fun(value, head->value))
+            return 1;
+    return 0;
+}
 hashmap* hashmap_create()
 {
     hashmap *result;

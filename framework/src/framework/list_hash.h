@@ -31,6 +31,7 @@ int list_addtoend(list *head, void *value);
 int list_remove(list *head, void *value);
 int list_length(list *head);
 int list_contains(list *map, void *key);
+int list_contains_fun(list *map, void *key, int (*fun)(void *, void*));
 
 hashmap* hashmap_create();
 int hashmap_free(hashmap *map);

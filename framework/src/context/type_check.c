@@ -269,7 +269,8 @@ node *TYPEbinop(node *arg_node, info *arg_info)
                         "'%s' with expression of type '%s'",
                         NODE_LINE(arg_node), types[left], types[right]);
                 arg_info->t = TYPE_unknown;
-            }
+            } else
+                arg_info->t = TYPE_bool;
             break;
         case BO_or:
         case BO_and:

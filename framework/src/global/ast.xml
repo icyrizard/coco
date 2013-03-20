@@ -64,12 +64,16 @@
           <node name="FunBody" />
           <node name="FunCall" />
           <node name="BinOp" />
+          <node name="MonOp" />
           <node name="Assign" />
           <node name="Var" />
           <node name="Num" />
           <node name="Float" />
           <node name="Bool" />
           <node name="ConditionIf" />
+          <node name="WhileLoop" />
+          <node name="Cast" />
+          <node name="ForLoop" />
         </travuser>
       </traversal>
       <traversal id="TCHECK" name="Context Analysis" default="sons" include="contextphase_type.h">

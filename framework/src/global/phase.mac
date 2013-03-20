@@ -56,19 +56,19 @@ PHASE( contextphase,
 SUBPHASE( linkfunctions,
           "Linking functions",
           CTPdoLinkFun,
-          NEVER,
+          ALWAYS,
           contextphase)
 
 SUBPHASE( linkvariables,
           "Linking variables",
           CTPdoLinkVar,
-          NEVER,
+          ALWAYS,
           contextphase)
 
 SUBPHASE( typecheck,
           "Type checking",
           CTPdoType,
-          NEVER,
+          ALWAYS,
           contextphase)
 
 SUBPHASE( typechecking,

@@ -70,13 +70,17 @@
           <node name="Bool" />
           <node name="ConditionIf" />
           <node name="WhileLoop" />
+          <node name="DoWhileLoop" />
           <node name="Cast" />
           <node name="ForLoop" />
         </travuser>
       </traversal>
       <traversal id="LOGIC" name="Type Checking" default="sons" include="logic.h">
         <travuser>
+          <node name="FunBody" />
+          <node name="StatementList" />
           <node name="Assign" />
+          <node name="BinOp" />
         </travuser>
       </traversal>
       <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
@@ -370,7 +374,7 @@
       <sons>
         <son name="Let">
           <targets>
-            <target mandatory="no">
+            <target mandatory="yes">
               <node name="Var" />
               <phases>
                 <all />

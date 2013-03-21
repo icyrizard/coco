@@ -408,6 +408,25 @@ node *TYPEwhileloop(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+node *TYPEdowhileloop(node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("TYPEwhileloop");
+
+
+    /* type check the loop body */
+    TRAVdo(DOWHILELOOP_BLOCK(arg_node), arg_info);
+
+    /* check if expr is of type bool */
+    TRAVdo(DOWHILELOOP_EXPR(arg_node), arg_info);
+
+    if(arg_info->t != TYPE_bool)
+        CTIerror(":%d: error: conditional expression must be of 'bool' type",
+                NODE_LINE(DOWHILELOOP_EXPR(arg_node)));
+
+    DBUG_RETURN(arg_node);
+}
+
+
 node *TYPEcast(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("TYPEcast");

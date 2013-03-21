@@ -13,5 +13,6 @@ node *TYPEnum(node *arg_node, info *arg_info);
 node *TYPEbool(node *arg_node, info *arg_info);
 node *TYPEconditionif(node *arg_node, info *arg_info);
 node *TYPEwhileloop(node *arg_node, info *arg_info);
+node *TYPEdowhileloop(node *arg_node, info *arg_info);
 node *TYPEcast(node *arg_node, info *arg_info);
 node *TYPEforloop(node *arg_node, info *arg_info);

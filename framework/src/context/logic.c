@@ -131,6 +131,27 @@ extern node *LOGICstatementlist(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
+extern node *LOGICconditionif(node *arg_node, info *arg_info)
+{
+    node *assign, *head, *next;
+
+    DBUG_ENTER("LOGICconditionif");
+
+    head = STATEMENTLIST_HEAD(arg_info->place_holder);
+    next = STATEMENTLIST_NEXT(arg_info->place_holder);
+
+    assign = TBmakeAssign(TBmakeVar(STRcpy("_b")), CONDITIONIF_EXPR(arg_node));
+
+    CONDITIONIF_EXPR(arg_node) = TBmakeVar(STRcpy("_b"));
+
+    STATEMENTLIST_HEAD(arg_info->place_holder) = assign;
+    STATEMENTLIST_NEXT(arg_info->place_holder) = TBmakeStatementlist(head, next);
+
+    TRAVdo(ASSIGN_EXPR(assign), arg_info);
+    TRAVdo(CONDITIONIF_BLOCK(arg_node), arg_info);
+
+    DBUG_RETURN(arg_node);
+}
 
 extern node *LOGICassign(node *arg_node, info *arg_info)
 {

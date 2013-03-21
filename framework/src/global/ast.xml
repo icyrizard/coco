@@ -79,6 +79,7 @@
         <travuser>
           <node name="FunBody" />
           <node name="StatementList" />
+          <node name="ConditionIf" />
           <node name="Assign" />
           <node name="BinOp" />
         </travuser>

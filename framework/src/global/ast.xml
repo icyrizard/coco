@@ -80,6 +80,7 @@
           <node name="FunBody" />
           <node name="StatementList" />
           <node name="ConditionIf" />
+          <node name="WhileLoop" />
           <node name="Assign" />
           <node name="BinOp" />
         </travuser>

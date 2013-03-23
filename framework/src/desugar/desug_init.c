@@ -189,7 +189,7 @@ node* create_init_fundef(info* info)
     header = TBmakeFunheader( TYPE_void , TBmakeVar(STRcpy("__init")), NULL);
     body   = TBmakeFunbody( NULL, create_statementlist(info->global_assigns), NULL);
 
-    return TBmakeFundef( FALSE, header, body);
+    return TBmakeFundef( TRUE, header, body);
 }
 
 

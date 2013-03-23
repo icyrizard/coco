@@ -175,8 +175,6 @@ node *concat_vardec_lists(node *var_decs, hashmap *tmp_bool_decs)
     node *tmps_list = create_vardec_hashmap(tmp_bool_decs);
     node *tail = tmps_list;
 
-    printf("halloooo\n");
-
     while(VARDECLIST_NEXT(tail))
         tail = VARDECLIST_NEXT(tail);
 
@@ -243,7 +241,6 @@ node *LOGICwhileloop(node *arg_node, info *arg_info)
     WHILELOOP_EXPR(arg_node) = TRAVdo(WHILELOOP_EXPR(arg_node), arg_info);
 
     if(expr != WHILELOOP_EXPR(arg_node))
-    //    printf("%d\n", arg_info->nest_level);
         add_to_end_of_block(WHILELOOP_BLOCK(arg_node), tmp, arg_info);
 
     arg_info->nest_level++;
@@ -295,8 +292,6 @@ node *LOGICfuncall(node *arg_node, info *arg_info)
 {
     node *expr_list;
     DBUG_ENTER("LOGICfuncall");
-
-    printf("funcall %s\n", VAR_NAME(FUNCALL_ID(arg_node)));
 
     expr_list = FUNCALL_ARGUMENTS(arg_node);
 

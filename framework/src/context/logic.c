@@ -65,6 +65,7 @@ node *get_create_var_dec(node *var, info *arg_info)
     var_decl = hashmap_get(arg_info->tmp_bools, var_name);
     if(!var_decl) {
         var_decl = TBmakeVardec(TYPE_bool, COPYdoCopy(var), NULL);
+        VAR_DECL(VARDEC_ID(var_decl)) = var_decl;
         hashmap_add(arg_info->tmp_bools, var_name, var_decl);
     }
 

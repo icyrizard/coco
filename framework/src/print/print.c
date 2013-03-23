@@ -377,24 +377,28 @@ node *PRTconditionif (node * arg_node, info * arg_info)
     CONDITIONIF_EXPR( arg_node) = TRAVdo( CONDITIONIF_EXPR( arg_node), arg_info);
 
     printf(")\n");
-    print_indent(arg_info->indent++);
-    printf("{\n");
+    //print_indent(arg_info->indent++);
+    arg_info->indent++;
+    //printf("{\n");
 
     CONDITIONIF_BLOCK( arg_node) = TRAVdo( CONDITIONIF_BLOCK( arg_node), arg_info);
 
-    print_indent(--arg_info->indent);
-    printf("}\n");
+    //print_indent(--arg_info->indent);
+    arg_info->indent--;
+    //printf("}\n");
 
     if(CONDITIONIF_ELSEBLOCK( arg_node) != NULL) {
         print_indent(arg_info->indent);
         printf("else\n");
-        print_indent(arg_info->indent++);
-        printf("{\n");
+        //print_indent(arg_info->indent++);
+        arg_info->indent++;
+        //printf("{\n");
 
         CONDITIONIF_ELSEBLOCK( arg_node) = TRAVdo(CONDITIONIF_ELSEBLOCK(\
                     arg_node), arg_info);
-        print_indent(--arg_info->indent);
-        printf("}\n");
+        //print_indent(--arg_info->indent);
+        arg_info->indent--;
+        //printf("}\n");
     }
 
     DBUG_RETURN (arg_node);
@@ -411,13 +415,15 @@ node *PRTwhileloop (node * arg_node, info * arg_info)
     printf(")\n");
 
     if(WHILELOOP_BLOCK( arg_node) != NULL) {
-        print_indent(arg_info->indent++);
-        printf("{\n");
+        /*print_indent(arg_info->indent++);
+        printf("{\n");*/
+        arg_info->indent++;
 
         WHILELOOP_BLOCK( arg_node) = TRAVdo( WHILELOOP_BLOCK( arg_node), arg_info);
 
-        print_indent(--arg_info->indent);
-        printf("}\n");
+        arg_info->indent--;
+        /*print_indent(--arg_info->indent);
+        printf("}\n");*/
     }
 
     DBUG_RETURN (arg_node);

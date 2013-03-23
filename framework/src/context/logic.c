@@ -56,27 +56,30 @@ void create_and(node *arg_node, info *arg_info)
 {
     node *assign1, *assign2, *block, *new_if, *tmp1, *tmp2;
 
+    /* create seperate assigns to tmp with left and right */
     assign1 = TBmakeAssign(TBmakeVar(STRcpy("_b")), BINOP_LEFT(arg_node));
     assign2 = TBmakeAssign(TBmakeVar(STRcpy("_b")), BINOP_RIGHT(arg_node));
+
+    /* create if with assign to right as block and temp var as condition */
     block = TBmakeStatementlist(assign2, NULL);
     new_if = TBmakeConditionif(TBmakeVar(STRcpy("_b")), block, NULL);
 
+    /* hack inorder to place the new statements at the right spot */
     swap_assign(assign1, STATEMENTLIST_HEAD(arg_info->place_holder));
 
+    /* add new if condition and assign to statementlist */
     tmp1 = TBmakeStatementlist(assign1, STATEMENTLIST_NEXT(arg_info->place_holder));
     tmp2 = TBmakeStatementlist(new_if, tmp1);
-
     STATEMENTLIST_NEXT(arg_info->place_holder) = tmp2;
 
+    /* set expression of last assign to temp variable */
     ASSIGN_EXPR(assign1) = TBmakeVar(STRcpy("_b"));
 
+    /* this is not needed anymore ? */
     //TRAVdo(ASSIGN_EXPR(STATEMENTLIST_HEAD(arg_info->place_holder)), arg_info);
-
     //tmp1 = arg_info->place_holder;
     //arg_info->place_holder = block;
-
     //TRAVdo(ASSIGN_EXPR(assign2), arg_info);
-
     //arg_info->place_holder = tmp1;
 }
 
@@ -84,27 +87,29 @@ void create_or(node *arg_node, info *arg_info)
 {
     node *assign1, *assign2, *block, *new_if, *tmp1, *tmp2;
 
+    /* create seperate assigns to tmp with left and right */
     assign1 = TBmakeAssign(TBmakeVar(STRcpy("_b")), BINOP_LEFT(arg_node));
     assign2 = TBmakeAssign(TBmakeVar(STRcpy("_b")), BINOP_RIGHT(arg_node));
+
+    /* create if with assign to right as block and !temp var as condition */
     block = TBmakeStatementlist(assign2, NULL);
     new_if = TBmakeConditionif(TBmakeMonop(MO_not, TBmakeVar(STRcpy("_b"))), block, NULL);
 
+    /* hack inorder to place the new statements at the right spot */
     swap_assign(assign1, STATEMENTLIST_HEAD(arg_info->place_holder));
 
+    /* add new if condition and assign to statementlist */
     tmp1 = TBmakeStatementlist(assign1, STATEMENTLIST_NEXT(arg_info->place_holder));
     tmp2 = TBmakeStatementlist(new_if, tmp1);
-
     STATEMENTLIST_NEXT(arg_info->place_holder) = tmp2;
 
+    /* set expression of last assign to temp variable */
     ASSIGN_EXPR(assign1) = TBmakeVar(STRcpy("_b"));
 
     //TRAVdo(ASSIGN_EXPR(STATEMENTLIST_HEAD(arg_info->place_holder)), arg_info);
-
     //tmp1 = arg_info->place_holder;
     //arg_info->place_holder = block;
-
     //TRAVdo(ASSIGN_EXPR(assign2), arg_info);
-
     //arg_info->place_holder = tmp1;
 }
 
@@ -120,15 +125,13 @@ int expr_is_complex(node *expr)
 {
     int type = NODE_TYPE(expr);
 
-    printf("%d\n", type);
-
     if(type == N_var || type == N_float || type == N_num || type == N_bool)
         return 0;
     return 1;
 }
 
 /*********************   Traverse   *********************/
-extern node *LOGICfunbody(node *arg_node, info *arg_info)
+node *LOGICfunbody(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("LOGICstatementlist");
 
@@ -137,13 +140,11 @@ extern node *LOGICfunbody(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
-extern node *LOGICstatementlist(node *arg_node, info *arg_info)
+node *LOGICstatementlist(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("LOGICstatementlist");
 
     arg_info->place_holder = arg_node;
-
-    printf("<%p> %d\n", arg_node, NODE_TYPE(STATEMENTLIST_HEAD(arg_node)));
 
     TRAVdo(STATEMENTLIST_HEAD(arg_node), arg_info);
 
@@ -152,7 +153,7 @@ extern node *LOGICstatementlist(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
-extern node *LOGICconditionif(node *arg_node, info *arg_info)
+node *LOGICconditionif(node *arg_node, info *arg_info)
 {
     node *assign, *head, *next;
 
@@ -179,7 +180,7 @@ extern node *LOGICconditionif(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
-extern node *LOGICwhileloop(node *arg_node, info *arg_info)
+node *LOGICwhileloop(node *arg_node, info *arg_info)
 {
     node *assign, *assign_end, *head, *next;
 
@@ -205,9 +206,7 @@ extern node *LOGICwhileloop(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
-
-
-extern node *LOGICassign(node *arg_node, info *arg_info)
+node *LOGICassign(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("LOGICassign");
 
@@ -216,22 +215,34 @@ extern node *LOGICassign(node *arg_node, info *arg_info)
     DBUG_RETURN(arg_node);
 }
 
-extern node *LOGICbinop(node *arg_node, info *arg_info)
+node *LOGICbinop(node *arg_node, info *arg_info)
 {
     DBUG_ENTER("LOGICbinop");
 
-    /* expr1 && expr2 */
-    if(BINOP_OP(arg_node) == BO_and) {
+    if(BINOP_OP(arg_node) == BO_and)
         create_and(arg_node, arg_info);
-    } else if(BINOP_OP(arg_node) == BO_or) {
+    else if(BINOP_OP(arg_node) == BO_or)
         create_or(arg_node, arg_info);
-    }
+
+    DBUG_RETURN(arg_node);
+}
+
+node *LOGICfuncall(node *arg_node, info *arg_info)
+{
+    node *expr_list;
+    DBUG_ENTER("LOGICfuncall");
+
+    expr_list = FUNCALL_ARGUMENTS(arg_node);
+
+    /* create a assign statement above the if when the expression
+     * consists of multiple values/binops */
+    FUNCALL_ARGUMENTS(arg_node) = TRAVopt(FUNCALL_ARGUMENTS(arg_node), arg_info);
 
     DBUG_RETURN(arg_node);
 }
 
 
-extern node *CTPdoLogic(node *syntaxtree)
+node *CTPdoLogic(node *syntaxtree)
 {
     info *info;
 

@@ -210,11 +210,17 @@ void* hashmap_get(hashmap *map, void *key)
     return NULL;
 }
 
-int hashmap_empty(hashmap *map)
+void hashmap_empty(hashmap *map)
 {
-    RETURN_NULL(map);
+    if(map == NULL)
+        return;
 
     map->next = NULL;
+}
+
+int hashmap_is_empty(hashmap *map)
+{
+    RETURN_NULL(map);
 
     return map->next == NULL;
 }

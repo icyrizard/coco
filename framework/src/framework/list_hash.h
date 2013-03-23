@@ -39,7 +39,8 @@ int hashmap_add(hashmap *map, void *key, void *value);
 int hashmap_remove(hashmap *map, void *key);
 int hashmap_contains(hashmap *map, void *key);
 void* hashmap_get(hashmap *map, void *key);
-int hashmap_empty(hashmap *map);
+void hashmap_empty(hashmap *map);
+int hashmap_is_empty(hashmap *map);
 hashmap* hashmap_pop(hashmap *map);
 hashmap* hashmap_pop_last(hashmap *map);
 

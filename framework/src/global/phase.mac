@@ -71,6 +71,12 @@ SUBPHASE( typecheck,
           ALWAYS,
           contextphase)
 
+SUBPHASE( convertloops,
+          "Converting loops",
+          CTPdoLoop,
+          ALWAYS,
+          contextphase)
+
 SUBPHASE( logic,
           "Logic Replacement",
           CTPdoLogic,

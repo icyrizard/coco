@@ -75,7 +75,12 @@
           <node name="ForLoop" />
         </travuser>
       </traversal>
-      <traversal id="LOGIC" name="Type Checking" default="sons" include="logic.h">
+      <traversal id="LOOP" name="" default="sons" include="loop.h">
+        <travuser>
+          <node name="StatementList" />
+        </travuser>
+      </traversal>
+      <traversal id="LOGIC" name="Logic" default="sons" include="logic.h">
         <travuser>
           <node name="FunBody" />
           <node name="StatementList" />

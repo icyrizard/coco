@@ -10,10 +10,6 @@
 #include "list_hash.h"
 #include "logic.h"
 
-
-/* TODO uhmm deze hele files heeft nu errors en shit dus.. ALLES! */
-int glob = 0;
-
 /***********************   INFO   ***********************/
 struct INFO {
     int nest_level;
@@ -143,10 +139,14 @@ node *create_or(node *arg_node, info *arg_info)
 }
 
 
-void add_to_end_of_block(node *block, node *assign)
+void add_to_end_of_block(node *block, node *expr, info *arg_info)
 {
+    node *assign;
+
     while(STATEMENTLIST_NEXT(block))
         block = STATEMENTLIST_NEXT(block);
+
+    assign = TBmakeAssign(create_var(arg_info), expr);
 
     STATEMENTLIST_NEXT(block) = TBmakeStatementlist(assign, NULL);
 }
@@ -233,12 +233,22 @@ node *LOGICconditionif(node *arg_node, info *arg_info)
 
 node *LOGICwhileloop(node *arg_node, info *arg_info)
 {
+    node *expr, *tmp;
+
     DBUG_ENTER("LOGICwhileloop");
+
+    expr = WHILELOOP_EXPR(arg_node);
+    tmp = COPYdoCopy(expr);
 
     WHILELOOP_EXPR(arg_node) = TRAVdo(WHILELOOP_EXPR(arg_node), arg_info);
 
-    //add_to_end_of_block(WHILELOOP_BLOCK(arg_node), assign_end);
-    //TRAVdo(WHILELOOP_BLOCK(arg_node), arg_info);
+    if(expr != WHILELOOP_EXPR(arg_node))
+    //    printf("%d\n", arg_info->nest_level);
+        add_to_end_of_block(WHILELOOP_BLOCK(arg_node), tmp, arg_info);
+
+    arg_info->nest_level++;
+    WHILELOOP_BLOCK(arg_node) = TRAVdo(WHILELOOP_BLOCK(arg_node), arg_info);
+    arg_info->nest_level--;
 
     DBUG_RETURN(arg_node);
 }
@@ -320,7 +330,7 @@ node *CTPdoLogic(node *syntaxtree)
 
     DBUG_ENTER("CTPdoLinkFun");
 
-    DBUG_ASSERT((syntaxtree != NULL), "CTPdoLink called with empty syntaxtree");
+    DBUG_ASSERT((syntaxtree != NULL), "CTPdoLogic called with empty syntaxtree");
 
     info = MakeInfo();
 
@@ -331,7 +341,6 @@ node *CTPdoLogic(node *syntaxtree)
     TRAVpop();
 
     info = FreeInfo(info);
-
 
     DBUG_RETURN(syntaxtree);
 }

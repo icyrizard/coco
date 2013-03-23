@@ -81,7 +81,9 @@
           <node name="StatementList" />
           <node name="ConditionIf" />
           <node name="WhileLoop" />
+          <node name="DoWhileLoop" />
           <node name="FunCall" />
+          <node name="ExprList" />
           <node name="Assign" />
           <node name="BinOp" />
         </travuser>

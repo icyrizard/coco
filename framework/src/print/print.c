@@ -176,7 +176,7 @@ node *PRTvar (node * arg_node, info * arg_info)
     printf( "%s", VAR_NAME( arg_node));
 
     /* print var as its declaration pointer */
-    //printf( "<%p>", VAR_DECL( arg_node));
+    printf( "<%p>", VAR_DECL( arg_node));
 
     DBUG_RETURN (arg_node);
 }
@@ -435,13 +435,15 @@ node *PRTdowhileloop (node * arg_node, info * arg_info)
 
     printf("do\n");
 
-    WHILELOOP_BLOCK( arg_node) = TRAVdo( WHILELOOP_BLOCK( arg_node), arg_info);
+    arg_info->indent++;
+    DOWHILELOOP_BLOCK( arg_node) = TRAVdo( DOWHILELOOP_BLOCK( arg_node), arg_info);
 
+    print_indent(--arg_info->indent);
     printf("while(");
 
-    WHILELOOP_EXPR( arg_node) = TRAVdo( WHILELOOP_EXPR( arg_node), arg_info);
+    DOWHILELOOP_EXPR( arg_node) = TRAVdo( DOWHILELOOP_EXPR( arg_node), arg_info);
 
-    printf(");\n");
+    printf(")");
 
     DBUG_RETURN (arg_node);
 

@@ -93,9 +93,11 @@
           <node name="BinOp" />
         </travuser>
       </traversal>
-      <traversal id="ASM" name="Create Assembly" default="user" include="assembly.h" />
+      <traversal id="ASM" name="Create Assembly" default="user" include="code_assembly.h" />
         <travnone>
           <node name="Error" />
+          <node name="AssemblyInstr"/>
+          <node name="AssemblyInstrs"/>
         </travnone>
       <!--<traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />-->
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />
@@ -945,6 +947,102 @@
       </attributes>
       <flags></flags>
     </node>
-  </syntaxtree>
+
+    <node name="AssemblyInstrs">
+        <sons>
+            <son name="Head">
+                <targets>
+                    <target mandatory="yes">
+                        <node name="AssemblyInstr" />
+                    <phases>
+                        <all />
+                    </phases>
+                    </target>
+                </targets>
+            </son>
+            <son name="Next">
+                <targets>
+                    <target mandatory="no">
+                        <node name="AssemblyInstrs" />
+                    <phases>
+                        <all />
+                    </phases>
+                    </target>
+                </targets>
+            </son>
+        </sons>
+    </node>
+
+    <node name="AssemblyInstr">
+      <sons>
+        <son name="Args">
+          <targets>
+            <target mandatory="no">
+              <node name="ArgList" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
+      <attributes>
+        <attribute name="instr">
+          <type name="String">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+
+    <node name="ArgList">
+       <sons>
+        <son name="Head">
+          <targets>
+            <target mandatory="yes">
+              <node name="arg" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        <son name="Next">
+          <targets>
+            <target mandatory="no">
+              <node name="ArgList" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        </sons>
+    </node>
+
+    <node name="Arg">
+        <attributes>
+            <attribute name="instr">
+            <type name="String">
+                <targets>
+                <target mandatory="yes">
+                    <any />
+                    <phases>
+                    <all />
+                    </phases>
+                </target>
+                </targets>
+            </type>
+            </attribute>
+        </attributes>
+    </node>
+    </syntaxtree>
 </definition>
 

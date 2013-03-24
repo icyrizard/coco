@@ -9,14 +9,13 @@
 #include "ctinfo.h"
 #include "list_hash.h"
 
-/* arrays for easy conversion of type
- * numbers into strings */
+
+/* arrays for easy conversion of type numbers into strings */
 char* monops[3] = { "not", "neg", "unknown" };
 char* binops[14] = { "add", "sub", "mul", "div", "modulo", "less than",
                      "less equals", "greater than", "greater equals", "equals",
                      "not equals", "and", "or", "unknown" };
 char* types[5] = { "bool", "int", "float", "void", "unknown" };
-
 
 /***********************   INFO   ***********************/
 

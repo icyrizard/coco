@@ -91,11 +91,24 @@ PHASE( cg,
        "Generating Code",
        ALWAYS)
 
-SUBPHASE( prt,
-          "Generating byte code",
-          PRTdoPrint,
+SUBPHASE( asm,
+          "Generating assembly code",
+          CODEdoAssembly,
           ALWAYS,
           cg)
+
+/*SUBPHASE( peephole,
+ *          "Peephole assembly code",
+ *          PRTdoPeephole,
+ *          NEVER,
+ *          cg)
+ *
+ *SUBPHASE( prt,
+ *          "Generating byte code",
+ *          PRTdoPrint,
+ *          NEVER,
+ *          cg)
+ */
 
 SUBPHASE( frtr,
           "De-allocating syntax tree representation",

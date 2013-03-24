@@ -53,7 +53,7 @@
 #
 
 
-src = global scanparse print framework desugar context
+src = global scanparse print framework desugar context code
 
 
 ###############################################################################
@@ -75,8 +75,10 @@ global      = options.o usage.o myglobals.o
 
 scanparse   = civic.tab.o civic.lex.o
 
-print       = print.o
+#print       = print.o
 
 desugar 	  = desug_init.o desug_for.o
 
 context 		= link_functions.o link_variables.o type_check.o logic.o loop.o
+
+code 				= assembly.o

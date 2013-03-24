@@ -93,7 +93,11 @@
           <node name="BinOp" />
         </travuser>
       </traversal>
-      <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
+      <traversal id="ASM" name="Create Assembly" default="user" include="assembly.h" />
+        <travnone>
+          <node name="Error" />
+        </travnone>
+      <!--<traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />-->
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />
       <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h" />
       <traversal id="CHK" name="Check the Tree" default="user" include="check.h" />

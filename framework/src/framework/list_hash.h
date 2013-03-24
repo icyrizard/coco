@@ -26,12 +26,14 @@ struct hashmap {
 list* list_create();
 int list_free(list *head);
 int list_empty(list *head);
+int list_is_empty(list *head);
 int list_addtofront(list *head, void *value);
 int list_addtoend(list *head, void *value);
 int list_remove(list *head, void *value);
 int list_length(list *head);
 int list_contains(list *map, void *key);
 int list_contains_fun(list *map, void *key, int (*fun)(void *, void*));
+void *list_get_elem(list *head, int index);
 
 hashmap* hashmap_create();
 int hashmap_free(hashmap *map);

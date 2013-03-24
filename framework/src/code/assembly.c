@@ -6,19 +6,41 @@
 #include "dbug.h"
 #include "memory.h"
 #include "globals.h"
+#include "list_hash.h"
+#include "str.h"
+
 
 #define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
 char* typess[5] = { "bool", "int", "float", "void", "unknown" };
 
+/* dit gaat trouens wel fout wss als we het meenemen nar een nieuwe phase of niet?
+ * mmm/ nog geen idee hoe we dat uberhaupt moeten doen ja ok no problem dan
+ * anders gooien we peepholing en printing ook gwn in deze uber file! */
+int int_types[4] = { 0,1,2,3 };
+
 /***********************   INFO   ***********************/
+        //    als je hebt: export int main() { ...}
+        //    dan wordt het:  .export  "main"  int  main
+        //
+struct export {
+    char *fun_name; // die sowieso 
+    list *args; 
+};
+
 struct instr {
     char *name;
-    int *args;
+    int args[3];
+    int num_args;
 };
+
+typedef struct instr instruction;
 
 struct INFO {
     int indent;
+    list *instrs;  // zoiets
+    list *imports;
+    list *exports;
 };
 
 
@@ -29,7 +51,9 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
     result->indent = 0;
-
+    result->instrs = list_create();
+    result->imports = list_create();
+    result->exports = list_create();
 
     return result;
 }
@@ -37,6 +61,10 @@ static info *MakeInfo()
 
 static info *FreeInfo( info *info)
 {
+    list_free(info->instrs);
+    list_free(info->imports);
+    list_free(info->exports);
+
     info = MEMfree( info);
 
     return info;
@@ -465,22 +493,56 @@ node *ASMfuncall (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
+// hier was ik begonnnen
 node *ASMfundef (node * arg_node, info * arg_info)
 {
-    type ret_type;
+    type tmp_type;
     char *fun_name;
+    node *header, *params;
+    instruction *new_instr;
 
     DBUG_ENTER ("ASMfundef");
 
-    ret_type = FUNHEADER_RETTYPE(FUNDEF_HEADER(arg_node));
-    fun_name = VAR_NAME(FUNHEADER_ID(FUNDEF_HEADER(arg_node)));
+    header = FUNDEF_HEADER(arg_node);
+    tmp_type = FUNHEADER_RETTYPE(header);
+    fun_name = VAR_NAME(FUNHEADER_ID(header));
 
+    /* add to export list */
     if(FUNDEF_EXPORT( arg_node)) {
-        printf(".export \"%s\" %s %s", fun_name, typess[ret_type], fun_name);
-        printf("export ");
+        struct export *new_export = MEMmalloc(sizeof(struct export));
+
+        /* set function name */
+        new_export->fun_name = VAR_NAME(FUNHEADER_ID(header));
+
+        /* create type list */
+        new_export->args = list_create();
+        list_addtoend(new_export->args, &int_types[FUNHEADER_RETTYPE(header)]);
+
+        params = FUNHEADER_PARAMS(header);
+        while(params) {
+            tmp_type = PARAM_TYPE(PARAMLIST_HEAD(params));
+            list_addtoend(new_export->args,  &int_types[tmp_type]);
+
+            params = PARAMLIST_NEXT(params);
+        }
     }
 
+    /* add function label to instrunction list */
+    new_instr = MEMmalloc(sizeof(instruction));
+    new_instr->name = STRcat(VAR_NAME(FUNHEADER_ID(header)), ":");
+
+    list_addtoend(arg_info->instrs, new_instr);
+
+    /* add esr to instruction list */
+    new_instr = MEMmalloc(sizeof(instruction));
+    new_instr->name = STRcpy("    esr");   // TODO die spaties moeten weg
+    new_instr->num_args = 1;
+    new_instr->args[0] = 0;         // TODO num args + num local vars
+    list_addtoend(arg_info->instrs, new_instr);
+    
+
     FUNDEF_HEADER( arg_node) = TRAVdo( FUNDEF_HEADER( arg_node), arg_info);
+
 
     printf("\n{\n");
 
@@ -681,6 +743,27 @@ node *ASMparam (node * arg_node, info * arg_info)
 }
 
 
+/****************** DEBUG PRINTING **********************/
+void print_assembly(info *arg_info)
+{
+    int i, index = 0;
+    instruction *instr;
+
+    instr = list_get_elem(arg_info->instrs, index++);
+
+    while(instr){
+        printf("%s ", instr->name);
+
+        /* print args */
+        for(i = 0; i < instr->num_args; i++)
+            printf("%d ", instr->args[i]);
+        printf("\n");
+        
+        instr = list_get_elem(arg_info->instrs, index++);
+    }
+
+}
+
 /******************   START of phase   ******************/
 node *CODEdoAssembly( node *syntaxtree)
 {
@@ -697,6 +780,10 @@ node *CODEdoAssembly( node *syntaxtree)
     TRAVpush( TR_asm);
 
     syntaxtree = TRAVdo( syntaxtree, info);
+
+    /* DEBUG printing of all instructions */
+    printf("\n\nAssembly:\n\n");
+    print_assembly(info);
 
     TRAVpop();
 

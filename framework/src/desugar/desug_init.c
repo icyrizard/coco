@@ -134,9 +134,9 @@ node *INITfunbody(node * arg_node, info * arg_info)
     /* Traverse all local variable declarations of the function.
      * Assignment will be removed and stored in the info structure */
     if(FUNBODY_VARS( arg_node) != NULL)
-        FUNBODY_VARS( arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
+        FUNBODY_VARS(arg_node) = TRAVopt( FUNBODY_VARS( arg_node), arg_info);
 
-    if(!list_length(arg_info->local_assigns) == 0) {
+    if(list_length(arg_info->local_assigns) > 0) {
         FUNBODY_STATEMENTS( arg_node) = concat_statements(
                 FUNBODY_STATEMENTS(arg_node), arg_info->local_assigns);
 
@@ -189,7 +189,7 @@ node* create_init_fundef(info* info)
     header = TBmakeFunheader( TYPE_void , TBmakeVar(STRcpy("__init")), NULL);
     body   = TBmakeFunbody( NULL, create_statementlist(info->global_assigns), NULL);
 
-    return TBmakeFundef( FALSE, header, body);
+    return TBmakeFundef( TRUE, header, body);
 }
 
 

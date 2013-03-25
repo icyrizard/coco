@@ -102,6 +102,13 @@ node *LVARglobaldef( node *arg_node, info *arg_info)
     DBUG_RETURN( arg_node);
 }
 
+node *LVARfundec( node *arg_node, info *arg_info)
+{
+    DBUG_ENTER("LVARfundec");
+
+    DBUG_RETURN( arg_node);
+}
+
 node *LVARfundef( node *arg_node, info *arg_info)
 {
     DBUG_ENTER("LVARfundef");

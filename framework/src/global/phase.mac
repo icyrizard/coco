@@ -44,6 +44,7 @@ SUBPHASE( desug_for,
           DSPdoFor,
           ALWAYS,
           desugarphase)
+
 ENDPHASE( desugarphase)
 
 /******************************************************************************/
@@ -53,20 +54,32 @@ PHASE( contextphase,
        ALWAYS)
 
 SUBPHASE( linkfunctions,
-          "Linking functioncalls with their declaration",
+          "Linking functions",
           CTPdoLinkFun,
           ALWAYS,
           contextphase)
 
 SUBPHASE( linkvariables,
-          "Linking variables with their declaration",
+          "Linking variables",
           CTPdoLinkVar,
           ALWAYS,
           contextphase)
 
-SUBPHASE( typechecking,
-          "type checking",
-          CTPdoTypeCheck,
+SUBPHASE( typecheck,
+          "Type checking",
+          CTPdoType,
+          ALWAYS,
+          contextphase)
+
+SUBPHASE( convertloops,
+          "Converting loops",
+          CTPdoLoop,
+          ALWAYS,
+          contextphase)
+
+SUBPHASE( logic,
+          "Logic Replacement",
+          CTPdoLogic,
           ALWAYS,
           contextphase)
 
@@ -78,11 +91,24 @@ PHASE( cg,
        "Generating Code",
        ALWAYS)
 
-SUBPHASE( prt,
-          "Generating byte code",
-          PRTdoPrint,
+SUBPHASE( asm,
+          "Generating assembly code",
+          CODEdoAssembly,
           ALWAYS,
           cg)
+
+/*SUBPHASE( peephole,
+ *          "Peephole assembly code",
+ *          PRTdoPeephole,
+ *          NEVER,
+ *          cg)
+ *
+ *SUBPHASE( prt,
+ *          "Generating byte code",
+ *          PRTdoPrint,
+ *          NEVER,
+ *          cg)
+ */
 
 SUBPHASE( frtr,
           "De-allocating syntax tree representation",

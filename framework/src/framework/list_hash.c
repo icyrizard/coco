@@ -43,6 +43,12 @@ int list_empty(list *head)
     return list_free(head->next);
 }
 
+int list_is_empty(list *head)
+{
+    return head == NULL &&
+           head->next == NULL;
+}
+
 /* adds the new element to the front of the list
  * right after the sentinal head node */
 int list_addtofront(list *head, void *value)
@@ -119,6 +125,31 @@ int list_contains(list *head, void *value)
         if(head->value == value)
             return 1;
     return 0;
+}
+
+int list_contains_fun(list *head, void *value, int (*fun)(void *, void *))
+{
+    RETURN_NULL(head);
+
+    while((head = head->next))
+        if(fun(value, head->value))
+            return 1;
+    return 0;
+}
+
+void *list_get_elem(list *head, int index)
+{
+    int i;
+    
+    RETURN_NNULL(head);
+
+    if(list_length(head) < index + 1)
+        return NULL; // wouw had ik niet aan gedacht xd
+    head = head->next;  // sla sentinel node over.
+    for(i = 0; i < index; i++)
+        head = head->next;
+
+    return head->value;
 }
 
 hashmap* hashmap_create()
@@ -201,11 +232,17 @@ void* hashmap_get(hashmap *map, void *key)
     return NULL;
 }
 
-int hashmap_empty(hashmap *map)
+void hashmap_empty(hashmap *map)
 {
-    RETURN_NULL(map);
+    if(map == NULL)
+        return;
 
     map->next = NULL;
+}
+
+int hashmap_is_empty(hashmap *map)
+{
+    RETURN_NULL(map);
 
     return map->next == NULL;
 }

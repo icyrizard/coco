@@ -36,16 +36,17 @@
           <node name="Var" />
         </travuser>
       </traversal>
-      <traversal id="LFUN" name="Context Analysis" default="sons" include="link_functions.h">
+      <traversal id="LFUN" name="Link Functions" default="sons" include="link_functions.h">
         <travuser>
           <node name="FunHeader" />
           <node name="FunCall" />
         </travuser>
       </traversal>
-      <traversal id="LVAR" name="Context Analysis" default="sons" include="link_variables.h">
+      <traversal id="LVAR" name="Link Variables" default="sons" include="link_variables.h">
         <travuser>
           <node name="GlobalDef" />
           <node name="GlobalDec" />
+          <node name="FunDec" />
           <node name="FunDef" />
           <node name="FunHeader" />
           <node name="Param" />
@@ -54,14 +55,51 @@
           <node name="Var" />
         </travuser>
       </traversal>
-      <traversal id="TCHECK" name="Context Analysis" default="sons" include="contextphase_type.h">
+      <traversal id="TYPE" name="Type Checking" default="sons" include="type_check.h">
         <travuser>
-          <node name="Assign"/>
-          <node name="Var"/>
-          <node name="VarDec"/>
-      </travuser>
+          <node name="FunDef" />
+          <node name="FunHeader" />
+          <node name="FunBody" />
+          <node name="FunCall" />
+          <node name="BinOp" />
+          <node name="MonOp" />
+          <node name="Assign" />
+          <node name="Var" />
+          <node name="Num" />
+          <node name="Float" />
+          <node name="Bool" />
+          <node name="ConditionIf" />
+          <node name="WhileLoop" />
+          <node name="DoWhileLoop" />
+          <node name="Cast" />
+          <node name="ForLoop" />
+        </travuser>
       </traversal>
-      <traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />
+      <traversal id="LOOP" name="" default="sons" include="loop.h">
+        <travuser>
+          <node name="StatementList" />
+        </travuser>
+      </traversal>
+      <traversal id="LOGIC" name="Logic" default="sons" include="logic.h">
+        <travuser>
+          <node name="FunBody" />
+          <node name="StatementList" />
+          <node name="ConditionIf" />
+          <node name="WhileLoop" />
+          <node name="DoWhileLoop" />
+          <node name="FunCall" />
+          <node name="ExprList" />
+          <node name="Assign" />
+          <node name="BinOp" />
+        </travuser>
+      </traversal>
+      <traversal id="ASM" name="Create Assembly" default="user" include="code_assembly.h" />
+        <travnone>
+          <node name="Error" />
+          <node name="AssemblyInstr"/>
+          <node name="AssemblyInstrs"/>
+        </travnone>
+      <!--<traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />-->
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />
       <traversal id="FREE" name="Free Syntax Tree" default="user" include="free_node.h" />
       <traversal id="CHK" name="Check the Tree" default="user" include="check.h" />
@@ -352,7 +390,7 @@
       <sons>
         <son name="Let">
           <targets>
-            <target mandatory="no">
+            <target mandatory="yes">
               <node name="Var" />
               <phases>
                 <all />
@@ -570,7 +608,7 @@
         </son>
         <son name="Arguments">
           <targets>
-            <target mandatory="yes">
+            <target mandatory="no">
               <node name="ExprList" />
               <phases>
                 <all />
@@ -909,6 +947,102 @@
       </attributes>
       <flags></flags>
     </node>
-  </syntaxtree>
+
+    <node name="AssemblyInstrs">
+        <sons>
+            <son name="Head">
+                <targets>
+                    <target mandatory="yes">
+                        <node name="AssemblyInstr" />
+                    <phases>
+                        <all />
+                    </phases>
+                    </target>
+                </targets>
+            </son>
+            <son name="Next">
+                <targets>
+                    <target mandatory="no">
+                        <node name="AssemblyInstrs" />
+                    <phases>
+                        <all />
+                    </phases>
+                    </target>
+                </targets>
+            </son>
+        </sons>
+    </node>
+
+    <node name="AssemblyInstr">
+      <sons>
+        <son name="Args">
+          <targets>
+            <target mandatory="no">
+              <node name="ArgList" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+      </sons>
+      <attributes>
+        <attribute name="instr">
+          <type name="String">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
+      </attributes>
+    </node>
+
+    <node name="ArgList">
+       <sons>
+        <son name="Head">
+          <targets>
+            <target mandatory="yes">
+              <node name="arg" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        <son name="Next">
+          <targets>
+            <target mandatory="no">
+              <node name="ArgList" />
+              <phases>
+                <all />
+              </phases>
+            </target>
+          </targets>
+        </son>
+        </sons>
+    </node>
+
+    <node name="Arg">
+        <attributes>
+            <attribute name="instr">
+            <type name="String">
+                <targets>
+                <target mandatory="yes">
+                    <any />
+                    <phases>
+                    <all />
+                    </phases>
+                </target>
+                </targets>
+            </type>
+            </attribute>
+        </attributes>
+    </node>
+    </syntaxtree>
 </definition>
 

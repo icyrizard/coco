@@ -44,7 +44,7 @@ void report_unlinked_functioncalls(info *arg_info)
 {
     hashmap *tmp;
 
-    while(!hashmap_empty(arg_info->fun_calls)) {
+    while(!hashmap_is_empty(arg_info->fun_calls)) {
         tmp = hashmap_pop_last(arg_info->fun_calls);
 
         CTIerror(":%d: error: unknown identifier '%s'", NODE_LINE((node *)tmp->value),
@@ -79,6 +79,7 @@ node *LFUNfunheader(node *arg_node, info *arg_info)
 
     /* check previously saved funcalls */
     while(hashmap_contains(arg_info->fun_calls, funname)) {
+        printf("hello\n");
         funcall = hashmap_get(arg_info->fun_calls, funname);
         VAR_DECL( FUNCALL_ID(funcall)) = arg_node;
 
@@ -86,7 +87,6 @@ node *LFUNfunheader(node *arg_node, info *arg_info)
     }
     DBUG_RETURN(arg_node);
 }
-
 
 node *LFUNfuncall(node *arg_node, info *arg_info)
 {

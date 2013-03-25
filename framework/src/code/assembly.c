@@ -6,16 +6,44 @@
 #include "dbug.h"
 #include "memory.h"
 #include "globals.h"
+#include "list_hash.h"
+#include "str.h"
 
+
+#define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
+
+char* typess[5] = { "bool", "int", "float", "void", "unknown" };
+
+/* dit gaat trouens wel fout wss als we het meenemen nar een nieuwe phase of niet?
+ * mmm/ nog geen idee hoe we dat uberhaupt moeten doen ja ok no problem dan
+ * anders gooien we peepholing en printing ook gwn in deze uber file! */
+int int_types[4] = { 0,1,2,3 };
 
 /***********************   INFO   ***********************/
+        //    als je hebt: export int main() { ...}
+        //    dan wordt het:  .export  "main"  int  main
+        //
+struct export {
+    char *fun_name; // die sowieso 
+    list *args; 
+};
+
+struct instr {
+    char *name;
+    int args[3];
+    int num_args;
+};
+
+typedef struct instr instruction;
+
 struct INFO {
-    bool firsterror;
     int indent;
+    list *instrs;  // zoiets
+    list *imports;
+    list *exports;
 };
 
 
-#define INFO_FIRSTERROR(n) ((n)->firsterror)
 
 static info *MakeInfo()
 {
@@ -23,8 +51,9 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
     result->indent = 0;
-
-    INFO_FIRSTERROR(result) = FALSE;
+    result->instrs = list_create();
+    result->imports = list_create();
+    result->exports = list_create();
 
     return result;
 }
@@ -32,6 +61,10 @@ static info *MakeInfo()
 
 static info *FreeInfo( info *info)
 {
+    list_free(info->instrs);
+    list_free(info->imports);
+    list_free(info->exports);
+
     info = MEMfree( info);
 
     return info;
@@ -48,9 +81,9 @@ void print_indent( int n)
 
 
 /*********************   Traverse   *********************/
-node *PRTprogram(node * arg_node, info * arg_info)
+node *ASMprogram(node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTprogram");
+    DBUG_ENTER ("ASMprogram");
 
     PROGRAM_HEAD( arg_node) = TRAVdo( PROGRAM_HEAD( arg_node), arg_info);
 
@@ -59,9 +92,9 @@ node *PRTprogram(node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTassign (node * arg_node, info * arg_info)
+node *ASMassign (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTassign");
+    DBUG_ENTER ("ASMassign");
 
     if (ASSIGN_LET( arg_node) != NULL) {
         ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
@@ -73,11 +106,11 @@ node *PRTassign (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTbinop (node * arg_node, info * arg_info)
+node *ASMbinop (node * arg_node, info * arg_info)
 {
     char *tmp;
 
-    DBUG_ENTER ("PRTbinop");
+    DBUG_ENTER ("ASMbinop");
 
     printf( "(");
 
@@ -136,27 +169,27 @@ node *PRTbinop (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTfloat (node * arg_node, info * arg_info)
+node *ASMfloat (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTfloat");
+    DBUG_ENTER ("ASMfloat");
 
     printf( "%f", FLOAT_VALUE( arg_node));
 
     DBUG_RETURN (arg_node);
 }
 
-node *PRTnum (node * arg_node, info * arg_info)
+node *ASMnum (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTnum");
+    DBUG_ENTER ("ASMnum");
 
     printf("%d", NUM_VALUE( arg_node));
 
     DBUG_RETURN (arg_node);
 }
 
-node *PRTbool (node * arg_node, info * arg_info)
+node *ASMbool (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTbool");
+    DBUG_ENTER ("ASMbool");
 
     if (BOOL_VALUE( arg_node)) {
         printf( "true");
@@ -168,61 +201,29 @@ node *PRTbool (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTvar (node * arg_node, info * arg_info)
+node *ASMvar (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTvar");
+    DBUG_ENTER ("ASMvar");
 
     /* print var as string */
     printf( "%s", VAR_NAME( arg_node));
 
-    /* print var as its declaration pointer */
-    printf( "<%p>", VAR_DECL( arg_node));
-
     DBUG_RETURN (arg_node);
 }
 
 
-node *PRTerror (node * arg_node, info * arg_info)
+node *ASMerror (node * arg_node, info * arg_info)
 {
-    bool first_error;
-
-    DBUG_ENTER ("PRTerror");
-
-    if (NODE_ERROR (arg_node) != NULL) {
-        NODE_ERROR (arg_node) = TRAVdo (NODE_ERROR (arg_node), arg_info);
-    }
-
-    first_error = INFO_FIRSTERROR( arg_info);
-
-    if( (global.outfile != NULL)
-            && (ERROR_ANYPHASE( arg_node) == global.compiler_anyphase)) {
-
-        if ( first_error) {
-            printf ( "\n/******* BEGIN TREE CORRUPTION ********\n");
-            INFO_FIRSTERROR( arg_info) = FALSE;
-        }
-
-        printf ( "%s\n", ERROR_MESSAGE( arg_node));
-
-        if (ERROR_NEXT (arg_node) != NULL) {
-            TRAVopt (ERROR_NEXT (arg_node), arg_info);
-        }
-
-        if ( first_error) {
-            printf ( "********    END TREE CORRUPTION    *******/\n");
-            INFO_FIRSTERROR( arg_info) = TRUE;
-        }
-    }
-
+    DBUG_ENTER ("ASMerror");
     DBUG_RETURN (arg_node);
 }
 
 node *
-PRTmonop (node * arg_node, info * arg_info)
+ASMmonop (node * arg_node, info * arg_info)
 {
     char *tmp;
 
-    DBUG_ENTER ("PRTmonop");
+    DBUG_ENTER ("ASMmonop");
 
     printf("(");
 
@@ -247,9 +248,9 @@ PRTmonop (node * arg_node, info * arg_info)
 }
 
 
-node *PRTfundec (node * arg_node, info * arg_info)
+node *ASMfundec (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTfundec");
+    DBUG_ENTER ("ASMfundec");
 
     printf("extern ");
 
@@ -260,11 +261,11 @@ node *PRTfundec (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTglobaldec (node * arg_node, info * arg_info)
+node *ASMglobaldec (node * arg_node, info * arg_info)
 {
     char* tmp;
 
-    DBUG_ENTER ("PRTglobaldec");
+    DBUG_ENTER ("ASMglobaldec");
 
     printf("exern ");
 
@@ -295,11 +296,11 @@ node *PRTglobaldec (node * arg_node, info * arg_info)
 
 }
 
-node *PRTglobaldef (node * arg_node, info * arg_info)
+node *ASMglobaldef (node * arg_node, info * arg_info)
 {
     char* tmp;
 
-    DBUG_ENTER ("PRTglobaldef");
+    DBUG_ENTER ("ASMglobaldef");
 
     if (GLOBALDEF_EXPORT( arg_node))
         printf("export ");
@@ -334,11 +335,11 @@ node *PRTglobaldef (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTcast (node * arg_node, info * arg_info)
+node *ASMcast (node * arg_node, info * arg_info)
 {
     char *tmp;
 
-    DBUG_ENTER ("PRTcast");
+    DBUG_ENTER ("ASMcast");
 
     printf("((");
 
@@ -367,9 +368,9 @@ node *PRTcast (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTconditionif (node * arg_node, info * arg_info)
+node *ASMconditionif (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTconditionif");
+    DBUG_ENTER ("ASMconditionif");
 
     print_indent(arg_info->indent);
     printf("if(");
@@ -377,36 +378,28 @@ node *PRTconditionif (node * arg_node, info * arg_info)
     CONDITIONIF_EXPR( arg_node) = TRAVdo( CONDITIONIF_EXPR( arg_node), arg_info);
 
     printf(")\n");
-    //print_indent(arg_info->indent++);
     arg_info->indent++;
-    //printf("{\n");
 
     CONDITIONIF_BLOCK( arg_node) = TRAVdo( CONDITIONIF_BLOCK( arg_node), arg_info);
 
-    //print_indent(--arg_info->indent);
     arg_info->indent--;
-    //printf("}\n");
 
     if(CONDITIONIF_ELSEBLOCK( arg_node) != NULL) {
         print_indent(arg_info->indent);
         printf("else\n");
-        //print_indent(arg_info->indent++);
         arg_info->indent++;
-        //printf("{\n");
 
         CONDITIONIF_ELSEBLOCK( arg_node) = TRAVdo(CONDITIONIF_ELSEBLOCK(\
                     arg_node), arg_info);
-        //print_indent(--arg_info->indent);
         arg_info->indent--;
-        //printf("}\n");
     }
 
     DBUG_RETURN (arg_node);
 }
 
-node *PRTwhileloop (node * arg_node, info * arg_info)
+node *ASMwhileloop (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTwhileloop");
+    DBUG_ENTER ("ASMwhileloop");
 
     printf("while(");
 
@@ -415,23 +408,19 @@ node *PRTwhileloop (node * arg_node, info * arg_info)
     printf(")\n");
 
     if(WHILELOOP_BLOCK( arg_node) != NULL) {
-        /*print_indent(arg_info->indent++);
-        printf("{\n");*/
         arg_info->indent++;
 
         WHILELOOP_BLOCK( arg_node) = TRAVdo( WHILELOOP_BLOCK( arg_node), arg_info);
 
         arg_info->indent--;
-        /*print_indent(--arg_info->indent);
-        printf("}\n");*/
     }
 
     DBUG_RETURN (arg_node);
 }
 
-node *PRTdowhileloop (node * arg_node, info * arg_info)
+node *ASMdowhileloop (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTdowhileloop");
+    DBUG_ENTER ("ASMdowhileloop");
 
     printf("do\n");
 
@@ -449,9 +438,9 @@ node *PRTdowhileloop (node * arg_node, info * arg_info)
 
 }
 
-node *PRTforloop (node * arg_node, info * arg_info)
+node *ASMforloop (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTforloop");
+    DBUG_ENTER ("ASMforloop");
 
     printf("for( ");
 
@@ -479,18 +468,18 @@ node *PRTforloop (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTconst (node * arg_node, info * arg_info)
+node *ASMconst (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTconst");
+    DBUG_ENTER ("ASMconst");
 
     printf(" %s ", CONST_NAME( arg_node));
 
     DBUG_RETURN (arg_node);
 }
 
-node *PRTfuncall (node * arg_node, info * arg_info)
+node *ASMfuncall (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTfuncall");
+    DBUG_ENTER ("ASMfuncall");
 
     FUNCALL_ID( arg_node) = TRAVdo( FUNCALL_ID( arg_node), arg_info);
 
@@ -504,14 +493,56 @@ node *PRTfuncall (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTfundef (node * arg_node, info * arg_info)
+// hier was ik begonnnen
+node *ASMfundef (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTfundef");
+    type tmp_type;
+    char *fun_name;
+    node *header, *params;
+    instruction *new_instr;
 
-    if(FUNDEF_EXPORT( arg_node))
-        printf("export ");
+    DBUG_ENTER ("ASMfundef");
+
+    header = FUNDEF_HEADER(arg_node);
+    tmp_type = FUNHEADER_RETTYPE(header);
+    fun_name = VAR_NAME(FUNHEADER_ID(header));
+
+    /* add to export list */
+    if(FUNDEF_EXPORT( arg_node)) {
+        struct export *new_export = MEMmalloc(sizeof(struct export));
+
+        /* set function name */
+        new_export->fun_name = VAR_NAME(FUNHEADER_ID(header));
+
+        /* create type list */
+        new_export->args = list_create();
+        list_addtoend(new_export->args, &int_types[FUNHEADER_RETTYPE(header)]);
+
+        params = FUNHEADER_PARAMS(header);
+        while(params) {
+            tmp_type = PARAM_TYPE(PARAMLIST_HEAD(params));
+            list_addtoend(new_export->args,  &int_types[tmp_type]);
+
+            params = PARAMLIST_NEXT(params);
+        }
+    }
+
+    /* add function label to instrunction list */
+    new_instr = MEMmalloc(sizeof(instruction));
+    new_instr->name = STRcat(VAR_NAME(FUNHEADER_ID(header)), ":");
+
+    list_addtoend(arg_info->instrs, new_instr);
+
+    /* add esr to instruction list */
+    new_instr = MEMmalloc(sizeof(instruction));
+    new_instr->name = STRcpy("    esr");   // TODO die spaties moeten weg
+    new_instr->num_args = 1;
+    new_instr->args[0] = 0;         // TODO num args + num local vars
+    list_addtoend(arg_info->instrs, new_instr);
+    
 
     FUNDEF_HEADER( arg_node) = TRAVdo( FUNDEF_HEADER( arg_node), arg_info);
+
 
     printf("\n{\n");
 
@@ -522,9 +553,9 @@ node *PRTfundef (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTfunbody (node * arg_node, info * arg_info)
+node *ASMfunbody (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTfunbody");
+    DBUG_ENTER ("ASMfunbody");
 
     arg_info->indent++;
 
@@ -551,9 +582,9 @@ node *PRTfunbody (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTexprlist (node * arg_node, info * arg_info)
+node *ASMexprlist (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTexprlist");
+    DBUG_ENTER ("ASMexprlist");
 
     EXPRLIST_HEAD( arg_node) = TRAVopt( EXPRLIST_HEAD( arg_node), arg_info);
 
@@ -566,9 +597,9 @@ node *PRTexprlist (node * arg_node, info * arg_info)
 
 }
 
-node *PRTvardeclist (node * arg_node, info * arg_info)
+node *ASMvardeclist (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTvardeclist");
+    DBUG_ENTER ("ASMvardeclist");
 
     VARDECLIST_HEAD( arg_node) = TRAVdo( VARDECLIST_HEAD( arg_node), arg_info);
     printf(";\n");
@@ -578,11 +609,11 @@ node *PRTvardeclist (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTvardec (node * arg_node, info * arg_info)
+node *ASMvardec (node * arg_node, info * arg_info)
 {
     char* tmp;
 
-    DBUG_ENTER ("PRTvardec");
+    DBUG_ENTER ("ASMvardec");
 
     switch (VARDEC_TYPE( arg_node)) {
         case TYPE_bool:
@@ -615,9 +646,9 @@ node *PRTvardec (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTstatementlist (node * arg_node, info * arg_info)
+node *ASMstatementlist (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTstatementlist");
+    DBUG_ENTER ("ASMstatementlist");
 
     if(NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) != N_conditionif)
         print_indent( arg_info->indent);
@@ -631,11 +662,11 @@ node *PRTstatementlist (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTfunheader (node * arg_node, info * arg_info)
+node *ASMfunheader (node * arg_node, info * arg_info)
 {
     char* tmp;
 
-    DBUG_ENTER ("PRTfunheader");
+    DBUG_ENTER ("ASMfunheader");
 
     switch (FUNHEADER_RETTYPE( arg_node)) {
         case TYPE_bool:
@@ -668,9 +699,9 @@ node *PRTfunheader (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTparamlist (node * arg_node, info * arg_info)
+node *ASMparamlist (node * arg_node, info * arg_info)
 {
-    DBUG_ENTER ("PRTparamlist");
+    DBUG_ENTER ("ASMparamlist");
 
     PARAMLIST_HEAD( arg_node) = TRAVdo( PARAMLIST_HEAD( arg_node), arg_info);
 
@@ -682,11 +713,11 @@ node *PRTparamlist (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-node *PRTparam (node * arg_node, info * arg_info)
+node *ASMparam (node * arg_node, info * arg_info)
 {
     char *tmp;
 
-    DBUG_ENTER ("PRTparam");
+    DBUG_ENTER ("ASMparam");
 
     switch (PARAM_TYPE( arg_node)) {
         case TYPE_bool:
@@ -712,22 +743,47 @@ node *PRTparam (node * arg_node, info * arg_info)
 }
 
 
+/****************** DEBUG PRINTING **********************/
+void print_assembly(info *arg_info)
+{
+    int i, index = 0;
+    instruction *instr;
+
+    instr = list_get_elem(arg_info->instrs, index++);
+
+    while(instr){
+        printf("%s ", instr->name);
+
+        /* print args */
+        for(i = 0; i < instr->num_args; i++)
+            printf("%d ", instr->args[i]);
+        printf("\n");
+        
+        instr = list_get_elem(arg_info->instrs, index++);
+    }
+
+}
+
 /******************   START of phase   ******************/
-node *PRTdoPrint( node *syntaxtree)
+node *CODEdoAssembly( node *syntaxtree)
 {
     info *info;
 
-    DBUG_ENTER("PRTdoPrint");
+    DBUG_ENTER("ASMdoPrint");
 
-    DBUG_ASSERT( (syntaxtree!= NULL), "PRTdoPrint called with empty syntaxtree");
+    DBUG_ASSERT( (syntaxtree!= NULL), "ASMdoPrint called with empty syntaxtree");
 
     fprintf(stderr, "\n\n------------------------------\n\n");
 
     info = MakeInfo();
 
-    TRAVpush( TR_prt);
+    TRAVpush( TR_asm);
 
     syntaxtree = TRAVdo( syntaxtree, info);
+
+    /* DEBUG printing of all instructions */
+    printf("\n\nAssembly:\n\n");
+    print_assembly(info);
 
     TRAVpop();
 

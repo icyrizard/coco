@@ -8,33 +8,27 @@ export float glob_f;
 
 void myfunc() {}
 
+int func(){
+    int a;
+    return 1;
+}
+
 export int main(int argc, int argv)
 {
     int i = 0;
     int j = 0;
     int k = 0;
-    int a = 1;
-    int b = 10;
+    bool a = true;
+    bool b = true;
+    bool c = true;
 
     j = 0;
 
-    for(int i = 0, 5)
-        i = 0;
+    a = a && b && c;
+    a = a && b || c;
 
-    while(true) {
-        i = 0;
-    }
 
-    for(int i = 0, 10)
-        j = j + 1;
-
-    fun(i);
-
-    fun( fun ( 1 ), fun (2) );
-
-    fun333();
-
-    k = 1 + 3 * 3 /(a + b);
-
+    func();
     return 0;
+
 }

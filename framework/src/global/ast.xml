@@ -1007,7 +1007,7 @@
         <son name="Head">
           <targets>
             <target mandatory="yes">
-              <node name="arg" />
+              <node name="Arg" />
               <phases>
                 <all />
               </phases>
@@ -1029,20 +1029,19 @@
 
     <node name="Arg">
         <attributes>
-            <attribute name="instr">
-            <type name="String">
-                <targets>
-                <target mandatory="yes">
-                    <any />
-                    <phases>
-                    <all />
-                    </phases>
-                </target>
-                </targets>
-            </type>
-            </attribute>
+        <attribute name="instr">
+          <type name="String">
+            <targets>
+              <target mandatory="yes">
+                <any />
+                <phases>
+                  <all />
+                </phases>
+              </target>
+            </targets>
+          </type>
+        </attribute>
         </attributes>
     </node>
     </syntaxtree>
 </definition>
-

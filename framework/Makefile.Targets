@@ -81,4 +81,5 @@ desugar 	  = desug_init.o desug_for.o
 
 context 		= link_functions.o link_variables.o type_check.o logic.o loop.o
 
-code 				= assembly.o
+#code 				= assembly.o
+code 				= code_assembly.o

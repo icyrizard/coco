@@ -42,5 +42,8 @@ extern node *PRTstatementlist (node * arg_node, info * arg_info);
 extern node *PRTfunheader (node * arg_node, info * arg_info);
 extern node *PRTparamlist (node * arg_node, info * arg_info);
 extern node *PRTparam (node * arg_node, info * arg_info);
+extern node *PRTparam (node * arg_node, info * arg_info);
+extern node *PRTassemblyinstrs(node * arg_node, info * arg_info);
+extern node *PRTassemblyinstr(node * arg_node, info * arg_info);
 
 #endif /* _SAC_PRT_NODE_H_ */

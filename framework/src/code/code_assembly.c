@@ -745,7 +745,7 @@ node *ASMparam (node * arg_node, info * arg_info)
 /****************** DEBUG PRINTING **********************/
 void print_assembly(info *arg_info)
 {
-    int i, index = 0;
+    int index = 0;
     node *instr, *arg;
 
     instr = list_get_elem(arg_info->exports, index++);

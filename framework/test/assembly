@@ -1,0 +1,11 @@
+extern void printInt(int num);
+
+export int main(int i, int j, int k){
+    bool b;
+    bool c;
+    bool d;
+
+    return 0;
+}
+
+extern void ScanInt(int num);

@@ -137,7 +137,7 @@ node *concat_vardeclist(node *vars, list *vardecs){
     return vardec_list;
 }
 
-int check_dup_decl(void *name, void *decl)
+bool check_dup_decl(void *name, void *decl)
 {
     return STReq((char *) name, VAR_NAME(VARDEC_ID(((node *)decl))));
 }

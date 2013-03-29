@@ -30,6 +30,7 @@ struct INFO {
     list *instrs;  // zoiets
     list *imports;
     list *exports;
+    list *localvars;
     node  *root; // root node for the instruction lists
 };
 
@@ -39,9 +40,10 @@ static info *MakeInfo()
 
     result = MEMmalloc(sizeof(info));
     result->indent = 0;
-    result->instrs  = list_create(); //TBmakeAssemblyinstrs(NULL, NULL);
-    result->imports = list_create(); //TBmakeAssemblyinstrs(NULL, NULL);
-    result->exports = list_create(); //TBmakeAssemblyinstrs(NULL, NULL);
+    result->instrs  = list_create();
+    result->imports = list_create();
+    result->exports = list_create();
+    result->localvars = list_create();
 
     return result;
 }
@@ -65,6 +67,11 @@ void print_indent( int n)
 
     for(; i < n; i++)
         printf("    ");
+}
+
+bool check_str(void *v1, void *v2)
+{
+    return STReq((char *)v1, (char *)v2);
 }
 
 
@@ -249,7 +256,40 @@ ASMmonop (node * arg_node, info * arg_info)
 
 node *ASMfundec (node * arg_node, info * arg_info)
 {
+    type tmp_type;
+    char *fun_name;
+    node *header, *params, *args;
+
     DBUG_ENTER ("ASMfundec");
+
+    header = FUNDEC_HEADER(arg_node);
+    tmp_type = FUNHEADER_RETTYPE(header);
+    fun_name = VAR_NAME(FUNHEADER_ID(header));
+
+    /* set function name */
+    node *arg_list = TBmakeArglist(TBmakeArg(fun_name), NULL);
+
+    /* set return type */
+    ARGLIST_NEXT(arg_list) = TBmakeArglist(TBmakeArg(STRcpy(typess[tmp_type])), NULL);
+
+    /* create type list */
+    params = FUNHEADER_PARAMS(header);
+
+    /* create param list  */
+    args = ARGLIST_NEXT(arg_list);
+    while(params) {
+        tmp_type = PARAM_TYPE(PARAMLIST_HEAD(params));
+        ARGLIST_NEXT(args) = TBmakeArglist(TBmakeArg(typess[tmp_type]), NULL);
+        args = ARGLIST_NEXT(args);
+        params = PARAMLIST_NEXT(params);
+    }
+
+    /* set funname as last argument */
+    ARGLIST_NEXT(args) = TBmakeArglist(TBmakeArg(fun_name), NULL);
+
+    /* add to list */
+    node *new_instr = TBmakeAssemblyinstr(".import", arg_list);
+    list_addtoend(arg_info->imports, new_instr);
 
     printf("extern ");
 
@@ -505,28 +545,31 @@ node *ASMarglist(node *arg_node, info *arg_info)
     DBUG_RETURN (arg_node);
 }
 
-// hier was ik begonnnen
 node *ASMfundef (node * arg_node, info * arg_info)
 {
-    type tmp_type;
-    char *fun_name;
-    node *header, *params, *args;
+    type tmp_type, ret_type;
+    char *fun_name, *return_keyword, *tmp_var;
+    node *header, *params, *var_decs, *args, *new_instr ;
 
     DBUG_ENTER ("ASMfundef");
 
     header = FUNDEF_HEADER(arg_node);
-    tmp_type = FUNHEADER_RETTYPE(header);
+    ret_type = FUNHEADER_RETTYPE(header);
     fun_name = VAR_NAME(FUNHEADER_ID(header));
 
     /* add to export list */
     if(FUNDEF_EXPORT( arg_node)) {
         /* set function name */
-        node *arg_list = TBmakeArglist(TBmakeArg(VAR_NAME(FUNHEADER_ID(header))), NULL);
+        node *arg_list = TBmakeArglist(TBmakeArg(fun_name), NULL);
+
+        /* set return type */
+        ARGLIST_NEXT(arg_list) = TBmakeArglist(TBmakeArg(STRcpy(typess[ret_type])), NULL);
 
         /* create type list */
         params = FUNHEADER_PARAMS(header);
 
-        args = arg_list;
+        /* create param list  */
+        args = ARGLIST_NEXT(arg_list);
         while(params) {
             tmp_type = PARAM_TYPE(PARAMLIST_HEAD(params));
             ARGLIST_NEXT(args) = TBmakeArglist(TBmakeArg(typess[tmp_type]), NULL);
@@ -534,12 +577,35 @@ node *ASMfundef (node * arg_node, info * arg_info)
             params = PARAMLIST_NEXT(params);
         }
 
-        ARGLIST_NEXT(args) = TBmakeArglist(TBmakeArg(STRcat("_", VAR_NAME(FUNHEADER_ID(header)))), NULL);
+        /* set funname as last argument */
+        ARGLIST_NEXT(args) = TBmakeArglist(TBmakeArg(fun_name), NULL);
 
         /* add to list */
-        node *new_instr = TBmakeAssemblyinstr(".export", arg_list);
+        new_instr = TBmakeAssemblyinstr(".export", arg_list);
         list_addtoend(arg_info->exports, new_instr);
     }
+
+
+    /* create esr list  */
+    params = FUNHEADER_PARAMS(header);
+    while(params) {
+        tmp_var = VAR_NAME(PARAM_ID(PARAMLIST_HEAD(params)));
+        list_addtoend(arg_info->localvars, (void*)tmp_var);
+        params = PARAMLIST_NEXT(params);
+    }
+
+    var_decs = FUNBODY_VARS(FUNDEF_BODY(arg_node));
+    while(var_decs) {
+        tmp_var = VAR_NAME(VARDEC_ID(VARDECLIST_HEAD(var_decs)));
+        list_addtoend(arg_info->localvars, (void*)tmp_var);
+        var_decs = VARDECLIST_NEXT(var_decs);
+    }
+
+
+    list_print_str(arg_info->localvars);
+
+    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(STRcat(fun_name, ":"), NULL));
+    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(STRcpy("esr"), TBmakeArglist(TBmakeArg(STRitoa(list_length(arg_info->localvars))), NULL)));
 
     FUNDEF_HEADER( arg_node) = TRAVdo( FUNDEF_HEADER( arg_node), arg_info);
 
@@ -547,7 +613,29 @@ node *ASMfundef (node * arg_node, info * arg_info)
 
     FUNDEF_BODY( arg_node) = TRAVopt( FUNDEF_BODY( arg_node), arg_info);
 
+    switch(ret_type){
+        case TYPE_float:
+            return_keyword = "freturn";
+            break;
+        case TYPE_void:
+            return_keyword = "return";
+            break;
+        case TYPE_int:
+            return_keyword = "ireturn";
+            break;
+        case TYPE_bool:
+            return_keyword = "breturn";
+            break;
+        case TYPE_unknown:
+            DBUG_ASSERT(0, "Unkown return type");
+    }
+
+    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(STRcpy(return_keyword), NULL));
+
     printf("}\n\n");
+
+    /* empty localvars list for re-use */
+    list_empty(arg_info->localvars);
 
     DBUG_RETURN (arg_node);
 }
@@ -568,14 +656,10 @@ node *ASMfunbody (node * arg_node, info * arg_info)
     }
 
     if(FUNBODY_RETURN( arg_node) != NULL) {
-        printf("\n");
-        print_indent(arg_info->indent);
-        printf("return ");
-
         FUNBODY_RETURN( arg_node) = TRAVdo( FUNBODY_RETURN( arg_node), arg_info);
 
-        printf(";\n");
     }
+
     arg_info->indent--;
 
     DBUG_RETURN (arg_node);
@@ -741,28 +825,84 @@ node *ASMparam (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
-
-/****************** DEBUG PRINTING **********************/
-void print_assembly(info *arg_info)
-{
+void print_export(list *exports){
     int index = 0;
     node *instr, *arg;
-
-    instr = list_get_elem(arg_info->exports, index++);
+    instr = list_get_elem(exports, index++);
 
     while(instr){
         printf("%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
+        printf("\"%s\" ", ARG_INSTR(ARGLIST_HEAD(arg)));
+        arg = ARGLIST_NEXT(arg);
+
         while(arg){
           printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
           arg = ARGLIST_NEXT(arg);
         }
         printf("\n");
 
-        instr = list_get_elem(arg_info->exports, index++);
+        instr = list_get_elem(exports, index++);
     }
+}
+
+void print_imports(list *imports){
+    int index = 0;
+    node *instr, *arg;
+    instr = list_get_elem(imports, index++);
+
+    while(instr){
+        printf("%s ", ASSEMBLYINSTR_INSTR(instr));
+
+        /* print args */
+        arg = ASSEMBLYINSTR_ARGS(instr);
+        printf("\"%s\" ", ARG_INSTR(ARGLIST_HEAD(arg)));
+        arg = ARGLIST_NEXT(arg);
+
+        while(arg){
+          printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+          arg = ARGLIST_NEXT(arg);
+        }
+        printf("\n");
+
+        instr = list_get_elem(imports, index++);
+    }
+}
+
+void print_instrs(list *instrs){
+    int index = 0;
+    node *instr, *arg;
+    instr = list_get_elem(instrs, index++);
+    char *instr_name;
+
+    while(instr){
+        instr_name = ASSEMBLYINSTR_INSTR(instr);
+        if(instr_name[STRlen(instr_name) - 1] != ':')
+            printf("        ");
+        printf("%s ", instr_name);
+
+        /* print args */
+        arg = ASSEMBLYINSTR_ARGS(instr);
+
+        while(arg){
+            printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+            arg = ARGLIST_NEXT(arg);
+        }
+        printf("\n");
+
+        instr = list_get_elem(instrs, index++);
+    }
+    printf("\n");
+}
+
+/****************** DEBUG PRINTING **********************/
+void print_assembly(info *arg_info)
+{
+    print_instrs(arg_info->instrs);
+    print_imports(arg_info->imports);
+    print_export(arg_info->exports);
 }
 
 /******************   START of phase   ******************/

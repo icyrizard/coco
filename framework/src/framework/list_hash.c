@@ -84,6 +84,13 @@ int list_addtoend(list *head, void *value)
     return 0;
 }
 
+void list_print_str(list *head){
+    printf("[ ");
+    while((head = head->next))
+        printf("%s, ", (char*) head->value);
+    printf("]\n");
+}
+
 int list_remove(list *head, void *value)
 {
     list *tmp,
@@ -127,7 +134,22 @@ int list_contains(list *head, void *value)
     return 0;
 }
 
-int list_contains_fun(list *head, void *value, int (*fun)(void *, void *))
+int list_get_index_fun(list *head, void *value, bool (*fun)(void *, void *))
+{
+    int index = 0;
+    RETURN_NULL(head);
+
+    while((head = head->next)) {
+        if(fun(value, head->value))
+            return index;
+        index++;
+    }
+
+    return -1;
+}
+
+
+int list_contains_fun(list *head, void *value, bool (*fun)(void *, void *))
 {
     RETURN_NULL(head);
 
@@ -140,7 +162,7 @@ int list_contains_fun(list *head, void *value, int (*fun)(void *, void *))
 void *list_get_elem(list *head, int index)
 {
     int i;
-    
+
     RETURN_NNULL(head);
 
     if(list_length(head) < index + 1)
@@ -238,6 +260,19 @@ void hashmap_empty(hashmap *map)
         return;
 
     map->next = NULL;
+}
+
+void hashmap_print(hashmap *map)
+{
+    if(map == NULL)
+        return;
+
+    printf("{ ");
+    while((map = map->next)) {
+        printf("%s: ", (char *)map->key);
+        printf("<%p>, ", map->value);
+    }
+    printf(" }\n");
 }
 
 int hashmap_is_empty(hashmap *map)

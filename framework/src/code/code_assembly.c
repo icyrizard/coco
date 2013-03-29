@@ -115,6 +115,8 @@ node *ASMassign (node * arg_node, info * arg_info)
         printf( " = ");
     }
 
+    ASSIGN_EXPR( arg_node) = TRAVdo( ASSIGN_EXPR( arg_node), arg_info);
+
     switch(get_type(VAR_DECL(ASSIGN_LET(arg_node))))
     {
         case TYPE_int:
@@ -134,7 +136,6 @@ node *ASMassign (node * arg_node, info * arg_info)
     list_addtoend(arg_info->instrs,
     TBmakeAssemblyinstr(STRcpy(tmp), TBmakeArglist(TBmakeArg( STRitoa(index) ), NULL)));
 
-    ASSIGN_EXPR( arg_node) = TRAVdo( ASSIGN_EXPR( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
 }
@@ -213,7 +214,29 @@ node *ASMfloat (node * arg_node, info * arg_info)
 
 node *ASMnum (node * arg_node, info * arg_info)
 {
+    char *instr = "yone", *arg;
+
     DBUG_ENTER ("ASMnum");
+
+    switch(NUM_VALUE(arg_node))
+    {
+        case -1:
+            instr = STRcpy("iloadc_m1");
+            arg = NULL;
+            break;
+        case 0:
+            instr = STRcpy("iloadc_0");
+            arg = NULL;
+            break;
+        case 1:
+            instr = STRcpy("iloadc_1");
+            arg = NULL;
+            break;
+        default:
+            break;
+    }
+    printf("%s\n", instr);
+    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, NULL));
 
     printf("%d", NUM_VALUE( arg_node));
 
@@ -775,7 +798,8 @@ node *ASMstatementlist (node * arg_node, info * arg_info)
         print_indent( arg_info->indent);
     STATEMENTLIST_HEAD( arg_node) = TRAVdo( STATEMENTLIST_HEAD( arg_node), arg_info);
 
-    if((NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_funcall) || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_assign) || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_dowhileloop))
+    if((NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_funcall) || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_assign)
+            || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_dowhileloop))
         printf(";\n");
 
     STATEMENTLIST_NEXT( arg_node) = TRAVopt( STATEMENTLIST_NEXT( arg_node), arg_info);

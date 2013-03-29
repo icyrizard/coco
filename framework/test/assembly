@@ -3,6 +3,5 @@ export void fun() {
     int i;
     float f;
 
-    i = 10;
-    f = 1.0032;
+    i = 0;
 }

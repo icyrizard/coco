@@ -1,5 +1,7 @@
 node *CTPdoType(node *syntaxtree);
 
+extern type get_decl_type(node *decl);
+
 node *TYPEfundef(node *arg_node, info *arg_info);
 node *TYPEfunheader(node *arg_node, info *arg_info);
 node *TYPEfunbody(node *arg_node, info *arg_info);

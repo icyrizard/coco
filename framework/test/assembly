@@ -1,11 +1,8 @@
-extern void printInt(int num);
 
-export int main(int i, int j, int k){
-    bool b;
-    bool c;
-    bool d;
+export void fun() {
+    int i;
+    float f;
 
-    return 0;
+    i = 10;
+    f = 1.0032;
 }
-
-extern void ScanInt(int num);

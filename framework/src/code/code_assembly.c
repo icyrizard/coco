@@ -74,6 +74,23 @@ bool check_str(void *v1, void *v2)
     return STReq((char *)v1, (char *)v2);
 }
 
+type get_type(node *decl)
+{
+    switch(NODE_TYPE(decl))
+    {
+        case N_globaldec:
+            return GLOBALDEC_TYPE(decl);
+        case N_globaldef:
+            return GLOBALDEF_TYPE(decl);
+        case N_vardec:
+            return VARDEC_TYPE(decl);
+        case N_param:
+            return PARAM_TYPE(decl);
+        default:
+            printf("Unknown node type %d\n", NODE_TYPE(decl));
+            return TYPE_unknown;
+    }
+}
 
 /*********************   Traverse   *********************/
 node *ASMprogram(node * arg_node, info * arg_info)
@@ -89,12 +106,33 @@ node *ASMprogram(node * arg_node, info * arg_info)
 
 node *ASMassign (node * arg_node, info * arg_info)
 {
+    char *tmp;
+    int index;
     DBUG_ENTER ("ASMassign");
 
     if (ASSIGN_LET( arg_node) != NULL) {
         ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
         printf( " = ");
     }
+
+    switch(get_type(VAR_DECL(ASSIGN_LET(arg_node))))
+    {
+        case TYPE_int:
+            tmp = "istore";
+            break;
+        case TYPE_float:
+            tmp = "fstore";
+            break;
+        case TYPE_bool:
+            tmp = "bstore";
+            break;
+        default:
+            printf("andere type\n");
+    }
+
+    index = list_get_index_fun(arg_info->localvars, VAR_NAME(ASSIGN_LET(arg_node)), check_str);
+    list_addtoend(arg_info->instrs,
+    TBmakeAssemblyinstr(STRcpy(tmp), TBmakeArglist(TBmakeArg( STRitoa(index) ), NULL)));
 
     ASSIGN_EXPR( arg_node) = TRAVdo( ASSIGN_EXPR( arg_node), arg_info);
 

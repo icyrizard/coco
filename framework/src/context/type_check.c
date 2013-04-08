@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "types.h"
 #include "link_functions.h"
 #include "memory.h"
@@ -83,7 +84,7 @@ type get_decl_type(node *decl)
         case N_param:
             return PARAM_TYPE(decl);
         default:
-            printf("Unknown node type %d\n", NODE_TYPE(decl));
+            fprintf(stderr, "Unknown node type %d\n", NODE_TYPE(decl));
             return TYPE_unknown;
     }
 }
@@ -281,7 +282,7 @@ node *TYPEbinop(node *arg_node, info *arg_info)
                 arg_info->t = TYPE_bool;
             break;
         default:
-            printf("unknown binop operator TYPEbinop()\n");
+            fprintf(stderr, "unknown binop operator TYPEbinop()\n");
     }
     DBUG_RETURN(arg_node);
 }
@@ -433,10 +434,19 @@ node *TYPEcast(node *arg_node, info *arg_info)
     TRAVdo(CAST_RIGHT(arg_node), arg_info);
 
     /* check on casting void types */
-    if(arg_info->t == TYPE_void) {
-        CTIerror(":%d: error: can only cast between basic types",
-            NODE_LINE(arg_node));
-        arg_info->t = TYPE_unknown;
+    switch(arg_info->t)
+    {
+        case TYPE_void:
+            CTIerror(":%d: error: can only cast between basic types",
+                NODE_LINE(arg_node));
+            arg_info->t = TYPE_unknown;
+            break;
+        case TYPE_int:
+        case TYPE_float:
+        case TYPE_bool:
+            arg_info->t = CAST_TYPE(arg_node);
+        case TYPE_unknown:
+            break;
     }
 
     DBUG_RETURN(arg_node);

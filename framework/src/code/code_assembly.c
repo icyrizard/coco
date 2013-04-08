@@ -1,5 +1,6 @@
 /***   Print tree phase for debugging purposes   ***/
 
+#include <stdio.h>
 #include "print.h"
 #include "traverse.h"
 #include "tree_basic.h"
@@ -31,6 +32,7 @@ struct INFO {
     list *imports;
     list *exports;
     list *localvars;
+    list *constpool;
     node  *root; // root node for the instruction lists
 };
 
@@ -44,6 +46,7 @@ static info *MakeInfo()
     result->imports = list_create();
     result->exports = list_create();
     result->localvars = list_create();
+    result->constpool = list_create();
 
     return result;
 }
@@ -54,6 +57,8 @@ static info *FreeInfo( info *info)
     list_free(info->instrs);
     list_free(info->imports);
     list_free(info->exports);
+    list_free(info->localvars);
+    list_free(info->constpool);
 
     info = MEMfree( info);
 
@@ -106,7 +111,7 @@ node *ASMprogram(node * arg_node, info * arg_info)
 
 node *ASMassign (node * arg_node, info * arg_info)
 {
-    char *tmp;
+    char *tmp = NULL;
     int index;
     DBUG_ENTER ("ASMassign");
 
@@ -214,11 +219,15 @@ node *ASMfloat (node * arg_node, info * arg_info)
 
 node *ASMnum (node * arg_node, info * arg_info)
 {
-    char *instr = "yone", *arg;
+    char *instr, *arg, tmp[32];
+    int index, number;
+    node *args = NULL;
 
     DBUG_ENTER ("ASMnum");
 
-    switch(NUM_VALUE(arg_node))
+    number = NUM_VALUE(arg_node);
+
+    switch(number)
     {
         case -1:
             instr = STRcpy("iloadc_m1");
@@ -233,12 +242,35 @@ node *ASMnum (node * arg_node, info * arg_info)
             arg = NULL;
             break;
         default:
+            /* copy the constant number in the buffer */
+            sprintf(tmp, "%d",  number);
+
+            /* try to find the constant in the buffer */
+            index = list_get_index_fun(arg_info->constpool, tmp, check_str);
+
+            /* constant found! add it to the constant list */
+            if(index == -1) {
+                /* add new constant to constant pool */
+                //list_addtoend(arg_info->constpool, .....);
+
+                /* get index of constant in constant pool */
+                index = list_length(arg_info->constpool) - 1;
+
+            }
+            arg =  STRitoa(index);
             break;
     }
-    printf("%s\n", instr);
-    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, NULL));
 
     printf("%d", NUM_VALUE( arg_node));
+
+    /* create argument node if needed */
+    if(arg)
+        args = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
+
+    /* add new instruction to list */
+    // TODO line below creates an error
+    //list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, args)); //
+
 
     DBUG_RETURN (arg_node);
 }

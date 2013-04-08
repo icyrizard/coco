@@ -76,7 +76,25 @@ void print_indent( int n)
 
 bool check_str(void *v1, void *v2)
 {
+
     return STReq((char *)v1, (char *)v2);
+}
+
+bool check_const(void *v1, void *v2){
+    char *value;
+    node *arg, *tmp = (node *)v2;
+
+    /* print args */
+    arg = ASSEMBLYINSTR_ARGS(tmp);
+    arg = ARGLIST_NEXT(arg);
+
+    /* get last argument(always second)  */
+    while(arg){
+        value = ARG_INSTR(ARGLIST_HEAD(arg));
+        arg = ARGLIST_NEXT(arg);
+    }
+
+    return STReq((char *)v1, (char *)value);
 }
 
 type get_type(node *decl)
@@ -212,7 +230,57 @@ node *ASMfloat (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("ASMfloat");
 
-    printf( "%f", FLOAT_VALUE( arg_node));
+    char *instr, *arg, tmp[32];
+    int index;
+    float number;
+    node *args = NULL, *arg_list = NULL, *new_instr = NULL;
+
+    number = FLOAT_VALUE(arg_node);
+
+    switch((int)number)
+    {
+        case 0:
+            instr = STRcpy("floadc_0");
+            arg = NULL;
+            break;
+        case 1:
+            instr = STRcpy("floadc_1");
+            arg = NULL;
+            break;
+        default:
+            instr = STRcpy("floadc");
+            /* copy the constant number in the buffer*/
+            sprintf(tmp, "%f",  number);
+            printf("tmp %s\n", tmp);
+
+            /* try to find the constant in the buffer */
+            index = list_get_index_fun(arg_info->constpool, tmp, check_const);
+
+            /* constant found! add it to the constant list */
+            if(index == -1) {
+                /* set int as first arg, value as second*/
+               arg_list = TBmakeArglist(TBmakeArg("float"), TBmakeArglist(TBmakeArg(STRcpy(tmp)), NULL));
+
+                /* add new constant to constant pool */
+                new_instr = TBmakeAssemblyinstr(".const", arg_list);
+                list_addtoend(arg_info->constpool, new_instr);
+
+                /* get index of constant in constant pool */
+                index = list_length(arg_info->constpool) - 1;
+            }
+
+            /* set value of arg to the index where this constant can be found by the VM */
+            arg =  STRitoa(index);
+            break;
+    }
+
+    /* create argument node if needed */
+    if(arg)
+        args = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
+
+    /* add new instruction to list */
+    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, args)); //
+    DBUG_RETURN (arg_node);
 
     DBUG_RETURN (arg_node);
 }
@@ -221,7 +289,7 @@ node *ASMnum (node * arg_node, info * arg_info)
 {
     char *instr, *arg, tmp[32];
     int index, number;
-    node *args = NULL;
+    node *args = NULL, *arg_list = NULL, *new_instr = NULL;
 
     DBUG_ENTER ("ASMnum");
 
@@ -242,36 +310,38 @@ node *ASMnum (node * arg_node, info * arg_info)
             arg = NULL;
             break;
         default:
+            instr = STRcpy("iloadc");
             /* copy the constant number in the buffer */
             sprintf(tmp, "%d",  number);
 
             /* try to find the constant in the buffer */
-            index = list_get_index_fun(arg_info->constpool, tmp, check_str);
+            index = list_get_index_fun(arg_info->constpool, tmp, check_const);
 
             /* constant found! add it to the constant list */
             if(index == -1) {
+                /* set int as first arg, value as second*/
+                arg_list = TBmakeArglist(TBmakeArg("int"),
+                        TBmakeArglist(TBmakeArg(STRcpy(tmp)), NULL));
+
                 /* add new constant to constant pool */
-                //list_addtoend(arg_info->constpool, .....);
+                new_instr = TBmakeAssemblyinstr(".const", arg_list);
+                list_addtoend(arg_info->constpool, new_instr);
 
                 /* get index of constant in constant pool */
                 index = list_length(arg_info->constpool) - 1;
-
             }
+
+            /* set value of arg to the index where this constant can be found by the VM */
             arg =  STRitoa(index);
             break;
     }
-
-    printf("%d", NUM_VALUE( arg_node));
 
     /* create argument node if needed */
     if(arg)
         args = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
 
     /* add new instruction to list */
-    // TODO line below creates an error
-    //list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, args)); //
-
-
+    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, args)); //
     DBUG_RETURN (arg_node);
 }
 
@@ -309,7 +379,6 @@ node *ASMvar (node * arg_node, info * arg_info)
 
     DBUG_RETURN (arg_node);
 }
-
 
 node *ASMerror (node * arg_node, info * arg_info)
 {
@@ -919,6 +988,29 @@ node *ASMparam (node * arg_node, info * arg_info)
     DBUG_RETURN (arg_node);
 }
 
+void print_const(list *consts){
+    int index = 0;
+    node *instr, *arg;
+    instr = list_get_elem(consts, index++);
+
+    while(instr){
+        printf("%s ", ASSEMBLYINSTR_INSTR(instr));
+
+        /* print args */
+        arg = ASSEMBLYINSTR_ARGS(instr);
+        printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+        arg = ARGLIST_NEXT(arg);
+
+        while(arg){
+          printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+          arg = ARGLIST_NEXT(arg);
+        }
+        printf("\n");
+
+        instr = list_get_elem(consts, index++);
+    }
+}
+
 void print_export(list *exports){
     int index = 0;
     node *instr, *arg;
@@ -997,6 +1089,7 @@ void print_assembly(info *arg_info)
     print_instrs(arg_info->instrs);
     print_imports(arg_info->imports);
     print_export(arg_info->exports);
+    print_const(arg_info->constpool);
 }
 
 /******************   START of phase   ******************/

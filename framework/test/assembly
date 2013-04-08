@@ -1,7 +1,11 @@
-
 export void fun() {
     int i;
+    int j;
     float f;
 
-    i = 0;
+    i = 10;
+    j = 0;
+    i = 10;
+    f = 1.0;
+    f = 20.0;
 }

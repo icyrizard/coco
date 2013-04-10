@@ -97,7 +97,6 @@
         <travnone>
           <node name="Error" />
           <node name="AssemblyInstr"/>
-          <node name="AssemblyInstrs"/>
         </travnone>
       <!--<traversal id="PRT" name="Print Syntax Tree" default="user" include="print.h" />-->
       <traversal id="COPY" name="Copy Syntax Tree" default="user" include="copy_node.h" />

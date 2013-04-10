@@ -1,3 +1,8 @@
+int x;
+int z = 10;
+float f = 1.0;
+bool a = true;
+
 export void fun() {
     int i;
     int j;
@@ -8,4 +13,9 @@ export void fun() {
     i = 10;
     f = 1.0;
     f = 20.0;
+}
+
+void f(){
+    x = 40;
+    z = x;
 }

@@ -10,6 +10,7 @@
 #include "list_hash.h"
 #include "str.h"
 
+void print_global(list *globals);
 
 #define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
@@ -58,6 +59,7 @@ static info *FreeInfo( info *info)
     list_free(info->exports);
     list_free(info->localvars);
     list_free(info->constpool);
+    list_free(info->globalvars);
 
     info = MEMfree( info);
 
@@ -67,7 +69,6 @@ static info *FreeInfo( info *info)
 /*****************   Helper Functions   *****************/
 bool check_str(void *v1, void *v2)
 {
-
     return STReq((char *)v1, (char *)v2);
 }
 
@@ -75,11 +76,9 @@ bool check_const(void *v1, void *v2){
     char *value;
     node *arg, *tmp = (node *)v2;
 
-    /* print args */
+    /* get last argument(always second)  */
     arg = ASSEMBLYINSTR_ARGS(tmp);
     arg = ARGLIST_NEXT(arg);
-
-    /* get last argument(always second)  */
     while(arg){
         value = ARG_INSTR(ARGLIST_HEAD(arg));
         arg = ARGLIST_NEXT(arg);
@@ -120,16 +119,21 @@ node *ASMprogram(node * arg_node, info * arg_info)
 
 node *ASMassign (node * arg_node, info * arg_info)
 {
-    char *tmp = NULL;
-    int index;
+    char *tmp = NULL, *var_name;
+    int index = 0;
+    type var_type;
+
     DBUG_ENTER ("ASMassign");
 
-    if (ASSIGN_LET( arg_node) != NULL)
-        ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
+    //if (ASSIGN_LET( arg_node) != NULL)
+    //    ASSIGN_LET( arg_node) = TRAVdo( ASSIGN_LET( arg_node), arg_info);
 
     ASSIGN_EXPR( arg_node) = TRAVdo( ASSIGN_EXPR( arg_node), arg_info);
 
-    switch(get_type(VAR_DECL(ASSIGN_LET(arg_node))))
+    var_type = get_type(VAR_DECL(ASSIGN_LET(arg_node)));
+    var_name = VAR_NAME(ASSIGN_LET(arg_node));
+
+    switch(var_type)
     {
         case TYPE_int:
             tmp = "istore";
@@ -141,13 +145,34 @@ node *ASMassign (node * arg_node, info * arg_info)
             tmp = "bstore";
             break;
         default:
-            printf("andere type\n");
+            printf("type unkown\n");
     }
 
-    index = list_get_index_fun(arg_info->localvars, VAR_NAME(ASSIGN_LET(arg_node)), check_str);
+    if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0){
+    }
+    else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0){
+    }
+    else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0){
+
+        /* change according to global stores*/
+        switch(var_type)
+        {
+            case TYPE_int:
+                tmp = "istoreg";
+                break;
+            case TYPE_float:
+                tmp = "fstoreg";
+                break;
+            case TYPE_bool:
+                tmp = "bstoreg";
+                break;
+            default:
+                printf("type unkown\n");
+        }
+    }
+
     list_addtoend(arg_info->instrs,
     TBmakeAssemblyinstr(STRcpy(tmp), TBmakeArglist(TBmakeArg( STRitoa(index) ), NULL)));
-
 
     DBUG_RETURN (arg_node);
 }
@@ -157,7 +182,6 @@ node *ASMbinop (node * arg_node, info * arg_info)
     char *tmp;
 
     DBUG_ENTER ("ASMbinop");
-
 
     BINOP_LEFT( arg_node) = TRAVdo( BINOP_LEFT( arg_node), arg_info);
 
@@ -207,7 +231,6 @@ node *ASMbinop (node * arg_node, info * arg_info)
 
 
     BINOP_RIGHT( arg_node) = TRAVdo( BINOP_RIGHT( arg_node), arg_info);
-
 
     DBUG_RETURN (arg_node);
 }
@@ -296,6 +319,7 @@ node *ASMnum (node * arg_node, info * arg_info)
             break;
         default:
             instr = STRcpy("iloadc");
+
             /* copy the constant number in the buffer */
             sprintf(tmp, "%d",  number);
 
@@ -358,10 +382,53 @@ node *ASMassemblyinstrs(node * arg_node, info * arg_info){
 node *ASMvar (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("ASMvar");
+    int index;
+    char *tmp = NULL, *var_name = NULL;
+    type var_type;
 
-    /* print var as string */
-    //printf( "%s", VAR_NAME( arg_node));
+    var_type = get_type(VAR_DECL(arg_node));
+    var_name = VAR_NAME(arg_node);
+    switch(var_type)
+    {
+        case TYPE_int:
+            tmp = STRcat("iload ", var_name);
+            break;
+        case TYPE_float:
+            tmp = STRcat("fload ", var_name);
+            break;
+        case TYPE_bool:
+            tmp = STRcat("bload ", var_name);
+            break;
+        default:
+            DBUG_RETURN(arg_node);
+    }
 
+    if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0){
+    }
+    else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0){
+    }
+    else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0){
+        /* change according to global loads*/
+        switch(var_type)
+        {
+            case TYPE_int:
+                tmp = "iloadg";
+                break;
+            case TYPE_float:
+                tmp = "floadg";
+                break;
+            case TYPE_bool:
+                tmp = "bloadg";
+                break;
+            default:
+                DBUG_RETURN(arg_node);
+        }
+    }
+
+    if (index != -1){
+        list_addtoend(arg_info->instrs,
+        TBmakeAssemblyinstr(STRcpy(tmp), TBmakeArglist(TBmakeArg( STRitoa(index) ), NULL)));
+    }
     DBUG_RETURN (arg_node);
 }
 
@@ -444,10 +511,11 @@ node *ASMfundec (node * arg_node, info * arg_info)
 
 node *ASMglobaldec (node * arg_node, info * arg_info)
 {
-    char* tmp;
+    int index;
+    char* tmp, *var;
+    node *new_instr, *arg_list;
 
     DBUG_ENTER ("ASMglobaldec");
-
 
     switch (GLOBALDEC_TYPE( arg_node)) {
       case TYPE_bool:
@@ -466,17 +534,27 @@ node *ASMglobaldec (node * arg_node, info * arg_info)
         DBUG_ASSERT( 0, "unknown type detected!");
     }
 
+    /* get index of constant in constant pool */
+    index = list_length(arg_info->globalvars) - 1;
 
     GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
+    var = VAR_NAME(GLOBALDEC_ID( arg_node));
 
+    /* create argument list */
+    arg_list = TBmakeArglist(TBmakeArg(tmp), TBmakeArglist(TBmakeArg(STRcpy(var)), NULL));
+
+    /* add new constant to constant pool */
+    new_instr = TBmakeAssemblyinstr(".global", arg_list);
+    list_addtoend(arg_info->globalvars, new_instr);
 
     DBUG_RETURN (arg_node);
-
 }
 
 node *ASMglobaldef (node * arg_node, info * arg_info)
 {
-    char* tmp;
+    int index;
+    char* tmp, *var = NULL;
+    node *new_instr, *arg_list;
 
     DBUG_ENTER ("ASMglobaldef");
 
@@ -500,8 +578,18 @@ node *ASMglobaldef (node * arg_node, info * arg_info)
         DBUG_ASSERT( 0, "unknown type detected!");
     }
 
-
     GLOBALDEF_ID( arg_node) = TRAVdo( GLOBALDEF_ID( arg_node), arg_info);
+
+    /* copy varname to globaldef */
+    var = STRcpy(VAR_NAME(GLOBALDEF_ID( arg_node)));
+    index = list_length(arg_info->globalvars) - 1;
+
+    /* create argument list */
+    arg_list = TBmakeArglist(TBmakeArg(tmp), TBmakeArglist(TBmakeArg(STRcpy(var)), NULL));
+
+    /* add new constant to constant pool */
+    new_instr = TBmakeAssemblyinstr(".global", arg_list);
+    list_addtoend(arg_info->globalvars, new_instr);
 
     if(GLOBALDEF_EXPR( arg_node) != NULL)
         GLOBALDEF_EXPR( arg_node) = TRAVdo( GLOBALDEF_EXPR( arg_node), arg_info);
@@ -514,7 +602,6 @@ node *ASMcast (node * arg_node, info * arg_info)
     char *tmp;
 
     DBUG_ENTER ("ASMcast");
-
 
     switch (CAST_TYPE( arg_node)) {
       case TYPE_bool:
@@ -534,8 +621,6 @@ node *ASMcast (node * arg_node, info * arg_info)
     }
 
     CAST_RIGHT( arg_node) = TRAVdo( CAST_RIGHT( arg_node), arg_info);
-
-
     DBUG_RETURN (arg_node);
 }
 
@@ -543,15 +628,11 @@ node *ASMconditionif (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("ASMconditionif");
 
-
     CONDITIONIF_EXPR( arg_node) = TRAVdo( CONDITIONIF_EXPR( arg_node), arg_info);
-
 
     CONDITIONIF_BLOCK( arg_node) = TRAVdo( CONDITIONIF_BLOCK( arg_node), arg_info);
 
-
     if(CONDITIONIF_ELSEBLOCK( arg_node) != NULL) {
-
         CONDITIONIF_ELSEBLOCK( arg_node) = TRAVdo(CONDITIONIF_ELSEBLOCK(\
                     arg_node), arg_info);
     }
@@ -626,10 +707,7 @@ node *ASMfuncall (node * arg_node, info * arg_info)
 
     FUNCALL_ID( arg_node) = TRAVdo( FUNCALL_ID( arg_node), arg_info);
 
-
     FUNCALL_ARGUMENTS( arg_node) = TRAVopt( FUNCALL_ARGUMENTS( arg_node), arg_info);
-
-
 
     DBUG_RETURN (arg_node);
 }
@@ -686,7 +764,6 @@ node *ASMfundef (node * arg_node, info * arg_info)
         new_instr = TBmakeAssemblyinstr(".export", arg_list);
         list_addtoend(arg_info->exports, new_instr);
     }
-
 
     /* create esr list  */
     params = FUNHEADER_PARAMS(header);
@@ -785,33 +862,13 @@ node *ASMvardeclist (node * arg_node, info * arg_info)
 
 node *ASMvardec (node * arg_node, info * arg_info)
 {
-    char* tmp;
-
     DBUG_ENTER ("ASMvardec");
+  // hmm do we need this? don't think so
+  //  VARDEC_ID( arg_node) = TRAVdo( VARDEC_ID( arg_node), arg_info);
 
-    switch (VARDEC_TYPE( arg_node)) {
-        case TYPE_bool:
-            tmp = "bool";
-            break;
-        case TYPE_int:
-            tmp = "int";
-            break;
-        case TYPE_float:
-            tmp = "float";
-            break;
-        case TYPE_void:
-            tmp = "void";
-            break;
-        case TYPE_unknown:
-            DBUG_ASSERT( 0, "no or unknown type defined");
-    }
-
-
-    VARDEC_ID( arg_node) = TRAVdo( VARDEC_ID( arg_node), arg_info);
-
-    if(VARDEC_VALUE( arg_node) != NULL) {
-        VARDEC_VALUE( arg_node) = TRAVdo( VARDEC_VALUE( arg_node), arg_info);
-    }
+  //  if(VARDEC_VALUE( arg_node) != NULL) {
+    //    VARDEC_VALUE( arg_node) = TRAVdo( VARDEC_VALUE( arg_node), arg_info);
+  //  }
 
     DBUG_RETURN (arg_node);
 }
@@ -854,11 +911,11 @@ node *ASMfunheader (node * arg_node, info * arg_info)
     }
 
 
-    FUNHEADER_ID( arg_node) = TRAVdo( FUNHEADER_ID( arg_node), arg_info);
+//    FUNHEADER_ID( arg_node) = TRAVdo( FUNHEADER_ID( arg_node), arg_info);
 
 
-    FUNHEADER_PARAMS( arg_node) = TRAVopt( FUNHEADER_PARAMS( arg_node),
-            arg_info);
+ //   FUNHEADER_PARAMS( arg_node) = TRAVopt( FUNHEADER_PARAMS( arg_node),
+            //arg_info);
 
 
     DBUG_RETURN (arg_node);
@@ -973,6 +1030,23 @@ void print_imports(list *imports){
     }
 }
 
+void print_global(list *globals){
+    int index = 0;
+    node *instr, *arg;
+    instr = list_get_elem(globals, index++);
+
+    while(instr){
+        printf("%s ", ASSEMBLYINSTR_INSTR(instr));
+
+        /* print args */
+        arg = ASSEMBLYINSTR_ARGS(instr);
+        printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+        printf("\n");
+        instr = list_get_elem(globals, index++);
+    }
+    printf("\n");
+}
+
 void print_instrs(list *instrs){
     int index = 0;
     node *instr, *arg;
@@ -1005,7 +1079,7 @@ void print_assembly(info *arg_info)
     print_instrs(arg_info->instrs);
     print_imports(arg_info->imports);
     print_export(arg_info->exports);
-    //print_global(arg_info->constpool);
+    print_global(arg_info->globalvars);
     print_const(arg_info->constpool);
 }
 

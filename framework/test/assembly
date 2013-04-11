@@ -3,17 +3,36 @@ int z = 10;
 float f = 1.0;
 bool a = true;
 
-export void fun() {
-    float i;
+int functie(int k, int f, bool b){
+    f = 200;
+    b = true;
+    return k;
+}
+
+float f_functie(int k, float f, bool b){
+    return f;
+}
+
+export void fun(){
+    int i;
+    int k;
+    bool b = true;
     float j;
     float f;
 
-    i = 10.0;
+    k = 10;
     j = 0.0;
-    f = i + j;
+    f = 1.0;
+
+    j = j + f;
+    k = k + functie(k, i, b);
+    f = f + f_functie(k, f, b);
+
 }
 
-void f(){
+int fx(){
     x = 40;
     z = x;
+    return 1;
 }
+

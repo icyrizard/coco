@@ -19,7 +19,6 @@ struct list {
 struct hashmap {
     void *key;
     void *value;
-
     void *next;
 };
 
@@ -36,6 +35,8 @@ int list_contains_fun(list *map, void *key, bool (*fun)(void *, void*));
 int list_get_index_fun(list *map, void *key, bool (*fun)(void *, void*));
 void *list_get_elem(list *head, int index);
 void list_print_str(list *head);
+void *list_get_last(list *head);
+void *get_from_end(list *head, int index);
 
 hashmap* hashmap_create();
 int hashmap_free(hashmap *map);

@@ -1,37 +1,37 @@
 /* ---------------------------------------------------------------------------
- * 
+ *
  * SAC Compiler Construction Framework
- * 
+ *
  * ---------------------------------------------------------------------------
- * 
+ *
  * SAC COPYRIGHT NOTICE, LICENSE, AND DISCLAIMER
- * 
+ *
  * (c) Copyright 1994 - 2011 by
- * 
+ *
  *   SAC Development Team
  *   SAC Research Foundation
- * 
+ *
  *   http://www.sac-home.org
  *   email:info@sac-home.org
- * 
+ *
  *   All rights reserved
- * 
+ *
  * ---------------------------------------------------------------------------
- * 
- * The SAC compiler construction framework, all accompanying 
+ *
+ * The SAC compiler construction framework, all accompanying
  * software and documentation (in the following named this software)
  * is developed by the SAC Development Team (in the following named
  * the developer) which reserves all rights on this software.
- * 
+ *
  * Permission to use this software is hereby granted free of charge
- * exclusively for the duration and purpose of the course 
- *   "Compilers and Operating Systems" 
+ * exclusively for the duration and purpose of the course
+ *   "Compilers and Operating Systems"
  * of the MSc programme Grid Computing at the University of Amsterdam.
  * Redistribution of the software or any parts thereof as well as any
- * alteration  of the software or any parts thereof other than those 
+ * alteration  of the software or any parts thereof other than those
  * required to use the compiler construction framework for the purpose
  * of the above mentioned course are not permitted.
- * 
+ *
  * The developer disclaims all warranties with regard to this software,
  * including all implied warranties of merchantability and fitness.  In no
  * event shall the developer be liable for any special, indirect or
@@ -41,9 +41,9 @@
  * performance of this software. The entire risk as to the quality and
  * performance of this software is with you. Should this software prove
  * defective, you assume the cost of all servicing, repair, or correction.
- * 
+ *
  * ---------------------------------------------------------------------------
- */ 
+ */
 
 
 
@@ -71,9 +71,9 @@
 char *STRcpy( const char *source)
 {
   char *ret;
-   
+
   DBUG_ENTER( "STRcpy");
-   
+
   if (source != NULL) {
     ret = (char*) MEMmalloc( sizeof( char) * (STRlen( source) + 1));
     strcpy( ret, source);
@@ -88,7 +88,7 @@ char *STRcpy( const char *source)
 
 /*******************************************************************************
  *
- * Description: Copy string and allocate memory for new string. 
+ * Description: Copy string and allocate memory for new string.
  *              Copy only maxlen characters.
  *
  * Parameters: - source, string to copy
@@ -102,9 +102,9 @@ char *STRncpy( const char *source, int maxlen)
 {
   char *ret;
   int max;
-   
+
   DBUG_ENTER( "STRncpy");
-   
+
   if (source != NULL) {
     max = STRlen( source);
     if (max > maxlen) {
@@ -126,12 +126,12 @@ char *STRncpy( const char *source, int maxlen)
 
 
 /** <!--********************************************************************-->
- *                                                                             
+ *
  * @fn char *STRsubStr( const char *string, int start, int len)
- *                                                                             
+ *
  * @brief copy part of a string from start to start + len.
  *        if len is <0 then len is relative to the length of the string.
- *                                                                           
+ *
  *****************************************************************************/
 char *STRsubStr( const char *string, int start, int len)
 {
@@ -139,23 +139,23 @@ char *STRsubStr( const char *string, int start, int len)
   char *ret = NULL;
 
   DBUG_ENTER( "STRsubStr");
-  
+
   strlen = STRlen( string);
 
   if ( len < 0){
     len = strlen + len; /* + - => - */
   }
-  
+
   if ( ( start + len) > strlen){ /* to long take what we can */
     len = strlen - start;
-  } 
-  
+  }
+
   if ( start > len){
     ret = STRnull();
   } else {
     ret = memcpy( MEMmalloc( sizeof( char) * ( len + 1)),
                   string + start, /* move to start of sub string */
-                  len); 
+                  len);
     ret[len] = '\0';
   }
 
@@ -163,17 +163,17 @@ char *STRsubStr( const char *string, int start, int len)
 }
 
 /** <!--********************************************************************-->
- *                                                                             
+ *
  * @fn char *STRnull( )
- *                                                                             
+ *
  * @brief return an empty string
- *                                                                           
+ *
  *****************************************************************************/
 char *STRnull( )
 {
   char *ret = NULL;
   DBUG_ENTER( "STRnull");
-  
+
   ret = MEMmalloc( sizeof( char) * 1);
   ret[0] = '\0';
 
@@ -197,7 +197,7 @@ char *STRcat( const char *first, const char* second)
   char *result;
 
   DBUG_ENTER( "STRcat");
-  
+
   if (first == NULL) {
     result = STRcpy(second);
   }
@@ -210,7 +210,7 @@ char *STRcat( const char *first, const char* second)
     strcpy( result, first);
     strcat( result, second);
   }
-  
+
   DBUG_RETURN( result);
 }
 
@@ -236,11 +236,11 @@ char *STRcatn(int n, ...)
   DBUG_ENTER("STRcatn");
 
   DBUG_ASSERTF( n>2, ("STRcatn called with %d arguments", n));
-  
+
   va_start( arg_list, n);
 
   length = 0;
-  
+
   for (i = 0; i < n; ++i) {
     ptr = va_arg(arg_list, const char *);
     if (ptr != NULL) {
@@ -256,7 +256,7 @@ char *STRcatn(int n, ...)
   else {
     result = (char *) MEMmalloc(length + 1);
     result[0] = '\0';
-  
+
     va_start( arg_list, n);
 
     for (i = 0; i < n; ++i) {
@@ -268,7 +268,7 @@ char *STRcatn(int n, ...)
 
     va_end( arg_list);
   }
-  
+
   DBUG_RETURN(result);
 }
 
@@ -300,7 +300,7 @@ bool STReq( const char *first, const char *second)
   else {
     res = (0 == strcmp( first, second));
   }
-  
+
   DBUG_RETURN( res);
 }
 
@@ -322,7 +322,7 @@ bool STReqci( const char *first, const char *second)
 {
   bool res;
   int i;
-  
+
   DBUG_ENTER("STReqci");
 
   if ((first == NULL) && (second == NULL)) {
@@ -333,7 +333,7 @@ bool STReqci( const char *first, const char *second)
   }
   else {
     i = 0;
-    while ((first[i] != '\0') && (second[i] != '\0') 
+    while ((first[i] != '\0') && (second[i] != '\0')
            && (tolower(first[i]) == tolower(second[i]))) {
       i+=1;
     }
@@ -344,7 +344,7 @@ bool STReqci( const char *first, const char *second)
       res = FALSE;
     }
   }
-  
+
   DBUG_RETURN( res);
 }
 
@@ -382,7 +382,7 @@ bool STReqn(const char *first, const char* second, int n)
   else {
     res = (0 == strncmp( first, second, n));
   }
-  
+
   DBUG_RETURN( res);
 }
 
@@ -402,9 +402,9 @@ bool STReqn(const char *first, const char* second, int n)
 bool STRprefix( const char *prefix, const char *str)
 {
   bool res;
-  
+
   DBUG_ENTER("STRprefix");
-  
+
   if (prefix == NULL) {
     res = TRUE;
   }
@@ -413,7 +413,7 @@ bool STRprefix( const char *prefix, const char *str)
       res = FALSE;
     } else {
       int plen = STRlen( prefix);
-  
+
       if (STRlen(str) < plen) {
         res = FALSE;
       } else {
@@ -421,21 +421,21 @@ bool STRprefix( const char *prefix, const char *str)
       }
     }
   }
-  
+
   DBUG_RETURN( res);
 }
 
 /** <!--********************************************************************-->
- *                                                                             
- * @fn bool *STRsuffix( const char *suffix, const char *str) 
- *                                                                            
- * @brief return true if suffix is the end of str, else return false. 
- *                                                                             
+ *
+ * @fn bool *STRsuffix( const char *suffix, const char *str)
+ *
+ * @brief return true if suffix is the end of str, else return false.
+ *
  *****************************************************************************/
 bool STRsuffix( const char *suffix, const char *str)
-{ 
+{
   bool res = FALSE;
-  
+
   DBUG_ENTER( "STRsuffix");
 
   if ( STRlen( suffix) > STRlen( str)){
@@ -446,7 +446,7 @@ bool STRsuffix( const char *suffix, const char *str)
   }
 
   DBUG_RETURN( res);
-} 
+}
 
 /*******************************************************************************
  *
@@ -463,9 +463,9 @@ bool STRsuffix( const char *suffix, const char *str)
 bool STRsub( const char *sub, const char *str)
 {
   bool res;
-  
+
   DBUG_ENTER("STRsub");
-  
+
   if (sub == NULL) {
     res = TRUE;
   }
@@ -477,11 +477,11 @@ bool STRsub( const char *sub, const char *str)
       res = (NULL != strstr( str, sub));
     }
   }
-  
+
   DBUG_RETURN( res);
 }
 
-  
+
 
 
 /*******************************************************************************
@@ -496,7 +496,7 @@ bool STRsub( const char *sub, const char *str)
 int STRlen( const char *s)
 {
   int len;
-  
+
   DBUG_ENTER("STRlen");
 
   if (s == NULL) {
@@ -505,7 +505,7 @@ int STRlen( const char *s)
   else {
     len = strlen( s);
   }
-  
+
   DBUG_RETURN( len);
 }
 
@@ -513,7 +513,7 @@ int STRlen( const char *s)
 /*******************************************************************************
  *
  * Description: Tokenize string. On first call the str will be copied to internal
- *              static variable, next calls str should be NULL. With last call the 
+ *              static variable, next calls str should be NULL. With last call the
  *              allocated memory of the copy will be freed.
  *
  *              In contrast to strtok, STRtok leaves the argument string untouched
@@ -532,9 +532,9 @@ bool CharInString( char c, const char *str)
 {
   int i;
   bool res;
-  
+
   DBUG_ENTER("CharInString");
-  
+
   if ((str == NULL) || (c == '\0')) {
     res = FALSE;
   }
@@ -545,7 +545,7 @@ bool CharInString( char c, const char *str)
     }
     res = str[i] != '\0';
   }
-  
+
   DBUG_RETURN( res);
 }
 
@@ -555,7 +555,7 @@ char *STRtok( const char *first, const char *sep)
   static char *current = NULL;
   char *ret;
   int i;
-  
+
   DBUG_ENTER( "STRtok");
 
   if (first != NULL) {
@@ -565,7 +565,7 @@ char *STRtok( const char *first, const char *sep)
     keep_string = STRcpy( first);
     current = keep_string;
   }
-  
+
   if (current == NULL) {
     ret = NULL;
   }
@@ -585,14 +585,14 @@ char *STRtok( const char *first, const char *sep)
       current += i+1;
     }
   }
-  
+
   DBUG_RETURN( ret);
 }
 
 
 /*******************************************************************************
  *
- * Description: 
+ * Description:
  *
  *  yields either the argument string if it is not NULL or an empty constant
  *  string otherwise.
@@ -605,16 +605,16 @@ char *STRtok( const char *first, const char *sep)
 char *STRonNull( char *alt, char *str)
 {
   char *res;
-  
+
   DBUG_ENTER("STRonNull");
-  
+
   if (str == NULL) {
     res = alt;
   }
   else {
     res = str;
   }
-  
+
   DBUG_RETURN( res);
 }
 
@@ -634,13 +634,13 @@ char *STRitoa( int number)
 {
   char *str;
   int num;
-  
+
   DBUG_ENTER("STRitoa");
 
   str = (char *) MEMmalloc( sizeof(int) * 4);
   num = snprintf( str, (sizeof(int) * 4) - 1, "%d", number);
   DBUG_ASSERT( num<(sizeof(int) * 4) - 1, "Trouble in STRitoa");
-  
+
   DBUG_RETURN( str);
 }
 
@@ -648,20 +648,20 @@ char *STRitoa( int number)
 
 /** <!-- ****************************************************************** -->
  * @brief Substitute all occurrences of token in str with subst
- * 
+ *
  * @param str The string in which to make substitutions
  * @param token a string to substitute occurrences of in str
- * @param subst a string to substitute tokens with 
- * 
+ * @param subst a string to substitute tokens with
+ *
  * @return A new String or NULL if str is NULL
  ******************************************************************************/
 char *STRsubstToken( const char *str, const char *token, const char *subst)
 {
   int occurrences, tlen, slen;
-  const char *found; 
+  const char *found;
   char *pos;
   char *result;
-  
+
   DBUG_ENTER( "STRsubstToken");
 
   /* Find number of occurrences of token in str */
@@ -676,7 +676,7 @@ char *STRsubstToken( const char *str, const char *token, const char *subst)
   }
 
   /* Make substitutions */
-  result = MEMmalloc( (STRlen( str) + 
+  result = MEMmalloc( (STRlen( str) +
                        (occurrences * (STRlen(subst) - tlen)) +
                        1) * sizeof(char));
 

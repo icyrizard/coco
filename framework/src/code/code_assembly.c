@@ -1,5 +1,4 @@
 /***   Print tree phase for debugging purposes   ***/
-
 #include <stdio.h>
 #include "print.h"
 #include "traverse.h"
@@ -10,6 +9,7 @@
 #include "list_hash.h"
 #include "str.h"
 
+void print_instrs(list *instrs);
 void print_global(list *globals);
 
 #define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
@@ -130,8 +130,8 @@ node *ASMassign (node * arg_node, info * arg_info)
 
     ASSIGN_EXPR( arg_node) = TRAVdo( ASSIGN_EXPR( arg_node), arg_info);
 
-    var_type = get_type(VAR_DECL(ASSIGN_LET(arg_node)));
     var_name = VAR_NAME(ASSIGN_LET(arg_node));
+    var_type = get_type(VAR_DECL(ASSIGN_LET(arg_node)));
 
     switch(var_type)
     {
@@ -153,7 +153,6 @@ node *ASMassign (node * arg_node, info * arg_info)
     else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0){
     }
     else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0){
-
         /* change according to global stores*/
         switch(var_type)
         {
@@ -179,7 +178,9 @@ node *ASMassign (node * arg_node, info * arg_info)
 
 node *ASMbinop (node * arg_node, info * arg_info)
 {
-    char *tmp;
+    int num_params = 0;
+    char *tmp, *instr_name = NULL, first_char[2];
+    node *instr = NULL, *arg = NULL, *new_instr = NULL;
 
     DBUG_ENTER ("ASMbinop");
 
@@ -187,21 +188,39 @@ node *ASMbinop (node * arg_node, info * arg_info)
     BINOP_LEFT( arg_node) = TRAVdo( BINOP_LEFT( arg_node), arg_info);
     BINOP_RIGHT( arg_node) = TRAVdo( BINOP_RIGHT( arg_node), arg_info);
 
+    instr = list_get_last(arg_info->instrs);
+    instr_name = ASSEMBLYINSTR_INSTR(instr);
+
+    /* move back (jsr) 'x' steps  */
+    if(STReq(instr_name, "jsr") || STReq(instr_name, "jsre")){
+        arg = ASSEMBLYINSTR_ARGS(instr);
+        num_params = atoi(ARG_INSTR(ARGLIST_HEAD(arg)));
+
+        /* get from end, skip isr instrs */
+        instr = get_from_end(arg_info->instrs, num_params + 2);
+        instr_name = ASSEMBLYINSTR_INSTR(instr);
+    }
+
     switch (BINOP_OP( arg_node)) {
         case BO_add:
-            tmp = "+";
+            sprintf(first_char, "%c", *instr_name);
+            tmp = STRcat(first_char, "add");
             break;
         case BO_sub:
-            tmp = "-";
+            sprintf(first_char, "%c", *instr_name);
+            tmp = STRcat(first_char, "sub");
             break;
         case BO_mul:
-            tmp = "*";
+            sprintf(first_char, "%c", *instr_name);
+            tmp = STRcat(first_char, "mul");
             break;
         case BO_div:
-            tmp = "/";
+            sprintf(first_char, "%c", *instr_name);
+            tmp = STRcat(first_char, "div");
             break;
         case BO_mod:
-            tmp = "%";
+            sprintf(first_char, "%c", *instr_name);
+            tmp = STRcat(first_char, "mod");
             break;
         case BO_lt:
             tmp = "<";
@@ -231,8 +250,10 @@ node *ASMbinop (node * arg_node, info * arg_info)
             DBUG_ASSERT( 0, "unknown binop detected!");
     }
 
+    new_instr = TBmakeAssemblyinstr(tmp, NULL);
 
-
+    /* add new instruction to list */
+    list_addtoend(arg_info->instrs, new_instr);
     DBUG_RETURN (arg_node);
 }
 
@@ -283,8 +304,9 @@ node *ASMfloat (node * arg_node, info * arg_info)
     }
 
     /* create argument node if needed */
-    if(arg)
+    if(arg){
         args = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
+    }
 
     /* add new instruction to list */
     list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, args)); //
@@ -348,7 +370,7 @@ node *ASMnum (node * arg_node, info * arg_info)
         args = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
 
     /* add new instruction to list */
-    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, args)); //
+    list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, args));
     DBUG_RETURN (arg_node);
 }
 
@@ -384,8 +406,9 @@ node *ASMvar (node * arg_node, info * arg_info)
     char *tmp = NULL, *var_name = NULL;
     type var_type;
 
-    var_type = get_type(VAR_DECL(arg_node));
     var_name = VAR_NAME(arg_node);
+    var_type = get_type(VAR_DECL(arg_node));
+
     switch(var_type)
     {
         case TYPE_int:
@@ -406,7 +429,7 @@ node *ASMvar (node * arg_node, info * arg_info)
     else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0){
     }
     else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0){
-    /* change according to global loads*/
+        /* change according to global loads*/
         switch(var_type)
         {
             case TYPE_int:
@@ -502,7 +525,6 @@ node *ASMfundec (node * arg_node, info * arg_info)
 
 
     FUNDEC_HEADER( arg_node) = TRAVdo( FUNDEC_HEADER( arg_node), arg_info);
-
 
     DBUG_RETURN (arg_node);
 }
@@ -695,18 +717,44 @@ node *ASMconst (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("ASMconst");
 
-
     DBUG_RETURN (arg_node);
 }
 
 node *ASMfuncall (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("ASMfuncall");
+    char *fun_name = NULL;
+    int num_args = 0, index = 0;
+    node *arg_list, *new_instr, *params;
 
     FUNCALL_ID( arg_node) = TRAVdo( FUNCALL_ID( arg_node), arg_info);
 
-    FUNCALL_ARGUMENTS( arg_node) = TRAVopt( FUNCALL_ARGUMENTS( arg_node), arg_info);
+    /* initiate function call*/
+    fun_name = STRcpy(VAR_NAME(FUNCALL_ID(arg_node)));
 
+    /* arg_list with num of argumenst and fun name */
+    new_instr = TBmakeAssemblyinstr("isrg", NULL);
+    list_addtoend(arg_info->instrs, new_instr);
+
+    params = FUNCALL_ARGUMENTS( arg_node) = TRAVopt( FUNCALL_ARGUMENTS( arg_node), arg_info);
+
+    /* create param list */
+    while(params) {
+        params = EXPRLIST_NEXT(params);
+        num_args++;
+    }
+
+    if((index = list_get_index_fun(arg_info->imports, fun_name, check_str)) >= 0){
+        arg_list = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
+        new_instr = TBmakeAssemblyinstr("jsre", arg_list);
+    }else {
+        arg_list = TBmakeArglist(TBmakeArg(STRitoa(num_args)),
+                        TBmakeArglist(TBmakeArg(fun_name), NULL));
+        new_instr = TBmakeAssemblyinstr("jsr", arg_list);
+    }
+
+    /* add new instruction to list */
+    list_addtoend(arg_info->instrs, new_instr);
     DBUG_RETURN (arg_node);
 }
 
@@ -908,11 +956,10 @@ node *ASMfunheader (node * arg_node, info * arg_info)
             DBUG_ASSERT( 0, "no or unknown type defined");
     }
 
+//  FUNHEADER_ID( arg_node) = TRAVdo( FUNHEADER_ID( arg_node), arg_info);
 
-//    FUNHEADER_ID( arg_node) = TRAVdo( FUNHEADER_ID( arg_node), arg_info);
 
-
- //   FUNHEADER_PARAMS( arg_node) = TRAVopt( FUNHEADER_PARAMS( arg_node),
+ //  FUNHEADER_PARAMS( arg_node) = TRAVopt( FUNHEADER_PARAMS( arg_node),
             //arg_info);
 
 
@@ -1047,9 +1094,10 @@ void print_global(list *globals){
 
 void print_instrs(list *instrs){
     int index = 0;
+    char *instr_name;
     node *instr, *arg;
     instr = list_get_elem(instrs, index++);
-    char *instr_name;
+    printf("%p \n", instrs);
 
     while(instr){
         instr_name = ASSEMBLYINSTR_INSTR(instr);
@@ -1059,7 +1107,6 @@ void print_instrs(list *instrs){
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
-
         while(arg){
             printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
             arg = ARGLIST_NEXT(arg);

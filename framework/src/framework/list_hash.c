@@ -113,6 +113,34 @@ int list_remove(list *head, void *value)
     return -2;
 }
 
+void *get_from_end(list *head, int index){
+    list *stride = head, *curr = head;
+    int i = 0;
+
+    while(curr){
+        if (i > index){
+            stride = stride->next;
+        }
+        curr = curr->next;
+        i++;
+    }
+
+    return stride->value;
+}
+
+void *list_get_last(list *head)
+{
+    list *prev;
+    RETURN_NULL(head);
+
+    while(head){
+        prev = head;
+        head = head->next;
+    }
+
+    return prev->value;
+}
+
 int list_length(list *head)
 {
     int length = 0;

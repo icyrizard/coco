@@ -35,6 +35,7 @@ struct INFO {
     list *localvars;
     list *constpool;
     node  *root; // root node for the instruction lists
+    type t;
 };
 
 static info *MakeInfo()
@@ -181,12 +182,18 @@ node *ASMbinop (node * arg_node, info * arg_info)
     int num_params = 0;
     char *tmp, *instr_name = NULL, first_char[2];
     node *instr = NULL, *arg = NULL, *new_instr = NULL;
+    type left, right;
 
     DBUG_ENTER ("ASMbinop");
 
     /* two exprs on top of stack */
     BINOP_LEFT( arg_node) = TRAVdo( BINOP_LEFT( arg_node), arg_info);
+    left = arg_info->t;
+
     BINOP_RIGHT( arg_node) = TRAVdo( BINOP_RIGHT( arg_node), arg_info);
+    right = arg_info->t;
+
+    printf("%d %d\n", left, right);
 
     instr = list_get_last(arg_info->instrs);
     instr_name = ASSEMBLYINSTR_INSTR(instr);
@@ -267,6 +274,7 @@ node *ASMfloat (node * arg_node, info * arg_info)
     node *args = NULL, *arg_list = NULL, *new_instr = NULL;
 
     number = FLOAT_VALUE(arg_node);
+    arg_info->t = TYPE_float;
 
     switch((int)number)
     {
@@ -322,6 +330,7 @@ node *ASMnum (node * arg_node, info * arg_info)
     DBUG_ENTER ("ASMnum");
 
     number = NUM_VALUE(arg_node);
+    arg_info->t = TYPE_int;
 
     switch(number)
     {
@@ -379,6 +388,8 @@ node *ASMbool (node * arg_node, info * arg_info)
     node *new_instr;
     DBUG_ENTER ("ASMbool");
 
+    arg_info->t = TYPE_bool;
+
     if (BOOL_VALUE( arg_node))
         new_instr = TBmakeAssemblyinstr("bload_t", NULL);
     else
@@ -408,6 +419,7 @@ node *ASMvar (node * arg_node, info * arg_info)
 
     var_name = VAR_NAME(arg_node);
     var_type = get_type(VAR_DECL(arg_node));
+    arg_info->t  = var_type;
 
     switch(var_type)
     {
@@ -478,9 +490,9 @@ ASMmonop (node * arg_node, info * arg_info)
             DBUG_ASSERT( 0, "unknown minop detected!");
     }
 
-
     MONOP_RIGHT( arg_node) = TRAVdo( MONOP_RIGHT( arg_node), arg_info);
 
+    /* no need to set the type in arg_info as it does not change */
 
     DBUG_RETURN (arg_node);
 }
@@ -641,6 +653,9 @@ node *ASMcast (node * arg_node, info * arg_info)
     }
 
     CAST_RIGHT( arg_node) = TRAVdo( CAST_RIGHT( arg_node), arg_info);
+
+    arg_info->t = CAST_TYPE(arg_node);
+
     DBUG_RETURN (arg_node);
 }
 
@@ -747,7 +762,7 @@ node *ASMfuncall (node * arg_node, info * arg_info)
     if((index = list_get_index_fun(arg_info->imports, fun_name, check_str)) >= 0){
         arg_list = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
         new_instr = TBmakeAssemblyinstr("jsre", arg_list);
-    }else {
+    } else {
         arg_list = TBmakeArglist(TBmakeArg(STRitoa(num_args)),
                         TBmakeArglist(TBmakeArg(fun_name), NULL));
         new_instr = TBmakeAssemblyinstr("jsr", arg_list);
@@ -755,6 +770,10 @@ node *ASMfuncall (node * arg_node, info * arg_info)
 
     /* add new instruction to list */
     list_addtoend(arg_info->instrs, new_instr);
+
+    /* set type in info to return type */
+    arg_info->t = FUNHEADER_RETTYPE(VAR_DECL(FUNCALL_ID(arg_node)));
+
     DBUG_RETURN (arg_node);
 }
 

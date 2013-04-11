@@ -4,15 +4,13 @@ float f = 1.0;
 bool a = true;
 
 export void fun() {
-    int i;
-    int j;
+    float i;
+    float j;
     float f;
 
-    i = 10;
-    j = 0;
-    i = 10;
-    f = 1.0;
-    f = 20.0;
+    i = 10.0;
+    j = 0.0;
+    f = i + j;
 }
 
 void f(){

@@ -183,7 +183,9 @@ node *ASMbinop (node * arg_node, info * arg_info)
 
     DBUG_ENTER ("ASMbinop");
 
+    /* two exprs on top of stack */
     BINOP_LEFT( arg_node) = TRAVdo( BINOP_LEFT( arg_node), arg_info);
+    BINOP_RIGHT( arg_node) = TRAVdo( BINOP_RIGHT( arg_node), arg_info);
 
     switch (BINOP_OP( arg_node)) {
         case BO_add:
@@ -230,7 +232,6 @@ node *ASMbinop (node * arg_node, info * arg_info)
     }
 
 
-    BINOP_RIGHT( arg_node) = TRAVdo( BINOP_RIGHT( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
 }
@@ -260,7 +261,6 @@ node *ASMfloat (node * arg_node, info * arg_info)
             instr = STRcpy("floadc");
             /* copy the constant number in the buffer*/
             sprintf(tmp, "%f",  number);
-
             /* try to find the constant in the buffer */
             index = list_get_index_fun(arg_info->constpool, tmp, check_const);
 
@@ -288,8 +288,6 @@ node *ASMfloat (node * arg_node, info * arg_info)
 
     /* add new instruction to list */
     list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(instr, args)); //
-    DBUG_RETURN (arg_node);
-
     DBUG_RETURN (arg_node);
 }
 
@@ -391,13 +389,13 @@ node *ASMvar (node * arg_node, info * arg_info)
     switch(var_type)
     {
         case TYPE_int:
-            tmp = STRcat("iload ", var_name);
+            tmp = "iload";
             break;
         case TYPE_float:
-            tmp = STRcat("fload ", var_name);
+            tmp = "fload";
             break;
         case TYPE_bool:
-            tmp = STRcat("bload ", var_name);
+            tmp = "bload";
             break;
         default:
             DBUG_RETURN(arg_node);
@@ -408,7 +406,7 @@ node *ASMvar (node * arg_node, info * arg_info)
     else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0){
     }
     else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0){
-        /* change according to global loads*/
+    /* change according to global loads*/
         switch(var_type)
         {
             case TYPE_int:

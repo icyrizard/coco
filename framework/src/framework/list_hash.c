@@ -131,7 +131,6 @@ void *get_from_end(list *head, int index){
 void *list_get_last(list *head)
 {
     list *prev;
-    RETURN_NULL(head);
 
     while(head){
         prev = head;

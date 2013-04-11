@@ -145,7 +145,7 @@ node *ASMassign (node * arg_node, info * arg_info)
             tmp = "bstore";
             break;
         default:
-            printf("type unkown\n");
+            DBUG_RETURN(arg_node);
     }
 
     if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0){
@@ -166,7 +166,7 @@ node *ASMassign (node * arg_node, info * arg_info)
                 tmp = "bstoreg";
                 break;
             default:
-                printf("type unkown\n");
+                DBUG_RETURN(arg_node);
         }
     }
 

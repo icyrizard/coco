@@ -184,7 +184,6 @@ node *ASMassign (node * arg_node, info * arg_info)
 
 node *ASMbinop (node * arg_node, info * arg_info)
 {
-    int num_params = 0;
     char *first_char, *tmp;
     node *new_instr = NULL;
     type left, right;
@@ -241,10 +240,10 @@ node *ASMbinop (node * arg_node, info * arg_info)
             DBUG_ASSERT( 0, "unknown binop detected!");
     }
 
-    new_instr = TBmakeAssemblyinstr(tmp, NULL);
-
     /* add new instruction to list */
+    new_instr = TBmakeAssemblyinstr(tmp, NULL);
     list_addtoend(arg_info->instrs, new_instr);
+
     DBUG_RETURN (arg_node);
 }
 
@@ -457,22 +456,26 @@ node *
 ASMmonop (node * arg_node, info * arg_info)
 {
     char *tmp;
+    node *new_instr;
 
     DBUG_ENTER ("ASMmonop");
 
+    MONOP_RIGHT( arg_node) = TRAVdo( MONOP_RIGHT( arg_node), arg_info);
 
     switch (MONOP_OP( arg_node)) {
         case MO_not:
-            tmp = "!";
+            tmp = STRcpy("bnot");
             break;
         case MO_neg:
-            tmp = "-";
+            tmp = STRcat(typesc[arg_info->t], "neg");
             break;
         case MO_unknown:
             DBUG_ASSERT( 0, "unknown minop detected!");
     }
 
-    MONOP_RIGHT( arg_node) = TRAVdo( MONOP_RIGHT( arg_node), arg_info);
+    /* add new instruction to list */
+    new_instr = TBmakeAssemblyinstr(tmp, NULL);
+    list_addtoend(arg_info->instrs, new_instr);
 
     /* no need to set the type in arg_info as it does not change */
 

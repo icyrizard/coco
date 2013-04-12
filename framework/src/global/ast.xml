@@ -625,7 +625,7 @@
         <son name="Header">
           <targets>
             <target mandatory="yes">
-              <nargumentsode name="FunHeader" />
+              <node name="FunHeader" />
               <phases>
                 <all />
               </phases>

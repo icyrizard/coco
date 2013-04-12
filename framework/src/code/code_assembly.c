@@ -15,6 +15,7 @@ void print_global(list *globals);
 #define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
 char* typess[5] = { "bool", "int", "float", "void", "unknown" };
+char* typesc[5] = { "b", "i", "f", "v", "u" };
 
 /* dit gaat trouens wel fout wss als we het meenemen nar een nieuwe phase of niet?
  * mmm/ nog geen idee hoe we dat uberhaupt moeten doen ja ok no problem dan
@@ -36,6 +37,7 @@ struct INFO {
     list *constpool;
     node  *root; // root node for the instruction lists
     type t;
+    int label;
 };
 
 static info *MakeInfo()
@@ -49,6 +51,7 @@ static info *MakeInfo()
     result->globalvars = list_create();
     result->localvars = list_create();
     result->constpool = list_create();
+    result->label = 1;
 
     return result;
 }
@@ -88,6 +91,22 @@ bool check_const(void *v1, void *v2){
     return STReq((char *)v1, (char *)value);
 }
 
+bool check_imports(void *v1, void *v2){
+    char *value;
+    node *arg, *tmp = (node *)v2;
+
+
+    /* get last argument(always second)  */
+    arg = ASSEMBLYINSTR_ARGS(tmp);
+    arg = ARGLIST_NEXT(arg);
+    while(arg){
+        value = ARG_INSTR(ARGLIST_HEAD(arg));
+        arg = ARGLIST_NEXT(arg);
+    }
+
+    return STReq((char *)v1, (char *)value);
+}
+
 type get_type(node *decl)
 {
     switch(NODE_TYPE(decl))
@@ -100,6 +119,8 @@ type get_type(node *decl)
             return VARDEC_TYPE(decl);
         case N_param:
             return PARAM_TYPE(decl);
+        case N_funheader:
+            return FUNHEADER_RETTYPE(decl);
         default:
             printf("Unknown node type %d\n", NODE_TYPE(decl));
             return TYPE_unknown;
@@ -134,26 +155,25 @@ node *ASMassign (node * arg_node, info * arg_info)
     var_name = VAR_NAME(ASSIGN_LET(arg_node));
     var_type = get_type(VAR_DECL(ASSIGN_LET(arg_node)));
 
-    switch(var_type)
-    {
-        case TYPE_int:
-            tmp = "istore";
-            break;
-        case TYPE_float:
-            tmp = "fstore";
-            break;
-        case TYPE_bool:
-            tmp = "bstore";
-            break;
-        default:
-            DBUG_RETURN(arg_node);
-    }
 
-    if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0){
+
+    if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0) {
+        switch(var_type)
+        {
+            case TYPE_int:
+                tmp = "istore";
+                break;
+            case TYPE_float:
+                tmp = "fstore";
+                break;
+            case TYPE_bool:
+                tmp = "bstore";
+                break;
+            default:
+                DBUG_RETURN(arg_node);
+        }
     }
-    else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0){
-    }
-    else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0){
+    else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0) {
         /* change according to global stores*/
         switch(var_type)
         {
@@ -179,10 +199,10 @@ node *ASMassign (node * arg_node, info * arg_info)
 
 node *ASMbinop (node * arg_node, info * arg_info)
 {
-    int num_params = 0;
-    char *tmp, *instr_name = NULL, first_char[2];
-    node *instr = NULL, *arg = NULL, *new_instr = NULL;
+    char *first_char, *tmp;
+    node *new_instr = NULL;
     type left, right;
+    int bool_add_mul = 0;
 
     DBUG_ENTER ("ASMbinop");
 
@@ -193,74 +213,97 @@ node *ASMbinop (node * arg_node, info * arg_info)
     BINOP_RIGHT( arg_node) = TRAVdo( BINOP_RIGHT( arg_node), arg_info);
     right = arg_info->t;
 
-    printf("%d %d\n", left, right);
-
-    instr = list_get_last(arg_info->instrs);
-    instr_name = ASSEMBLYINSTR_INSTR(instr);
-
-    /* move back (jsr) 'x' steps  */
-    if(STReq(instr_name, "jsr") || STReq(instr_name, "jsre")){
-        arg = ASSEMBLYINSTR_ARGS(instr);
-        num_params = atoi(ARG_INSTR(ARGLIST_HEAD(arg)));
-
-        /* get from end, skip isr instrs */
-        instr = get_from_end(arg_info->instrs, num_params + 2);
-        instr_name = ASSEMBLYINSTR_INSTR(instr);
-    }
+    /* get the 'i', 'f', 'b' character used for some assembly instructions */
+    first_char = typesc[right];
 
     switch (BINOP_OP( arg_node)) {
-        case BO_add:
-            sprintf(first_char, "%c", *instr_name);
-            tmp = STRcat(first_char, "add");
+        case BO_add:                /* TODO: 'adding' two bools!!! */
+            if(left == TYPE_bool) {
+                bool_add_mul = 1;
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("bloadc_t"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("beq"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("branch_f"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label)), NULL));
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("bpop"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("bloadc_t"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(arg_info->label++), ":"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            } else
+                tmp = STRcat(first_char, "add");
             break;
         case BO_sub:
-            sprintf(first_char, "%c", *instr_name);
             tmp = STRcat(first_char, "sub");
             break;
-        case BO_mul:
-            sprintf(first_char, "%c", *instr_name);
-            tmp = STRcat(first_char, "mul");
+        case BO_mul:                /* TODO: 'multiplying' two bools!!! */
+            if(left == TYPE_bool) {
+                bool_add_mul = 1;
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("bloadc_t"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("beq"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("branch_t"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label)), NULL));
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("bpop"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("bloadc_f"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(arg_info->label++), ":"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            } else
+                tmp = STRcat(first_char, "mul");
             break;
         case BO_div:
-            sprintf(first_char, "%c", *instr_name);
             tmp = STRcat(first_char, "div");
             break;
         case BO_mod:
-            sprintf(first_char, "%c", *instr_name);
-            tmp = STRcat(first_char, "mod");
+            tmp = STRcat(first_char, "rem");
             break;
         case BO_lt:
-            tmp = "<";
+            tmp = STRcat(first_char, "lt");
             break;
         case BO_le:
-            tmp = "<=";
+            tmp = STRcat(first_char, "le");
             break;
         case BO_gt:
-            tmp = ">";
+            tmp = STRcat(first_char, "gt");
             break;
         case BO_ge:
-            tmp = ">=";
+            tmp = STRcat(first_char, "ge");
             break;
         case BO_eq:
-            tmp = "==";
+            tmp = STRcat(first_char, "eq");
             break;
         case BO_ne:
-            tmp = "!=";
+            tmp = STRcat(first_char, "ne");
             break;
-        case BO_or:
-            tmp = "||";
-            break;
+        case BO_or:         /* 'or' and 'and' should not exist anymore */
         case BO_and:
-            tmp = "&&";
-            break;
         case BO_unknown:
             DBUG_ASSERT( 0, "unknown binop detected!");
     }
 
-    new_instr = TBmakeAssemblyinstr(tmp, NULL);
-
     /* add new instruction to list */
-    list_addtoend(arg_info->instrs, new_instr);
+    if(!bool_add_mul) {
+        new_instr = TBmakeAssemblyinstr(tmp, NULL);
+        list_addtoend(arg_info->instrs, new_instr);
+    }
+
     DBUG_RETURN (arg_node);
 }
 
@@ -276,43 +319,38 @@ node *ASMfloat (node * arg_node, info * arg_info)
     number = FLOAT_VALUE(arg_node);
     arg_info->t = TYPE_float;
 
-    switch((int)number)
-    {
-        case 0:
-            instr = STRcpy("floadc_0");
-            arg = NULL;
-            break;
-        case 1:
-            instr = STRcpy("floadc_1");
-            arg = NULL;
-            break;
-        default:
-            instr = STRcpy("floadc");
-            /* copy the constant number in the buffer*/
-            sprintf(tmp, "%f",  number);
-            /* try to find the constant in the buffer */
-            index = list_get_index_fun(arg_info->constpool, tmp, check_const);
+    if(number == 0.0) {
+        instr = STRcpy("floadc_0");
+        arg = NULL;
+    } else if(number == 1.0) {
+        instr = STRcpy("floadc_1");
+        arg = NULL;
+    } else {
+        instr = STRcpy("floadc");
+        /* copy the constant number in the buffer*/
+        sprintf(tmp, "%f",  number);
+        /* try to find the constant in the buffer */
+        index = list_get_index_fun(arg_info->constpool, tmp, check_const);
 
-            /* constant found! add it to the constant list */
-            if(index == -1) {
-                /* set int as first arg, value as second*/
-               arg_list = TBmakeArglist(TBmakeArg("float"), TBmakeArglist(TBmakeArg(STRcpy(tmp)), NULL));
+        /* constant found! add it to the constant list */
+        if(index == -1) {
+            /* set int as first arg, value as second*/
+            arg_list = TBmakeArglist(TBmakeArg("float"), TBmakeArglist(TBmakeArg(STRcpy(tmp)), NULL));
 
-                /* add new constant to constant pool */
-                new_instr = TBmakeAssemblyinstr(".const", arg_list);
-                list_addtoend(arg_info->constpool, new_instr);
+            /* add new constant to constant pool */
+            new_instr = TBmakeAssemblyinstr(".const", arg_list);
+            list_addtoend(arg_info->constpool, new_instr);
 
-                /* get index of constant in constant pool */
-                index = list_length(arg_info->constpool) - 1;
-            }
+            /* get index of constant in constant pool */
+            index = list_length(arg_info->constpool) - 1;
+        }
 
-            /* set value of arg to the index where this constant can be found by the VM */
-            arg =  STRitoa(index);
-            break;
+        /* set value of arg to the index where this constant can be found by the VM */
+        arg =  STRitoa(index);
     }
 
     /* create argument node if needed */
-    if(arg){
+    if(arg) {
         args = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
     }
 
@@ -391,9 +429,9 @@ node *ASMbool (node * arg_node, info * arg_info)
     arg_info->t = TYPE_bool;
 
     if (BOOL_VALUE( arg_node))
-        new_instr = TBmakeAssemblyinstr("bload_t", NULL);
+        new_instr = TBmakeAssemblyinstr("bloadc_t", NULL);
     else
-        new_instr = TBmakeAssemblyinstr("bload_f", NULL);
+        new_instr = TBmakeAssemblyinstr("bloadc_f", NULL);
 
     list_addtoend(arg_info->instrs, new_instr);
     DBUG_RETURN (arg_node);
@@ -436,11 +474,13 @@ node *ASMvar (node * arg_node, info * arg_info)
             DBUG_RETURN(arg_node);
     }
 
-    if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0){
-    }
-    else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0){
-    }
-    else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0){
+    if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0) {
+
+    /* een variabele vinden in de constant pool lijkt mij niet heel nuttig */
+    //} else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0) {
+
+    } else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0) {
+
         /* change according to global loads*/
         switch(var_type)
         {
@@ -458,10 +498,11 @@ node *ASMvar (node * arg_node, info * arg_info)
         }
     }
 
-    if (index != -1){
-        list_addtoend(arg_info->instrs,
-        TBmakeAssemblyinstr(STRcpy(tmp), TBmakeArglist(TBmakeArg( STRitoa(index) ), NULL)));
-    }
+    //if (index != -1){
+    list_addtoend(arg_info->instrs,
+    TBmakeAssemblyinstr(STRcpy(tmp), TBmakeArglist(TBmakeArg( STRitoa(index) ), NULL)));
+    //}
+
     DBUG_RETURN (arg_node);
 }
 
@@ -475,24 +516,26 @@ node *
 ASMmonop (node * arg_node, info * arg_info)
 {
     char *tmp;
+    node *new_instr;
 
     DBUG_ENTER ("ASMmonop");
 
+    MONOP_RIGHT( arg_node) = TRAVdo( MONOP_RIGHT( arg_node), arg_info);
 
     switch (MONOP_OP( arg_node)) {
         case MO_not:
-            tmp = "!";
+            tmp = STRcpy("bnot");
             break;
         case MO_neg:
-            tmp = "-";
+            tmp = STRcat(typesc[arg_info->t], "neg");
             break;
         case MO_unknown:
             DBUG_ASSERT( 0, "unknown minop detected!");
     }
 
-    MONOP_RIGHT( arg_node) = TRAVdo( MONOP_RIGHT( arg_node), arg_info);
-
-    /* no need to set the type in arg_info as it does not change */
+    /* add new instruction to list */
+    new_instr = TBmakeAssemblyinstr(tmp, NULL);
+    list_addtoend(arg_info->instrs, new_instr);
 
     DBUG_RETURN (arg_node);
 }
@@ -569,7 +612,7 @@ node *ASMglobaldec (node * arg_node, info * arg_info)
     /* get index of constant in constant pool */
     index = list_length(arg_info->globalvars) - 1;
 
-    GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
+    //GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
     var = VAR_NAME(GLOBALDEC_ID( arg_node));
 
     /* create argument list */
@@ -610,7 +653,8 @@ node *ASMglobaldef (node * arg_node, info * arg_info)
         DBUG_ASSERT( 0, "unknown type detected!");
     }
 
-    GLOBALDEF_ID( arg_node) = TRAVdo( GLOBALDEF_ID( arg_node), arg_info);
+    /* no need to traverse the ID */
+    //GLOBALDEF_ID( arg_node) = TRAVdo( GLOBALDEF_ID( arg_node), arg_info);
 
     /* copy varname to globaldef */
     var = STRcpy(VAR_NAME(GLOBALDEF_ID( arg_node)));
@@ -631,63 +675,178 @@ node *ASMglobaldef (node * arg_node, info * arg_info)
 
 node *ASMcast (node * arg_node, info * arg_info)
 {
-    char *tmp;
+    node *new_instr;
+    type cast;
 
     DBUG_ENTER ("ASMcast");
 
-    switch (CAST_TYPE( arg_node)) {
-      case TYPE_bool:
-        tmp = "bool";
-        break;
-      case TYPE_int:
-        tmp = "int";
-        break;
-      case TYPE_float:
-        tmp = "float";
-        break;
-      case TYPE_void:
-        tmp = "void";
-        break;
-      case TYPE_unknown:
-        DBUG_ASSERT( 0, "unknown type detected!");
+    cast = CAST_TYPE(arg_node);
+
+    TRAVdo( CAST_RIGHT( arg_node), arg_info);
+
+    switch(cast) {
+        /* Casting to int */
+        case TYPE_int:
+            if(arg_info->t == TYPE_float) {
+                new_instr = TBmakeAssemblyinstr(STRcpy("f2i"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            } else if(arg_info->t == TYPE_bool) {
+                /* casting a bool to int */
+
+                /*  (bool) b1
+                 *  [false
+                 *
+                 */
+                new_instr = TBmakeAssemblyinstr(STRcpy("bloadc_t"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("beq"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("branch_f"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label)), NULL));
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("iloadc_1"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("jump"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label + 1)), NULL));
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(arg_info->label++), ":"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("iloadc_0"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(arg_info->label++), ":"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            }
+            break;
+
+        /* Casting to float */
+        case TYPE_float:
+            if(arg_info->t == TYPE_int) {
+                new_instr = TBmakeAssemblyinstr(STRcpy("i2f"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            } else if(arg_info->t == TYPE_bool) {
+                /* casting a bool to float */
+                new_instr = TBmakeAssemblyinstr(STRcpy("bloadc_t"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("beq"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("branch_f"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label)), NULL));
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("floadc_1"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("jump"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label+1)), NULL));
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(arg_info->label++), ":"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("floadc_0"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(arg_info->label++), ":"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            }
+            break;
+
+        /* Casting to bool */
+        case TYPE_bool:
+            if(arg_info->t == TYPE_int) {
+                /* casting a int to bool */
+                new_instr = TBmakeAssemblyinstr(STRcpy("iloadc_0"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("ineq"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            } else if(arg_info->t == TYPE_float) {
+                /* casting a float to bool */
+                new_instr = TBmakeAssemblyinstr(STRcpy("floadc_0"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("fneq"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            }
+            break;
+        default:
+            break;
+
     }
 
-    CAST_RIGHT( arg_node) = TRAVdo( CAST_RIGHT( arg_node), arg_info);
-
-    arg_info->t = CAST_TYPE(arg_node);
+    /* the type of the result of the expression is the cast type */
+    arg_info->t = cast;
 
     DBUG_RETURN (arg_node);
 }
 
 node *ASMconditionif (node * arg_node, info * arg_info)
 {
+    node *new_instr;
+    int old, old2;
+
     DBUG_ENTER ("ASMconditionif");
 
     CONDITIONIF_EXPR( arg_node) = TRAVdo( CONDITIONIF_EXPR( arg_node), arg_info);
+    old = arg_info->label;
+
+    new_instr = TBmakeAssemblyinstr(STRcpy("branch_f"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label++)), NULL));
+    list_addtoend(arg_info->instrs, new_instr);
 
     CONDITIONIF_BLOCK( arg_node) = TRAVdo( CONDITIONIF_BLOCK( arg_node), arg_info);
+
+    old2 = arg_info->label;
+    new_instr = TBmakeAssemblyinstr(STRcpy("jump"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label++)), NULL));
+    list_addtoend(arg_info->instrs, new_instr);
+
+    new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(old), ":"), NULL);
+    list_addtoend(arg_info->instrs, new_instr);
 
     if(CONDITIONIF_ELSEBLOCK( arg_node) != NULL) {
         CONDITIONIF_ELSEBLOCK( arg_node) = TRAVdo(CONDITIONIF_ELSEBLOCK(\
                     arg_node), arg_info);
     }
 
+    new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(old2), ":"), NULL);
+    list_addtoend(arg_info->instrs, new_instr);
+
     DBUG_RETURN (arg_node);
 }
 
 node *ASMwhileloop (node * arg_node, info * arg_info)
 {
+    node *new_instr;
+    int label_before, label_after;
+
     DBUG_ENTER ("ASMwhileloop");
+
+
+    label_before = arg_info->label;
+    new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(arg_info->label++), ":"), NULL);
+    list_addtoend(arg_info->instrs, new_instr);
 
 
     WHILELOOP_EXPR( arg_node) = TRAVdo( WHILELOOP_EXPR( arg_node), arg_info);
 
 
+    label_after = arg_info->label;
+    new_instr = TBmakeAssemblyinstr(STRcpy("branch_f"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label++)), NULL));
+    list_addtoend(arg_info->instrs, new_instr);
+
     if(WHILELOOP_BLOCK( arg_node) != NULL) {
-
         WHILELOOP_BLOCK( arg_node) = TRAVdo( WHILELOOP_BLOCK( arg_node), arg_info);
-
     }
+
+    new_instr = TBmakeAssemblyinstr(STRcpy("jump"), TBmakeArglist(TBmakeArg(STRitoa(label_before)), NULL));
+    list_addtoend(arg_info->instrs, new_instr);
+
+    new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(label_after), ":"), NULL);
+    list_addtoend(arg_info->instrs, new_instr);
 
     DBUG_RETURN (arg_node);
 }
@@ -742,8 +901,6 @@ node *ASMfuncall (node * arg_node, info * arg_info)
     int num_args = 0, index = 0;
     node *arg_list, *new_instr, *params;
 
-    FUNCALL_ID( arg_node) = TRAVdo( FUNCALL_ID( arg_node), arg_info);
-
     /* initiate function call*/
     fun_name = STRcpy(VAR_NAME(FUNCALL_ID(arg_node)));
 
@@ -759,7 +916,7 @@ node *ASMfuncall (node * arg_node, info * arg_info)
         num_args++;
     }
 
-    if((index = list_get_index_fun(arg_info->imports, fun_name, check_str)) >= 0){
+    if((index = list_get_index_fun(arg_info->imports, fun_name, check_const)) >= 0){
         arg_list = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
         new_instr = TBmakeAssemblyinstr("jsre", arg_list);
     } else {
@@ -795,6 +952,7 @@ node *ASMfundef (node * arg_node, info * arg_info)
     type tmp_type, ret_type;
     char *fun_name, *return_keyword, *tmp_var;
     node *header, *params, *var_decs, *args, *new_instr ;
+
 
     DBUG_ENTER ("ASMfundef");
 
@@ -838,11 +996,14 @@ node *ASMfundef (node * arg_node, info * arg_info)
         params = PARAMLIST_NEXT(params);
     }
 
-    var_decs = FUNBODY_VARS(FUNDEF_BODY(arg_node));
-    while(var_decs) {
-        tmp_var = VAR_NAME(VARDEC_ID(VARDECLIST_HEAD(var_decs)));
-        list_addtoend(arg_info->localvars, tmp_var);
-        var_decs = VARDECLIST_NEXT(var_decs);
+    if(FUNDEF_BODY(arg_node) != NULL) {
+        var_decs = FUNBODY_VARS(FUNDEF_BODY(arg_node));
+
+        while(var_decs) {
+            tmp_var = VAR_NAME(VARDEC_ID(VARDECLIST_HEAD(var_decs)));
+            list_addtoend(arg_info->localvars, tmp_var);
+            var_decs = VARDECLIST_NEXT(var_decs);
+        }
     }
 
     list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(STRcat(fun_name, ":"), NULL));
@@ -871,7 +1032,6 @@ node *ASMfundef (node * arg_node, info * arg_info)
     }
 
     list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(STRcpy(return_keyword), NULL));
-
 
     /* empty localvars list for re-use */
     list_empty(arg_info->localvars);
@@ -1030,7 +1190,7 @@ void print_const(list *consts){
     node *instr, *arg;
     instr = list_get_elem(consts, index++);
 
-    while(instr){
+    while(instr) {
         printf("%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
@@ -1048,12 +1208,88 @@ void print_const(list *consts){
     }
 }
 
+
+/****************** PEEPHOLING **********************/
+list *peephole(list *instrs)
+{
+    list *prev, *curr;
+    node *first, *second, *args1, *args2;
+    char *instr1, *instr2;
+    int change = 1;
+
+    /* continue peeholing as long as something changes */
+    while(change) {
+        change = 0;
+
+        /* initialize prev and curr to the first 2 instrutions */
+        prev = instrs->next;
+        curr = prev->next;
+
+        /* go though the whole list of instructions */
+        while(curr) {
+            /* get the instruction nodes */
+            first = (node *)prev->value;
+            second = (node *)curr->value;
+
+            /* get instruction strings */
+            instr1 = ASSEMBLYINSTR_INSTR(first);
+            instr2 = ASSEMBLYINSTR_INSTR(second);
+
+            /* get argument nodes */
+            args1 = ASSEMBLYINSTR_ARGS(first);
+            args2 = ASSEMBLYINSTR_ARGS(second);
+
+            /* [.., load 0, store 0, ..] -> [.., ..] */
+            if(STReq(instr1 + 1, "load") &&
+                    STReq(instr2 + 1, "store") &&
+                    STReq(ARG_INSTR(ARGLIST_HEAD(args1)), ARG_INSTR(ARGLIST_HEAD(args2)))) {
+                change = 1;
+
+                /* this is perfectly find as there will always be a init
+                 * function after this */
+                prev = curr->next;
+                curr = prev->next;
+
+                /* remove the insructions from the list */
+                list_remove(instrs, first);
+                list_remove(instrs, second);
+
+                continue;
+            } else if(STReq(instr1 + 1, "loadg") &&
+                    STReq(instr2 + 1, "storeg") &&
+                    STReq(ARG_INSTR(ARGLIST_HEAD(args1)), ARG_INSTR(ARGLIST_HEAD(args2)))) {
+                change = 1;
+
+                /* this is perfectly fine as there will alwasy be a return
+                 * instruction after istoreg instructions in the __init
+                 * function */
+                prev = curr->next;
+                curr = prev->next;
+
+                /* remove the insructions from the list */
+                list_remove(instrs, first);
+                list_remove(instrs, second);
+
+                continue;
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+
+
+
+    return instrs;
+}
+
+
+/****************** ASSEMBLY PRINTING **********************/
 void print_export(list *exports){
     int index = 0;
     node *instr, *arg;
     instr = list_get_elem(exports, index++);
 
-    while(instr){
+    while(instr) {
         printf("%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
@@ -1084,7 +1320,7 @@ void print_imports(list *imports){
         printf("\"%s\" ", ARG_INSTR(ARGLIST_HEAD(arg)));
         arg = ARGLIST_NEXT(arg);
 
-        while(arg){
+        while(arg) {
           printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
           arg = ARGLIST_NEXT(arg);
         }
@@ -1099,7 +1335,7 @@ void print_global(list *globals){
     node *instr, *arg;
     instr = list_get_elem(globals, index++);
 
-    while(instr){
+    while(instr) {
         printf("%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
@@ -1116,17 +1352,21 @@ void print_instrs(list *instrs){
     char *instr_name;
     node *instr, *arg;
     instr = list_get_elem(instrs, index++);
-    printf("%p \n", instrs);
 
     while(instr){
         instr_name = ASSEMBLYINSTR_INSTR(instr);
         if(instr_name[STRlen(instr_name) - 1] != ':')
             printf("        ");
+        //else
+        //    printf("    ");
         printf("%s ", instr_name);
+
+        if(STReq(instr_name, "return") || STReq(instr_name+1, "return"))
+            printf("\n");
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
-        while(arg){
+        while(arg) {
             printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
             arg = ARGLIST_NEXT(arg);
         }
@@ -1137,7 +1377,6 @@ void print_instrs(list *instrs){
     printf("\n");
 }
 
-/****************** DEBUG PRINTING **********************/
 void print_assembly(info *arg_info)
 {
     print_instrs(arg_info->instrs);
@@ -1162,9 +1401,14 @@ node *CODEdoAssembly( node *syntaxtree)
 
     TRAVpush( TR_asm);
 
+    /* generate assembly code */
     syntaxtree = TRAVdo( syntaxtree, info);
 
-    /* DEBUG printing of all instructions */
+    /* peephole the assembly code */
+    info->instrs = peephole(info->instrs);
+
+
+    /* print assembly code */
     print_assembly(info);
 
     TRAVpop();

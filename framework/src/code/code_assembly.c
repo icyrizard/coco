@@ -1208,6 +1208,82 @@ void print_const(list *consts){
     }
 }
 
+
+/****************** PEEPHOLING **********************/
+list *peephole(list *instrs)
+{
+    list *prev, *curr;
+    node *first, *second, *args1, *args2;
+    char *instr1, *instr2;
+    int change = 1;
+
+    /* continue peeholing as long as something changes */
+    while(change) {
+        change = 0;
+
+        /* initialize prev and curr to the first 2 instrutions */
+        prev = instrs->next;
+        curr = prev->next;
+
+        /* go though the whole list of instructions */
+        while(curr) {
+            /* get the instruction nodes */
+            first = (node *)prev->value;
+            second = (node *)curr->value;
+
+            /* get instruction strings */
+            instr1 = ASSEMBLYINSTR_INSTR(first);
+            instr2 = ASSEMBLYINSTR_INSTR(second);
+
+            /* get argument nodes */
+            args1 = ASSEMBLYINSTR_ARGS(first);
+            args2 = ASSEMBLYINSTR_ARGS(second);
+
+            /* [.., load 0, store 0, ..] -> [.., ..] */
+            if(STReq(instr1 + 1, "load") &&
+                    STReq(instr2 + 1, "store") &&
+                    STReq(ARG_INSTR(ARGLIST_HEAD(args1)), ARG_INSTR(ARGLIST_HEAD(args2)))) {
+                change = 1;
+
+                /* this is perfectly find as there will always be a init
+                 * function after this */
+                prev = curr->next;
+                curr = prev->next;
+
+                /* remove the insructions from the list */
+                list_remove(instrs, first);
+                list_remove(instrs, second);
+
+                continue;
+            } else if(STReq(instr1 + 1, "loadg") &&
+                    STReq(instr2 + 1, "storeg") &&
+                    STReq(ARG_INSTR(ARGLIST_HEAD(args1)), ARG_INSTR(ARGLIST_HEAD(args2)))) {
+                change = 1;
+
+                /* this is perfectly fine as there will alwasy be a return
+                 * instruction after istoreg instructions in the __init
+                 * function */
+                prev = curr->next;
+                curr = prev->next;
+
+                /* remove the insructions from the list */
+                list_remove(instrs, first);
+                list_remove(instrs, second);
+
+                continue;
+            } else if(STReq(i
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+
+
+
+    return instrs;
+}
+
+
+/****************** ASSEMBLY PRINTING **********************/
 void print_export(list *exports){
     int index = 0;
     node *instr, *arg;
@@ -1301,7 +1377,6 @@ void print_instrs(list *instrs){
     printf("\n");
 }
 
-/****************** DEBUG PRINTING **********************/
 void print_assembly(info *arg_info)
 {
     print_instrs(arg_info->instrs);
@@ -1326,9 +1401,14 @@ node *CODEdoAssembly( node *syntaxtree)
 
     TRAVpush( TR_asm);
 
+    /* generate assembly code */
     syntaxtree = TRAVdo( syntaxtree, info);
 
-    /* DEBUG printing of all instructions */
+    /* peephole the assembly code */
+    info->instrs = peephole(info->instrs);
+
+
+    /* print assembly code */
     print_assembly(info);
 
     TRAVpop();

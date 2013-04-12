@@ -820,17 +820,33 @@ node *ASMconditionif (node * arg_node, info * arg_info)
 
 node *ASMwhileloop (node * arg_node, info * arg_info)
 {
+    node *new_instr;
+    int label_before, label_after;
+
     DBUG_ENTER ("ASMwhileloop");
+
+
+    label_before = arg_info->label;
+    new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(arg_info->label++), ":"), NULL);
+    list_addtoend(arg_info->instrs, new_instr);
 
 
     WHILELOOP_EXPR( arg_node) = TRAVdo( WHILELOOP_EXPR( arg_node), arg_info);
 
 
+    label_after = arg_info->label;
+    new_instr = TBmakeAssemblyinstr(STRcpy("branch_f"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label++)), NULL));
+    list_addtoend(arg_info->instrs, new_instr);
+
     if(WHILELOOP_BLOCK( arg_node) != NULL) {
-
         WHILELOOP_BLOCK( arg_node) = TRAVdo( WHILELOOP_BLOCK( arg_node), arg_info);
-
     }
+
+    new_instr = TBmakeAssemblyinstr(STRcpy("jump"), TBmakeArglist(TBmakeArg(STRitoa(label_before)), NULL));
+    list_addtoend(arg_info->instrs, new_instr);
+
+    new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(label_after), ":"), NULL);
+    list_addtoend(arg_info->instrs, new_instr);
 
     DBUG_RETURN (arg_node);
 }
@@ -980,11 +996,14 @@ node *ASMfundef (node * arg_node, info * arg_info)
         params = PARAMLIST_NEXT(params);
     }
 
-    var_decs = FUNBODY_VARS(FUNDEF_BODY(arg_node));
-    while(var_decs) {
-        tmp_var = VAR_NAME(VARDEC_ID(VARDECLIST_HEAD(var_decs)));
-        list_addtoend(arg_info->localvars, tmp_var);
-        var_decs = VARDECLIST_NEXT(var_decs);
+    if(FUNDEF_BODY(arg_node) != NULL) {
+        var_decs = FUNBODY_VARS(FUNDEF_BODY(arg_node));
+
+        while(var_decs) {
+            tmp_var = VAR_NAME(VARDEC_ID(VARDECLIST_HEAD(var_decs)));
+            list_addtoend(arg_info->localvars, tmp_var);
+            var_decs = VARDECLIST_NEXT(var_decs);
+        }
     }
 
     list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(STRcat(fun_name, ":"), NULL));
@@ -1262,8 +1281,8 @@ void print_instrs(list *instrs){
         instr_name = ASSEMBLYINSTR_INSTR(instr);
         if(instr_name[STRlen(instr_name) - 1] != ':')
             printf("        ");
-        else
-            printf("    ");
+        //else
+        //    printf("    ");
         printf("%s ", instr_name);
 
         if(STReq(instr_name, "return") || STReq(instr_name+1, "return"))

@@ -200,20 +200,20 @@ node *ASMbinop (node * arg_node, info * arg_info)
     first_char = typesc[right];
 
     switch (BINOP_OP( arg_node)) {
-        case BO_add:
+        case BO_add:                /* TODO: 'adding' two bools!!! */
             tmp = STRcat(first_char, "add");
             break;
         case BO_sub:
             tmp = STRcat(first_char, "sub");
             break;
-        case BO_mul:
+        case BO_mul:                /* TODO: 'multiplying' two bools!!! */
             tmp = STRcat(first_char, "mul");
             break;
         case BO_div:
             tmp = STRcat(first_char, "div");
             break;
         case BO_mod:
-            tmp = STRcat(first_char, "mod");
+            tmp = STRcat(first_char, "rem");
             break;
         case BO_lt:
             tmp = STRcat(first_char, "lt");
@@ -289,7 +289,7 @@ node *ASMfloat (node * arg_node, info * arg_info)
     }
 
     /* create argument node if needed */
-    if(arg){
+    if(arg) {
         args = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
     }
 
@@ -413,11 +413,13 @@ node *ASMvar (node * arg_node, info * arg_info)
             DBUG_RETURN(arg_node);
     }
 
-    if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0){
-    }
-    else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0){
-    }
-    else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0){
+    if((index = list_get_index_fun(arg_info->localvars, var_name, check_str)) >= 0) {
+
+    /* een variabele vinden in de constant pool lijkt mij niet heel nuttig */
+    //} else if((index = list_get_index_fun(arg_info->constpool, var_name, check_const)) >= 0) {
+
+    } else if((index = list_get_index_fun(arg_info->globalvars, var_name, check_const)) >= 0) {
+
         /* change according to global loads*/
         switch(var_type)
         {
@@ -435,10 +437,11 @@ node *ASMvar (node * arg_node, info * arg_info)
         }
     }
 
-    if (index != -1){
-        list_addtoend(arg_info->instrs,
-        TBmakeAssemblyinstr(STRcpy(tmp), TBmakeArglist(TBmakeArg( STRitoa(index) ), NULL)));
-    }
+    //if (index != -1){
+    list_addtoend(arg_info->instrs,
+    TBmakeAssemblyinstr(STRcpy(tmp), TBmakeArglist(TBmakeArg( STRitoa(index) ), NULL)));
+    //}
+
     DBUG_RETURN (arg_node);
 }
 
@@ -587,7 +590,8 @@ node *ASMglobaldef (node * arg_node, info * arg_info)
         DBUG_ASSERT( 0, "unknown type detected!");
     }
 
-    GLOBALDEF_ID( arg_node) = TRAVdo( GLOBALDEF_ID( arg_node), arg_info);
+    /* no need to traverse the ID */
+    //GLOBALDEF_ID( arg_node) = TRAVdo( GLOBALDEF_ID( arg_node), arg_info);
 
     /* copy varname to globaldef */
     var = STRcpy(VAR_NAME(GLOBALDEF_ID( arg_node)));
@@ -609,29 +613,63 @@ node *ASMglobaldef (node * arg_node, info * arg_info)
 node *ASMcast (node * arg_node, info * arg_info)
 {
     char *tmp;
+    node *new_instr;
+    type cast;
 
     DBUG_ENTER ("ASMcast");
 
-    switch (CAST_TYPE( arg_node)) {
-      case TYPE_bool:
-        tmp = "bool";
-        break;
-      case TYPE_int:
-        tmp = "int";
-        break;
-      case TYPE_float:
-        tmp = "float";
-        break;
-      case TYPE_void:
-        tmp = "void";
-        break;
-      case TYPE_unknown:
-        DBUG_ASSERT( 0, "unknown type detected!");
+    cast = CAST_TYPE(arg_node);
+
+    TRAVdo( CAST_RIGHT( arg_node), arg_info);
+
+    switch(cast) {
+        /* Casting to int */
+        case TYPE_int:
+            if(arg_info->t == TYPE_float)
+                tmp = "f2i";
+            else if(arg_info->t == TYPE_bool)
+                tmp = "CAST BOOL TO INT";
+            break;
+
+        /* Casting to float */
+        case TYPE_float:
+            if(arg_info->t == TYPE_int) {
+                tmp = "i2f";
+            } else if(arg_info->t == TYPE_bool) {
+                tmp = "CAST BOOL TO FLOAT";
+            }
+            break;
+
+        /* Casting to bool */
+        case TYPE_bool:
+            if(arg_info->t == TYPE_int) {
+                tmp = "CAST INT TO BOOL";
+            } else if(arg_info->t == TYPE_float) {
+                tmp = "CAST FLOAT TO BOOL";
+            }
+            break;
+        default:
+            break;
+
+    }
+    /* Casting to int */
+    if(cast == TYPE_int) {
+
+    /* Casting to float */
+    } else if(cast == TYPE_float) {
+
+    /* Casting to bool */
+    } else if(cast == TYPE_bool) {
+
+
     }
 
-    CAST_RIGHT( arg_node) = TRAVdo( CAST_RIGHT( arg_node), arg_info);
+    new_instr = TBmakeAssemblyinstr(STRcpy(tmp), NULL);
+    list_addtoend(arg_info->instrs, new_instr);
 
+    /* the type of the result of the expression is the cast type */
     arg_info->t = CAST_TYPE(arg_node);
+
 
     DBUG_RETURN (arg_node);
 }

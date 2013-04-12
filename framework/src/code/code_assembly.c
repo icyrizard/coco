@@ -15,6 +15,7 @@ void print_global(list *globals);
 #define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
 char* typess[5] = { "bool", "int", "float", "void", "unknown" };
+char* typesc[5] = { "b", "i", "f", "v", "u" };
 
 /* dit gaat trouens wel fout wss als we het meenemen nar een nieuwe phase of niet?
  * mmm/ nog geen idee hoe we dat uberhaupt moeten doen ja ok no problem dan
@@ -100,6 +101,8 @@ type get_type(node *decl)
             return VARDEC_TYPE(decl);
         case N_param:
             return PARAM_TYPE(decl);
+        case N_funheader:
+            return FUNHEADER_RETTYPE(decl);
         default:
             printf("Unknown node type %d\n", NODE_TYPE(decl));
             return TYPE_unknown;
@@ -180,8 +183,8 @@ node *ASMassign (node * arg_node, info * arg_info)
 node *ASMbinop (node * arg_node, info * arg_info)
 {
     int num_params = 0;
-    char *tmp, *instr_name = NULL, first_char[2];
-    node *instr = NULL, *arg = NULL, *new_instr = NULL;
+    char *first_char, *tmp;
+    node *new_instr = NULL;
     type left, right;
 
     DBUG_ENTER ("ASMbinop");
@@ -193,66 +196,45 @@ node *ASMbinop (node * arg_node, info * arg_info)
     BINOP_RIGHT( arg_node) = TRAVdo( BINOP_RIGHT( arg_node), arg_info);
     right = arg_info->t;
 
-    printf("%d %d\n", left, right);
-
-    instr = list_get_last(arg_info->instrs);
-    instr_name = ASSEMBLYINSTR_INSTR(instr);
-
-    /* move back (jsr) 'x' steps  */
-    if(STReq(instr_name, "jsr") || STReq(instr_name, "jsre")){
-        arg = ASSEMBLYINSTR_ARGS(instr);
-        num_params = atoi(ARG_INSTR(ARGLIST_HEAD(arg)));
-
-        /* get from end, skip isr instrs */
-        instr = get_from_end(arg_info->instrs, num_params + 2);
-        instr_name = ASSEMBLYINSTR_INSTR(instr);
-    }
+    /* get the 'i', 'f', 'b' character used for some assembly instructions */
+    first_char = typesc[right];
 
     switch (BINOP_OP( arg_node)) {
         case BO_add:
-            sprintf(first_char, "%c", *instr_name);
             tmp = STRcat(first_char, "add");
             break;
         case BO_sub:
-            sprintf(first_char, "%c", *instr_name);
             tmp = STRcat(first_char, "sub");
             break;
         case BO_mul:
-            sprintf(first_char, "%c", *instr_name);
             tmp = STRcat(first_char, "mul");
             break;
         case BO_div:
-            sprintf(first_char, "%c", *instr_name);
             tmp = STRcat(first_char, "div");
             break;
         case BO_mod:
-            sprintf(first_char, "%c", *instr_name);
             tmp = STRcat(first_char, "mod");
             break;
         case BO_lt:
-            tmp = "<";
+            tmp = STRcat(first_char, "lt");
             break;
         case BO_le:
-            tmp = "<=";
+            tmp = STRcat(first_char, "le");
             break;
         case BO_gt:
-            tmp = ">";
+            tmp = STRcat(first_char, "gt");
             break;
         case BO_ge:
-            tmp = ">=";
+            tmp = STRcat(first_char, "ge");
             break;
         case BO_eq:
-            tmp = "==";
+            tmp = STRcat(first_char, "eq");
             break;
         case BO_ne:
-            tmp = "!=";
+            tmp = STRcat(first_char, "ne");
             break;
-        case BO_or:
-            tmp = "||";
-            break;
+        case BO_or:         /* 'or' and 'and' should not exist anymore */
         case BO_and:
-            tmp = "&&";
-            break;
         case BO_unknown:
             DBUG_ASSERT( 0, "unknown binop detected!");
     }
@@ -276,39 +258,34 @@ node *ASMfloat (node * arg_node, info * arg_info)
     number = FLOAT_VALUE(arg_node);
     arg_info->t = TYPE_float;
 
-    switch((int)number)
-    {
-        case 0:
-            instr = STRcpy("floadc_0");
-            arg = NULL;
-            break;
-        case 1:
-            instr = STRcpy("floadc_1");
-            arg = NULL;
-            break;
-        default:
-            instr = STRcpy("floadc");
-            /* copy the constant number in the buffer*/
-            sprintf(tmp, "%f",  number);
-            /* try to find the constant in the buffer */
-            index = list_get_index_fun(arg_info->constpool, tmp, check_const);
+    if(number == 0.0) {
+        instr = STRcpy("floadc_0");
+        arg = NULL;
+    } else if(number == 1.0) {
+        instr = STRcpy("floadc_1");
+        arg = NULL;
+    } else {
+        instr = STRcpy("floadc");
+        /* copy the constant number in the buffer*/
+        sprintf(tmp, "%f",  number);
+        /* try to find the constant in the buffer */
+        index = list_get_index_fun(arg_info->constpool, tmp, check_const);
 
-            /* constant found! add it to the constant list */
-            if(index == -1) {
-                /* set int as first arg, value as second*/
-               arg_list = TBmakeArglist(TBmakeArg("float"), TBmakeArglist(TBmakeArg(STRcpy(tmp)), NULL));
+        /* constant found! add it to the constant list */
+        if(index == -1) {
+            /* set int as first arg, value as second*/
+            arg_list = TBmakeArglist(TBmakeArg("float"), TBmakeArglist(TBmakeArg(STRcpy(tmp)), NULL));
 
-                /* add new constant to constant pool */
-                new_instr = TBmakeAssemblyinstr(".const", arg_list);
-                list_addtoend(arg_info->constpool, new_instr);
+            /* add new constant to constant pool */
+            new_instr = TBmakeAssemblyinstr(".const", arg_list);
+            list_addtoend(arg_info->constpool, new_instr);
 
-                /* get index of constant in constant pool */
-                index = list_length(arg_info->constpool) - 1;
-            }
+            /* get index of constant in constant pool */
+            index = list_length(arg_info->constpool) - 1;
+        }
 
-            /* set value of arg to the index where this constant can be found by the VM */
-            arg =  STRitoa(index);
-            break;
+        /* set value of arg to the index where this constant can be found by the VM */
+        arg =  STRitoa(index);
     }
 
     /* create argument node if needed */
@@ -872,7 +849,6 @@ node *ASMfundef (node * arg_node, info * arg_info)
 
     list_addtoend(arg_info->instrs, TBmakeAssemblyinstr(STRcpy(return_keyword), NULL));
 
-
     /* empty localvars list for re-use */
     list_empty(arg_info->localvars);
 
@@ -1030,7 +1006,7 @@ void print_const(list *consts){
     node *instr, *arg;
     instr = list_get_elem(consts, index++);
 
-    while(instr){
+    while(instr) {
         printf("%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
@@ -1053,7 +1029,7 @@ void print_export(list *exports){
     node *instr, *arg;
     instr = list_get_elem(exports, index++);
 
-    while(instr){
+    while(instr) {
         printf("%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
@@ -1084,7 +1060,7 @@ void print_imports(list *imports){
         printf("\"%s\" ", ARG_INSTR(ARGLIST_HEAD(arg)));
         arg = ARGLIST_NEXT(arg);
 
-        while(arg){
+        while(arg) {
           printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
           arg = ARGLIST_NEXT(arg);
         }
@@ -1099,7 +1075,7 @@ void print_global(list *globals){
     node *instr, *arg;
     instr = list_get_elem(globals, index++);
 
-    while(instr){
+    while(instr) {
         printf("%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
@@ -1126,7 +1102,7 @@ void print_instrs(list *instrs){
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
-        while(arg){
+        while(arg) {
             printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
             arg = ARGLIST_NEXT(arg);
         }

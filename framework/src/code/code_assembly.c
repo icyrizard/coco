@@ -1271,7 +1271,7 @@ list *peephole(list *instrs)
                 list_remove(instrs, second);
 
                 continue;
-            } else if(STReq(i
+            }
             prev = curr;
             curr = curr->next;
         }

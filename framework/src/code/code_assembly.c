@@ -612,7 +612,7 @@ node *ASMglobaldec (node * arg_node, info * arg_info)
     /* get index of constant in constant pool */
     index = list_length(arg_info->globalvars) - 1;
 
-    GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
+    //GLOBALDEC_ID( arg_node) = TRAVdo( GLOBALDEC_ID( arg_node), arg_info);
     var = VAR_NAME(GLOBALDEC_ID( arg_node));
 
     /* create argument list */
@@ -822,10 +822,14 @@ node *ASMwhileloop (node * arg_node, info * arg_info)
 {
     DBUG_ENTER ("ASMwhileloop");
 
+
     WHILELOOP_EXPR( arg_node) = TRAVdo( WHILELOOP_EXPR( arg_node), arg_info);
 
+
     if(WHILELOOP_BLOCK( arg_node) != NULL) {
+
         WHILELOOP_BLOCK( arg_node) = TRAVdo( WHILELOOP_BLOCK( arg_node), arg_info);
+
     }
 
     DBUG_RETURN (arg_node);
@@ -932,6 +936,7 @@ node *ASMfundef (node * arg_node, info * arg_info)
     type tmp_type, ret_type;
     char *fun_name, *return_keyword, *tmp_var;
     node *header, *params, *var_decs, *args, *new_instr ;
+
 
     DBUG_ENTER ("ASMfundef");
 

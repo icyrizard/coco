@@ -625,16 +625,42 @@ node *ASMcast (node * arg_node, info * arg_info)
     switch(cast) {
         /* Casting to int */
         case TYPE_int:
-            if(arg_info->t == TYPE_float)
-                tmp = "f2i";
-            else if(arg_info->t == TYPE_bool)
+            if(arg_info->t == TYPE_float) {
+                new_instr = TBmakeAssemblyinstr(STRcpy("f2i"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+            } else if(arg_info->t == TYPE_bool) {
+                new_instr = TBmakeAssemblyinstr(STRcpy("bloadc_t"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("beq"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("branch_f"), TBmakeArglist(TBmakeArg(STRcpy("1")), NULL));
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("iloadc_1"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("jump"), TBmakeArglist(TBmakeArg(STRcpy("2")), NULL));
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("1:"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("iloadc_0"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
+
+                new_instr = TBmakeAssemblyinstr(STRcpy("2:"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
                 tmp = "CAST BOOL TO INT";
+            }
             break;
 
         /* Casting to float */
         case TYPE_float:
             if(arg_info->t == TYPE_int) {
-                tmp = "i2f";
+                new_instr = TBmakeAssemblyinstr(STRcpy("i2f"), NULL);
+                list_addtoend(arg_info->instrs, new_instr);
             } else if(arg_info->t == TYPE_bool) {
                 tmp = "CAST BOOL TO FLOAT";
             }
@@ -652,20 +678,7 @@ node *ASMcast (node * arg_node, info * arg_info)
             break;
 
     }
-    /* Casting to int */
-    if(cast == TYPE_int) {
 
-    /* Casting to float */
-    } else if(cast == TYPE_float) {
-
-    /* Casting to bool */
-    } else if(cast == TYPE_bool) {
-
-
-    }
-
-    new_instr = TBmakeAssemblyinstr(STRcpy(tmp), NULL);
-    list_addtoend(arg_info->instrs, new_instr);
 
     /* the type of the result of the expression is the cast type */
     arg_info->t = CAST_TYPE(arg_node);
@@ -1130,13 +1143,15 @@ void print_instrs(list *instrs){
     char *instr_name;
     node *instr, *arg;
     instr = list_get_elem(instrs, index++);
-    printf("%p \n", instrs);
 
     while(instr){
         instr_name = ASSEMBLYINSTR_INSTR(instr);
         if(instr_name[STRlen(instr_name) - 1] != ':')
             printf("        ");
         printf("%s ", instr_name);
+
+        if(STReq(instr_name, "return") || STReq(instr_name+1, "return"))
+            printf("\n");
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);

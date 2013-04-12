@@ -1,0 +1,96 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\author{Rik van der Kooij <stdnmmr>\& \\
+Richard Torenvliet - 6138861 \texttt{rich.riz@gmail.com}}
+\title{Compiler Construction - Creating the CiViC Compiler}
+\begin{document}
+\abstract{Civicc Compiler}
+\tableofcontents
+\maketitle
+
+\section{Introduction}
+This document describes yet another implementation of the CiviC compiler for
+the CiviC-VM.  The creation of the CiviC compiler consists of different phases
+in order to parse the program text to assembly which in turn CiviC-VM can
+interpret. Starting with creating the AST(Abstract Syntax Tree), which
+describes the hierarchy of "Nodes". Next, creating the Lex and Yacc to parse a
+file and assemble the AST, where phases like "desugaring", "type checking" and
+"code generation".
+
+\section{Abstract Syntax Tree}
+The abstract syntaxtree is represented in XML form. In the XML
+file(\texttt{src/global/ast.xml} the hierarchy and relation between nodes can be
+expressed. The framework supports a certain syntax in order to describe the
+tree. For example, an assign node(see reference document) is described by the following.
+
+\begin{lstlisting}[language=XML]
+ <node name="Assign">
+  <sons>
+    <son name="Let">
+      <targets>
+        <target mandatory="yes">
+          <node name="Var" />
+          <phases>
+            <all />
+          </phases>
+        </target>
+      </targets>
+    </son>
+    <son name="Expr">
+      <targets>
+        <target mandatory="yes">
+          <set name="Expr" />
+          <phases>
+            <all />
+          </phases>
+        </target>
+      </targets>
+    </son>
+  </sons>
+  <attributes />
+</node>
+\end{lstlisting}
+
+An important thing to note is that <sons> represent other nodes in the ast.xml,
+and a relation between these nodes is created. To create a cyclic
+relation, the node that is referred to can refer back to the parent node.
+
+If a node is a ctype, those are described in the $\lt$attributes$\gt$ field.\\
+\texttt{<type name="String" ctype="char*" init="NULL" copy="function" />}
+\\
+Also, the AST can be visually represented in a Directed Cyclic Graph, see
+figure \ref{fig:ast.png}.
+
+\begin{figure}[h!]
+    \includegraphics[width=15cm]{../framework/doc/ast.png}
+\label{fig:ast.png}
+\end{figure}
+
+The framework generates functions to create these nodes which can be
+used in the Yaccer to construct the AST in memory. Function syntax of these
+have the following format: \\
+\texttt{TBmake<NODENAME>\_<SON\_NAME/ATTRIBUTE\_NAME>}
+
+\section{Lex and Yacc}
+In the Lex file we describe the patterns that we want to match as a token in
+order to match a sequence of these to a certain node(exactly the nodes we
+described in the ast.xml).
+\begin{lstlisting}
+#define FILTER(token) \
+  global.col += yyleng;  \
+  return( token);
+"while"   { FILTER( WHILELOOP); }
+\end{lstlisting}
+A sequence of tokens in a certain order correspond to a node we defined in the
+ast.xml.
+
+\section{Desugaring}
+
+\section{Type Checking}
+
+\section{Code Generation}
+
+\end{document}

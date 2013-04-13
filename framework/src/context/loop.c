@@ -57,14 +57,24 @@ node *change_dowhile(node *arg_node)
 node *change_forloop(node *arg_node)
 {
     node *whileloop, *forloop, *head, *tail, *step, *assign, *counterid;
+    binop op;
 
     /* get the forloop and counter id */
     forloop = STATEMENTLIST_HEAD(arg_node);
     counterid = ASSIGN_LET(FORLOOP_STARTVALUE(forloop));
-
+    step = FORLOOP_STEPVALUE(forloop);
 
     /* create the new while loop */
-    whileloop = TBmakeWhileloop(TBmakeBinop(BO_lt, counterid, FORLOOP_STOPVALUE(forloop)), FORLOOP_BLOCK(forloop));
+    if(step < 0) {
+        op = BO_gt;
+    } else if(step == 0) {
+        CTIwarnLine(NODE_LINE(arg_node), "Step value of zero in for loop creates undefined behaviour");
+        op = BO_eq;
+    } else {
+        op = BO_lt;
+    }
+
+    whileloop = TBmakeWhileloop(TBmakeBinop(op, counterid, FORLOOP_STOPVALUE(forloop)), FORLOOP_BLOCK(forloop));
 
     /* create new statementlist with the 'forloop variable' initialization */
     head = TBmakeStatementlist(COPYdoCopy(FORLOOP_STARTVALUE(forloop)), TBmakeStatementlist(whileloop, STATEMENTLIST_NEXT(arg_node)));
@@ -75,7 +85,6 @@ node *change_forloop(node *arg_node)
         tail = STATEMENTLIST_NEXT(tail);
 
     /* create loop counter increase assignment */
-    step = FORLOOP_STEPVALUE(forloop);
     if(!step)
         step = TBmakeNum(1);
 

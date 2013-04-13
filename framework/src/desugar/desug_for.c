@@ -34,9 +34,6 @@ struct var_list {
 struct INFO {
     int nest_level;
 
-    //struct var_list *vars;
-    //node *decs_head,
-    //     *decs_tail;
     list *vardeclist;
     hashmap *hashvars;
 };
@@ -189,7 +186,6 @@ node *FORforloop(node *arg_node, info *arg_info)
     FORLOOP_BLOCK ( arg_node) = TRAVopt( FORLOOP_BLOCK( arg_node), arg_info);
 
     /* apply rule to loop variable initialization */
-    /* TODO wrapper funtion with FREE calls */
     VAR_NAME ( ASSIGN_LET ( start)) = STRcat(VAR_NAME ( ASSIGN_LET ( start)), STRcat( "$", STRitoa( arg_info->nest_level)));
 
     /* create a new var dec */

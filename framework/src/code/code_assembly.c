@@ -95,14 +95,11 @@ bool check_imports(void *v1, void *v2){
     char *value;
     node *arg, *tmp = (node *)v2;
 
+    /* get first argument */
+    arg = ARGLIST_HEAD(ASSEMBLYINSTR_ARGS(tmp));
+    value = ARG_INSTR(arg);
 
-    /* get last argument(always second)  */
-    arg = ASSEMBLYINSTR_ARGS(tmp);
-    arg = ARGLIST_NEXT(arg);
-    while(arg){
-        value = ARG_INSTR(ARGLIST_HEAD(arg));
-        arg = ARGLIST_NEXT(arg);
-    }
+    //printf("'%s' | '%s'\n", (char*) v1, (char*)value);
 
     return STReq((char *)v1, (char *)value);
 }
@@ -572,11 +569,12 @@ node *ASMfundec (node * arg_node, info * arg_info)
     }
 
     /* set funname as last argument */
-    ARGLIST_NEXT(args) = TBmakeArglist(TBmakeArg(fun_name), NULL);
+    //ARGLIST_NEXT(args) = TBmakeArglist(TBmakeArg(fun_name), NULL);
 
     /* add to list */
     node *new_instr = TBmakeAssemblyinstr(".import", arg_list);
     list_addtoend(arg_info->imports, new_instr);
+
 
 
     FUNDEC_HEADER( arg_node) = TRAVdo( FUNDEC_HEADER( arg_node), arg_info);
@@ -792,26 +790,34 @@ node *ASMconditionif (node * arg_node, info * arg_info)
 
     DBUG_ENTER ("ASMconditionif");
 
+    /* traverse condition expression */
     CONDITIONIF_EXPR( arg_node) = TRAVdo( CONDITIONIF_EXPR( arg_node), arg_info);
     old = arg_info->label;
 
+    /* branch over if block if expression is false */
     new_instr = TBmakeAssemblyinstr(STRcpy("branch_f"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label++)), NULL));
     list_addtoend(arg_info->instrs, new_instr);
 
+    /* travserse if block */
     CONDITIONIF_BLOCK( arg_node) = TRAVdo( CONDITIONIF_BLOCK( arg_node), arg_info);
 
     old2 = arg_info->label;
+
+    /* jump over else block */
     new_instr = TBmakeAssemblyinstr(STRcpy("jump"), TBmakeArglist(TBmakeArg(STRitoa(arg_info->label++)), NULL));
     list_addtoend(arg_info->instrs, new_instr);
 
+    /* add label */
     new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(old), ":"), NULL);
     list_addtoend(arg_info->instrs, new_instr);
 
+    /* traverse else block */
     if(CONDITIONIF_ELSEBLOCK( arg_node) != NULL) {
         CONDITIONIF_ELSEBLOCK( arg_node) = TRAVdo(CONDITIONIF_ELSEBLOCK(\
                     arg_node), arg_info);
     }
 
+    /* add label */
     new_instr = TBmakeAssemblyinstr(STRcat(STRitoa(old2), ":"), NULL);
     list_addtoend(arg_info->instrs, new_instr);
 
@@ -901,6 +907,7 @@ node *ASMfuncall (node * arg_node, info * arg_info)
     int num_args = 0, index = 0;
     node *arg_list, *new_instr, *params;
 
+
     /* initiate function call*/
     fun_name = STRcpy(VAR_NAME(FUNCALL_ID(arg_node)));
 
@@ -916,7 +923,8 @@ node *ASMfuncall (node * arg_node, info * arg_info)
         num_args++;
     }
 
-    if((index = list_get_index_fun(arg_info->imports, fun_name, check_const)) >= 0){
+
+    if((index = list_get_index_fun(arg_info->imports, fun_name, check_imports)) >= 0){
         arg_list = TBmakeArglist(TBmakeArg(STRitoa(index)), NULL);
         new_instr = TBmakeAssemblyinstr("jsre", arg_list);
     } else {
@@ -1104,9 +1112,8 @@ node *ASMstatementlist (node * arg_node, info * arg_info)
 
     STATEMENTLIST_HEAD( arg_node) = TRAVdo( STATEMENTLIST_HEAD( arg_node), arg_info);
 
-    if((NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_funcall) || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_assign)
-            || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_dowhileloop))
-
+    //if((NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_funcall) || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_assign)
+    //        || (NODE_TYPE(STATEMENTLIST_HEAD(arg_node)) == N_dowhileloop))
     STATEMENTLIST_NEXT( arg_node) = TRAVopt( STATEMENTLIST_NEXT( arg_node), arg_info);
 
     DBUG_RETURN (arg_node);
@@ -1356,7 +1363,7 @@ void print_instrs(list *instrs){
     while(instr){
         instr_name = ASSEMBLYINSTR_INSTR(instr);
         if(instr_name[STRlen(instr_name) - 1] != ':')
-            printf("        ");
+            printf("\t");
         //else
         //    printf("    ");
         printf("%s ", instr_name);
@@ -1405,7 +1412,7 @@ node *CODEdoAssembly( node *syntaxtree)
     syntaxtree = TRAVdo( syntaxtree, info);
 
     /* peephole the assembly code */
-    info->instrs = peephole(info->instrs);
+    //info->instrs = peephole(info->instrs);
 
 
     /* print assembly code */

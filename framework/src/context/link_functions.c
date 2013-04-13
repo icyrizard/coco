@@ -79,7 +79,6 @@ node *LFUNfunheader(node *arg_node, info *arg_info)
 
     /* check previously saved funcalls */
     while(hashmap_contains(arg_info->fun_calls, funname)) {
-        printf("hello\n");
         funcall = hashmap_get(arg_info->fun_calls, funname);
         VAR_DECL( FUNCALL_ID(funcall)) = arg_node;
 

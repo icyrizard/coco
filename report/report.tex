@@ -10,6 +10,10 @@
 Richard Torenvliet - 6138861 \texttt{rich.riz@gmail.com}}
 \title{Compiler Construction - Creating the CiViC Compiler}
 \begin{document}
+\lstset{
+    numbers=left,
+    tabsize=2,
+}
 \abstract{Civicc Compiler}
 \tableofcontents
 \maketitle
@@ -132,17 +136,51 @@ initialization.
 
 \subsection{Global variables to \_\_init}
 The first desugaring step is to rewrite the initialization of global variables
-to a new \_\_init function. The reason for this is that ultimately the assembly
-instructions need to be placed under a label/function. In addition the global
-variables need to initialized before any other instruction is invoked, simply
-because of the fact that we expect them to hold the right variable before
-anything else.
+to a new \_\_init function, this is in fact "code generation". The reason for
+this is that ultimately the assembly instructions need to be placed under a
+label/function. In addition the global variables need to initialized before any
+other instruction is invoked, simply because of the fact that we expect them to
+hold the right variable before anything else.
 
+This phase does imply that the \_\_init function is called first by the
+CiviC-VM and secondly that \_\_init can not be declared by the user.
+The node of interest is the \texttt{GlobalDef}, which is defined in the CiviC
+manual by:\\
+\textit{GlobalDef $\Rightarrow$ [ \texttt{export} ] Type Id [ = Expr ]}
+
+In the event of an Expr, which means that an assignment is present. A new
+assignment expression is created and prepended to a list in the info object.
+The list of new assign nodes is added in the end to a new function called
+\_\_init. See psuedo code in figure \ref{fig:init}.
+
+\begin{figure}[h]
+    \begin{lstlisting}[language=C, frame=single]
+    info = {
+        list *globaldefs;
+    };
+
+    INITglobaldef (arg, info){
+        /* return if no assignment*/
+        if arg->expr:
+            return
+
+        /* store a new expression node */
+        info->globaldefs.prepend(new_expr_node);
+
+        /* remove the assignment */
+        arg->expr = NULL;
+    }
+
+    /* add init to top of statements */
+    add_init(info);
+    \end{lstlisting}
+    \caption{Globaldefs to \_\_init}
+    \label{fig:init}
+\end{figure}
 
 
 \section{Type Checking}
 
 \section{Code Generation}
 
-\printindex
 \end{document}

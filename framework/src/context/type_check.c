@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "types.h"
 #include "link_functions.h"
 #include "memory.h"
@@ -355,11 +356,14 @@ node *TYPEbool(node *arg_node, info *arg_info)
 
 node *TYPEassign(node *arg_node, info *arg_info)
 {
+    char *tmp, *let;
     type varlet;
     DBUG_ENTER("TYPEassign");
 
     /* get type of varlet */
     varlet = get_decl_type(VAR_DECL(ASSIGN_LET(arg_node)));
+
+    let = VAR_NAME(ASSIGN_LET(arg_node));
 
     /* check if expr is of same type as varlet */
     TRAVdo(ASSIGN_EXPR(arg_node), arg_info);
@@ -367,8 +371,18 @@ node *TYPEassign(node *arg_node, info *arg_info)
     if(varlet != TYPE_unknown && arg_info->t != TYPE_unknown &&
             varlet != arg_info->t)
         CTIerror(":%d: error: cannot initialize '%s', of type '%s', with an "
-                 "expression of type '%s'", NODE_LINE(arg_node),
-                 VAR_NAME(ASSIGN_LET(arg_node)), types[varlet], types[arg_info->t]);
+                 "expression of type '%s'", NODE_LINE(arg_node), let,
+                 types[varlet], types[arg_info->t]);
+
+    /* check if we are assigning to a loop counter */
+    tmp = strchr(let, '$');
+
+    if(tmp) {
+        int length = tmp - let;
+        tmp = STRncpy(let, length);
+        CTIerror(":%d: error: cannot write to loop counter '%s'", NODE_LINE(arg_node), tmp);
+        MEMfree(tmp);
+    }
 
     DBUG_RETURN(arg_node);
 }

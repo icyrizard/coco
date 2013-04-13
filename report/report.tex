@@ -178,8 +178,19 @@ The list of new assign nodes is added in the end to a new function called
     \label{fig:init}
 \end{figure}
 
+\subsection{Forloop variable initialization desuggering}
+All forloops start with a declaration part. This part will be split from the
+for loop much like we did with the global variables. The declaration of the
+loop variables is moved to the top of the function. The loop variables could be
+seen as though they are defined in a different scope. This means that we had to
+rename it to allow multiple local variables of the same name.
 
-\section{Type Checking}
+We used a list to collect all new variable declarations and a hashmap which
+consisted of 'rewrite rules'. The rewrite rules were simply the old variable
+name and the new one. Whith this we were able to rename all uses of forloop
+variables with the new name.
+
+\section{Context}
 
 \section{Code Generation}
 

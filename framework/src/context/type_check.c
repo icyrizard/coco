@@ -276,7 +276,7 @@ node *TYPEbinop(node *arg_node, info *arg_info)
         case BO_and:
             /* left and right must be bool */
             if(left != TYPE_bool || right != TYPE_bool) {
-                CTIerror(":%d: error: both sides of a boolean operator must be boolean expressions");
+                CTIerror(":%d: error: both sides of a boolean operator must be boolean expressions", NODE_LINE(arg_node));
                 arg_info->t = TYPE_unknown;
             } else
                 arg_info->t = TYPE_bool;

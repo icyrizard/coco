@@ -226,7 +226,7 @@ for($i1 = 0, 10, 1){
 
 The list described in section %ref
 is used to construct a list of variable declarations with the renamed
-variables, i.e. \texttt{\$<VARNAME><NESTLEVEL>}. For all occurrences of variables with
+variables, i.e. \texttt{<VARNAME>\$<NESTLEVEL>}. For all occurrences of variables with
 the old name have to be renamed to the new one. The solution is to create a
 hashmap: \texttt{"old\_varname":"new\_varname"}. If a variable of
 \texttt{"old\_varname"} is encountered it has to be renamed to the new varname.

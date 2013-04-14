@@ -1,9 +1,8 @@
-
 #ifndef _LIST_HASH_H_
 #define _LIST_HASH_H_
 
 #define RETURN_NULL(a) if(!a) return -1;
-#define RETURN_NNULL(a) if(!a) return NULL; /* FIXME macro name */
+#define RETURN_NNULL(a) if(!a) return NULL;
 #define SET_LIST(l, v, n) l->value = v; l->next = n;
 #define SET_HASH(h, k, v, n) h->key = k; h->value =v; h->next = n;
 

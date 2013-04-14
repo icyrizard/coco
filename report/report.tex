@@ -431,10 +431,40 @@ the stack need to be of the same type. We take use of the info object to track
 the last type of instruction that was left and right of the \texttt{BinOp}
 node. Depending on that type we pick the right instruction.
 
+A difficult case is adding to boolean values together. An multiplication of two
+booleans is equal to \&\&, the other is addition which is equal to $\mid\mid$.
+
+Begin with left values.
+\begin{lstlisting}
+"boolvalue"
+bloadc_t // load a boolean true
+beq      // check if first value is eq to true
+branch_f 1 // branch if false
+    bpop     // pop if true
+    bloadc_t // load false
+label 1:
+    "rest" // dont do anything
+\end{lstlisting}
+
+\begin{lstlisting}
+"boolvalue"
+bloadc_t // load a boolean true
+beq      // check if first value is eq to true
+branch_t 1// branch if false
+    bpop     // pop if true
+    floadc_t // load false
+label 1:
+    "rest" // dont do anything
+\end{lstlisting}
+
 \subsection{Whileloops}
 \begin{lstlisting}
-
-
+label 1:
+    expressie
+    branch_f 2
+    body
+    jump 1
+label 2:
 \end{lstlisting}
 
 
@@ -448,14 +478,18 @@ Another optimization is done by changing 'load 0' to 'load\_0'
 
 
 \section{Conclusion}
-%TODO Awesome conclusie
+This concludes all the steps that we needed to create the CiviC compiler.
+Starting of by creating an AST which forms a crucial part of creating the
+compiler. The AST is used to represent the language, both in visual form(i.e.
+an image) and as a tool to make sense of the tree, on a syntactic and semantic
+level. This tree goes through a series of phases that will check the
+correctness and alter it to ultimately form a stream of assembly. This boils
+down to go from a highlevel representation, to a form that only machines can
+fully interpret.
 
-
-
-
-
-%TODO Er moet ook ergens nog komen dat we nested functies en arrays niet
-%     hebben.
-
+\section{Reflection}
+We didn't find the time to include nested functions and arrays. These can cost
+a lot of effort to construct, due to the fact that compilers is difficult area
+in computer science we weren't able to implement.
 
 \end{document}

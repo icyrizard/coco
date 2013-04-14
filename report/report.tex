@@ -7,8 +7,8 @@
 \usepackage{amsmath}
 \usepackage{makeidx}
 \marginparsep = 10pt
-\author{Rik van der Kooij <stdnmmr>\& \\
-Richard Torenvliet - 6138861 \texttt{rich.riz@gmail.com}}
+\author{Rik van der Kooij - 6064965\\
+Richard Torenvliet - 6138861}
 \title{Compiler Construction - Creating the CiViC Compiler}
 \begin{document}
 \lstset{
@@ -16,10 +16,12 @@ Richard Torenvliet - 6138861 \texttt{rich.riz@gmail.com}}
     tabsize=2,
 }
 
-\abstract{Civicc Compiler}
 
-\tableofcontents
 \maketitle
+\tableofcontents
+
+\abstract{Civilized C Compiler}
+
 \section{Introduction}
 This document describes yet another implementation of the CiviC compiler for
 the CiviC-VM. The creation of the CiviC compiler consists of different phases
@@ -38,6 +40,19 @@ Nauer form in the CiviC Language Manuel. The next step is creating the Lex and
 Yacc to parse a file and assemble the AST. This AST is used in the next phases
 like "desugaring", "type checking" and "code generation". These phases are
 explained in the following sections.
+
+\section{List and HashMap}
+A list data structure with an dynamic size would help out alot. An example
+would be in  desuggaring of for loops where all new vardecs could then be
+stored in that list. We created our own linked list implementation in the file:
+'framework/src/framework/list\_hash.c'. All function names should be enough to
+indicate what they are doing.
+
+Another usefull data structure would be an hash map. We also created a simple
+hash map implementation in the same file as the linked list. The hash map can
+be used to create simple rename rules for variables. For example for loop
+desugaring requires to rename all loop variables. In the hash map we can use
+the key for the old value for lookup and the value for the new value.
 
 \section{Abstract Syntax Tree}
 An abstract syntaxtree is a representation of the structure of components that
@@ -303,13 +318,15 @@ constraints. It made our lives a little easier as we did not have to worry
 about passing the assembly instructions to a new phase.
 
 %TODO: we gebruiken voor elke assembly onderdeel een lijst (instr, import, ..)
-%      blabalbalbaba
+The civic assembly can be described as a list of instructions followed by
+a global variable, a constant, an import and an export table. In our code each
+of these will be represented as a list which are filled when traversing the syntax tree.
 
 
 %TODO: instructies maken we zo!
 \section{Peephole Optimization}
-Our peepholer looks at two instructions at the time. Optimization of a consecutive
-load and store to the same register is done by removing both instructions.
+Our peepholer looks at two instructions at the time. We optimize a consecutive
+load and store to the same register by removing both instructions.
 Another optimization is done by changing 'load 0' to 'load\_0'
 
 %TODO als je nog iets weet
@@ -317,6 +334,8 @@ Another optimization is done by changing 'load 0' to 'load\_0'
 
 \section{Conclusion}
 %TODO Awesome conclusie
+
+
 
 
 

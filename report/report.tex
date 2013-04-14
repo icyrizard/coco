@@ -16,9 +16,11 @@ Richard Torenvliet - 6138861}
 }
 
 
-\tableofcontents
 \maketitle
-\abstract{Civicc Compiler}
+\tableofcontents
+
+\abstract{Civilized C Compiler}
+
 \section{Introduction}
 This document describes yet another implementation of the CiviC compiler for
 the CiviC-VM. The creation of the CiviC compiler consists of different phases
@@ -35,6 +37,19 @@ A starting point is defining the AST(Abstract Syntax Tree), which
 describes the hierarchy of "Nodes", the actual definition of the AST is stated
 in Backus Nauer form in the CiviC Language Manuel. The next step is creating the Lex and Yacc to parse a
 file and assemble the AST. This AST is used in the next phases like "desugaring", "type checking" and "code generation". These phases are explained in the following sections.
+
+\section{List and HashMap}
+A list data structure with an dynamic size would help out alot. An example
+would be in  desuggaring of for loops where all new vardecs could then be
+stored in that list. We created our own linked list implementation in the file:
+'framework/src/framework/list\_hash.c'. All function names should be enough to
+indicate what they are doing.
+
+Another usefull data structure would be an hash map. We also created a simple
+hash map implementation in the same file as the linked list. The hash map can
+be used to create simple rename rules for variables. For example for loop
+desugaring requires to rename all loop variables. In the hash map we can use
+the key for the old value for lookup and the value for the new value.
 
 \section{Abstract Syntax Tree}
 An abstract syntaxtree is a representation of the structure of components that
@@ -279,18 +294,6 @@ Another optimization is done by changing 'load 0' to 'load\_0'
 %TODO Awesome conclusie
 
 
-\section{List and HashMap}
-A list data structure with an dynamic size would help out alot. An example
-would be in  desuggaring of for loops where all new vardecs could then be
-stored in that list. We created our own linked list implementation in the file:
-'framework/src/framework/list\_hash.c'. All function names should be enough to
-indicate what they are doing.
-
-Another usefull data structure would be an hash map. We also created a simple
-hash map implementation in the same file as the linked list. The hash map can
-be used to create simple rename rules for variables. For example for loop
-desugaring requires to rename all loop variables. In the hash map we can use
-the key for the old value for lookup and the value for the new value.
 
 
 

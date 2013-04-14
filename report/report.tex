@@ -174,7 +174,7 @@ The list of new assign nodes is added in the end to a new function called
 \_\_init. See psuedo code in figure \ref{fig:init}.
 
 \begin{figure}[h]
-    \begin{lstlisting}[language=C, frame=single]
+    \begin{lstlisting}[language=C]
     info = {
         list *globaldefs;
     };
@@ -258,9 +258,7 @@ messages of non declared function calls is done at the end.
 \subsection{Type Checking}
 Type checking makes sure that all functions and operations are applied to the
 correct types. The implementation rests on the last phase which enables to get
-the type of the identifiers.
-
-This way we can throw the type upwards when we traverse the tree. In every
+the type of the identifiers. This way we can throw the type upwards when we traverse the tree. In every
 traversal of a node we can simply traverse the children and get their types.
 When we have the types of the children it is merely checking whether or not the
 types are ok.
@@ -286,7 +284,50 @@ can ultimately be compared in the Assign Node.
 We made a little phase to rewrite do while and for loops to while loops. As we
 thought it might make the rest of the code easier. Do while loops simply have
 their body copied above the new while loop and for loops are have their
-initialization above the while and the increment at the end of the loop
+initialization above the while and the increment at the end of the loop.
+The reason for rewriting the loops to for loop, is that the assembly of all
+variations of loops will be the same. That makes it easier in the assembly
+phase.
+
+This phase will involve the deletion/replacement of nodes by new nodes. See
+fig. \ref{fig:fortowhile} and fig. \ref{fig:dotowhile} for an example of how a
+for loop to while loop looks like.
+
+\begin{figure}[h!]
+\centering
+\begin{lstlisting}[language=C]
+int i;
+for(i = 0; 5, 1){
+
+}
+\end{lstlisting}
+\begin{lstlisting}[language=C]
+int i = 0;
+while(i < 5){
+
+    i = i + 1;
+}
+\end{lstlisting}
+\caption{For to while loop}
+\label{fig:fortowhile}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{lstlisting}[language=C]
+do {
+
+} while(i);
+\end{lstlisting}
+
+\begin{lstlisting}[language=C]
+while(i){
+
+}
+\end{lstlisting}
+\caption{Do while to while loop}
+\label{fig:dotowhile}
+\end{figure}
 
 \subsection{Conjunction and Disjunction replacement}
 In this phase we rewrite the logic conjunction and disjunction to branches. One
@@ -304,8 +345,9 @@ var = temp
 
 If we take line 8 to be our old statement we only have to change the expression
 of the assignment and create new statements above it. This is a problem since
-the statement list can only been traversed forwards. Once arrived at a statement you can't go
-back. Which in turn means you only append statements after the current one.
+the statement list can only been traversed forwards. Once arrived at a
+statement you can't go back. Which in turn means you only append statements
+after the current one.
 
 We tackled this by not picking line 8, but line 5 as our old statement. Replacing
 both the let and expression of the assignment. We can then easily insert the
@@ -320,7 +362,52 @@ about passing the assembly instructions to a new phase.
 %TODO: we gebruiken voor elke assembly onderdeel een lijst (instr, import, ..)
 The civic assembly can be described as a list of instructions followed by
 a global variable, a constant, an import and an export table. In our code each
-of these will be represented as a list which are filled when traversing the syntax tree.
+of these will be represented as a list which are filled when traversing the
+syntax tree. All these lists are initialized in the info object.
+
+For the creation of Assembly instructions we need a new type of Node, namely an
+AssemblyInstr Node. These can be printed at the and of the traversal.
+Asembly instructions have arguments which has an undefined argument length.
+Because of this, an AssemblyInstr node has an ArgumentList. With these type of
+nodes, all the instructions can be created.
+
+\subsection{.export table}
+\texttt{.export "<func\_name>" <return Type> [<paramtypes>, ..] <func\_name>} \\
+The first step is to create a list of imports, since the main and \_\_init function
+needs to be visible to the VM as a starting point, also other functions that are
+declared with export also need to be added to this list. The list can be build
+by purely traversing every \texttt{FunDef} nodes, in case of an export, we
+create and add a new AssemblyInstruction to the list of imports.
+
+\subsection{.const table}
+\texttt{.const <BasicType> <value>} \\
+The const table is used for constant variables in an Expr node. All operations
+are performed on registers, these constant variables do not have a register
+assigned yet. Therefore contantpool is created. This means traversing,
+\texttt{Var}, \texttt{Float}, \texttt{Int}, \texttt{Bool} nodes. Hereby keeping
+in mind that we can optimize with direct constant loading. In this case, we
+don't need to create a new assembly instruction in the constant table. Thus
+sparing bytes.
+
+\subsection{.import table}
+\texttt{.global Type}\\
+All the \texttt{GlobalDec} nodes are traversed and new nodes are added to the import
+list. The value is not important, just the \#i-th place of the variable. In case
+of a load of the variable this index is the offset that the VM uses to target
+the right variable register. The reason why an imports table is created is that
+they are accessible from any place in the code.
+
+\subsection{esr}
+\texttt{esr L} \\
+In the encounter of a \texttt{FunDef} node a new function label is created, and
+added to the localvars list. The localvars list keeps track of all the vardecs
+in a function. The \texttt{L} includes the amount of parameters and the list of
+vardecs. The VM reserves space for these parameters. This is easily done by
+counting the amount of parameters(which is a list), and counting the amount of
+vardecs (which is also a list). Those two together form the nummer L.
+
+\subsection{Loads}
+\texttt{Load}
 
 
 %TODO: instructies maken we zo!

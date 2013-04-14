@@ -94,13 +94,13 @@ node *create_and(node *arg_node, info *arg_info)
     block = TBmakeStatementlist(ass_right, NULL);
     new_if = TBmakeConditionif(create_var(arg_info), block, NULL);
 
-    ///* hack inorder to place the new statements at the right spot */
+    /* hack inorder to place the new statements at the right spot */
     swap(ass_left, arg_info->place_holder);
 
-    ///* add new if condition and assign to statementlist */
+    /* add new if condition and assign to statementlist */
     tmp1 = TBmakeStatementlist(new_if, STATEMENTLIST_NEXT(arg_info->place_holder));
 
-    ///* add new if condition and assign to statementlist */
+    /* add new if condition and assign to statementlist */
     STATEMENTLIST_NEXT(arg_info->place_holder) = tmp1;
 
     ass_left = TRAVdo(ass_left, arg_info);
@@ -128,10 +128,10 @@ node *create_or(node *arg_node, info *arg_info)
     /* hack inorder to place the new statements at the right spot */
     swap(ass_left, arg_info->place_holder);
 
-    ///* add new if condition and assign to statementlist */
+    /* add new if condition and assign to statementlist */
     tmp1 = TBmakeStatementlist(new_if, STATEMENTLIST_NEXT(arg_info->place_holder));
 
-    ///* add new if condition and assign to statementlist */
+    /* add new if condition and assign to statementlist */
     STATEMENTLIST_NEXT(arg_info->place_holder) = tmp1;
 
     ass_left = TRAVdo(ass_left, arg_info);

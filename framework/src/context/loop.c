@@ -87,7 +87,7 @@ node *change_forloop(node *arg_node)
     while(STATEMENTLIST_NEXT(tail))
         tail = STATEMENTLIST_NEXT(tail);
 
-    /* create loop counter increase assignment */
+    /* create loop counter increase assignment when no step value was given */
     if(!step)
         step = TBmakeNum(1);
 

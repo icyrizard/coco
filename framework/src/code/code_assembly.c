@@ -264,21 +264,27 @@ node *ASMbinop (node * arg_node, info * arg_info)
             break;
         case BO_lt:
             tmp = STRcat(first_char, "lt");
+            arg_info->t = TYPE_bool;
             break;
         case BO_le:
             tmp = STRcat(first_char, "le");
+            arg_info->t = TYPE_bool;
             break;
         case BO_gt:
             tmp = STRcat(first_char, "gt");
+            arg_info->t = TYPE_bool;
             break;
         case BO_ge:
             tmp = STRcat(first_char, "ge");
+            arg_info->t = TYPE_bool;
             break;
         case BO_eq:
             tmp = STRcat(first_char, "eq");
+            arg_info->t = TYPE_bool;
             break;
         case BO_ne:
             tmp = STRcat(first_char, "ne");
+            arg_info->t = TYPE_bool;
             break;
         case BO_or:         /* 'or' and 'and' should not exist anymore */
         case BO_and:
@@ -672,6 +678,7 @@ node *ASMcast (node * arg_node, info * arg_info)
     cast = CAST_TYPE(arg_node);
 
     TRAVdo( CAST_RIGHT( arg_node), arg_info);
+    //fprintf(stderr, "cast: %d    expr: %d\n", cast, arg_info->t);
 
     switch(cast) {
         /* Casting to int */
@@ -1273,7 +1280,7 @@ list *peephole(list *instrs)
                 continue;
 
             /* load 0 -> load_0 */
-            } else if(STReq(instr1 + 1, "load") && atoi(ARG_INSTR(ARGLIST_HEAD(args1))) < 5) {
+            } else if(STReq(instr1 + 1, "load") && atoi(ARG_INSTR(ARGLIST_HEAD(args1))) < 4) {
                 ASSEMBLYINSTR_INSTR(first) = STRcat(STRcat(instr1, "_"), ARG_INSTR(ARGLIST_HEAD(args1)));
                 ASSEMBLYINSTR_ARGS(first) = NULL;
             }

@@ -93,7 +93,7 @@ following.
 </node>
 \end{lstlisting}
 
-An important thing to note is that <sons> represent other nodes in the ast.xml.
+An important thing to note is that \texttt{<sons>} represent other nodes in the ast.xml.
 By declaring other nodes a relation between these nodes is created. To create a cyclic
 relation(needed for lists, e.g statement lists), the node that is referred to can refer back to the parent node.
 
@@ -391,11 +391,12 @@ sparing bytes.
 
 \subsection{.global table}
 \texttt{.global Type}\\
-All the \texttt{GlobalDec} nodes are traversed and new nodes are added to the import
-list. The value is not important, just the \#i-th place of the variable. In case
-of a load of the variable this index is the offset that the VM uses to target
-the right variable register. The reason why an imports table is created is that
-they are accessible from any place in the code.
+All the \texttt{GlobalDef} and \texttt{GlobalDec} nodes are traversed and new
+nodes are added to the import list. The value is not important, just the \#i-th
+place of the variable. In case of a load of the variable this index is the
+offset that the VM uses to target the right variable register. The reason why
+an imports table is created is that they are accessible from any place in the
+code.
 
 \subsection{esr}
 \texttt{esr L} \\
@@ -407,7 +408,34 @@ counting the amount of parameters(which is a list), and counting the amount of
 vardecs (which is also a list). Those two together form the nummer L.
 
 \subsection{Loads}
-\texttt{Load}
+\texttt{\{i,f,b\}load\{ L,\_\#, g\}}
+Depending on an integer, float or bool type the according load is added to the
+instr list. The instr list is the final instruction list that does form the
+body of a function. The value of \texttt{L}, corresponds to index in the list.
+The variable name needs to be looked for in the localvars, and globalvars
+lists and in that order. First look in the locallist, if not found, look in the
+globalvars list.
+
+\subsection{Binop}
+\begin{itemize}
+\item \texttt{\{i,f\}add}
+\item \texttt{\{i,f\}sub}
+\item \texttt{\{i,f\}mul}
+\item \texttt{\{i,f\}div}
+\item \texttt{irem}
+\end{itemize}
+All these instructions pop two values of the stack and perform the
+corresponding arithmetic instruction. The crux of the creation of these
+assembly instructions lies picking the right one. Both instructions on top of
+the stack need to be of the same type. We take use of the info object to track
+the last type of instruction that was left and right of the \texttt{BinOp}
+node. Depending on that type we pick the right instruction.
+
+\subsection{Whileloops}
+\begin{lstlisting}
+
+
+\end{lstlisting}
 
 
 %TODO: instructies maken we zo!

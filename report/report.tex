@@ -35,17 +35,17 @@ functionalities to create phases, to construct an AST and comes with helper
 functions.
 
 A starting point is defining the AST(Abstract Syntax Tree), which describes the
-hierarchy of "Nodes". The formal definition of the AST is stated in Backus
+hierarchy of ``Nodes". The formal definition of the AST is stated in Backus
 Nauer form in the CiviC Language Manuel. The next step is creating the Lex and
 Yacc to parse a file and assemble the AST. This AST is used in the next phases
-like "desugaring", "type checking" and "code generation". These phases are
+like ``desugaring", ``type checking" and ``code generation". These phases are
 explained in the following sections.
 
 \section{List and HashMap}
 A list data structure with an dynamic size would help out alot. An example
 would be in  desuggaring of for loops where all new vardecs could then be
 stored in that list. We created our own linked list implementation in the file:
-'framework/src/framework/list\_hash.c'. All function names should be enough to
+`framework/src/framework/list\_hash.c'. All function names should be enough to
 indicate what they are doing.
 
 Another usefull data structure would be an hash map. We also created a simple

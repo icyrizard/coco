@@ -6,8 +6,8 @@
 \usepackage{amsmath}
 \usepackage{makeidx}
 \marginparsep = 10pt
-\author{Rik van der Kooij <stdnmmr>\& \\
-Richard Torenvliet - 6138861 \texttt{rich.riz@gmail.com}}
+\author{Rik van der Kooij - 6064965\\
+Richard Torenvliet - 6138861}
 \title{Compiler Construction - Creating the CiViC Compiler}
 \begin{document}
 \lstset{
@@ -15,10 +15,10 @@ Richard Torenvliet - 6138861 \texttt{rich.riz@gmail.com}}
     tabsize=2,
 }
 
-\abstract{Civicc Compiler}
 
 \tableofcontents
 \maketitle
+\abstract{Civicc Compiler}
 \section{Introduction}
 This document describes yet another implementation of the CiviC compiler for
 the CiviC-VM. The creation of the CiviC compiler consists of different phases
@@ -258,7 +258,9 @@ constraints. It made our lives a little easier as we did not have to worry
 about passing the assembly instructions to a new phase.
 
 %TODO: we gebruiken voor elke assembly onderdeel een lijst (instr, import, ..)
-%      blabalbalbaba
+The civic assembly can be described as a list of instructions followed by
+a global variable, a constant, an import and an export table. In our code each
+of these will be represented as a list which are filled when traversing the syntax tree.
 
 
 %TODO: instructies maken we zo!
@@ -266,8 +268,8 @@ about passing the assembly instructions to a new phase.
 
 
 \section{Peephole Optimization}
-Our peepholer looks at two instructions at the time. Optimization of a consecutive
-load and store to the same register is done by removing both instructions.
+Our peepholer looks at two instructions at the time. We optimize a consecutive
+load and store to the same register by removing both instructions.
 Another optimization is done by changing 'load 0' to 'load\_0'
 
 %TODO als je nog iets weet

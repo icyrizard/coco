@@ -232,7 +232,7 @@ node *ASMbinop (node * arg_node, info * arg_info)
         case BO_sub:
             tmp = STRcat(first_char, "sub");
             break;
-        case BO_mul:                /* TODO: 'multiplying' two bools!!! */
+        case BO_mul:
             if(left == TYPE_bool) {
                 bool_add_mul = 1;
 

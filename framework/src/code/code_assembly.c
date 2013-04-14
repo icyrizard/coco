@@ -1262,6 +1262,8 @@ list *peephole(list *instrs)
                 list_remove(instrs, second);
 
                 continue;
+
+            /* [.., loadg 0, storeg 0, ..] -> [.., ..] */
             } else if(STReq(instr1 + 1, "loadg") &&
                     STReq(instr2 + 1, "storeg") &&
                     STReq(ARG_INSTR(ARGLIST_HEAD(args1)), ARG_INSTR(ARGLIST_HEAD(args2)))) {
@@ -1278,7 +1280,13 @@ list *peephole(list *instrs)
                 list_remove(instrs, second);
 
                 continue;
+
+            /* load 0 -> load_0 */
+            } else if(STReq(instr1 + 1, "load") && atoi(ARG_INSTR(ARGLIST_HEAD(args1))) < 5) {
+                ASSEMBLYINSTR_INSTR(first) = STRcat(STRcat(instr1, "_"), ARG_INSTR(ARGLIST_HEAD(args1)));
+                ASSEMBLYINSTR_ARGS(first) = NULL;
             }
+
             prev = curr;
             curr = curr->next;
         }
@@ -1412,8 +1420,7 @@ node *CODEdoAssembly( node *syntaxtree)
     syntaxtree = TRAVdo( syntaxtree, info);
 
     /* peephole the assembly code */
-    //info->instrs = peephole(info->instrs);
-
+    info->instrs = peephole(info->instrs);
 
     /* print assembly code */
     print_assembly(info);

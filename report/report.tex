@@ -1,8 +1,9 @@
-\documentclass[a4paper]{article}
+    \documentclass[a4paper]{article}
 \usepackage[a4paper]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
 \usepackage{graphicx}
+\usepackage[all]{xy}
 \usepackage{amsmath}
 \usepackage{makeidx}
 \marginparsep = 10pt
@@ -14,25 +15,29 @@ Richard Torenvliet - 6138861 \texttt{rich.riz@gmail.com}}
     numbers=left,
     tabsize=2,
 }
+
 \abstract{Civicc Compiler}
+
 \tableofcontents
 \maketitle
 \section{Introduction}
 This document describes yet another implementation of the CiviC compiler for
 the CiviC-VM. The creation of the CiviC compiler consists of different phases
-in order to parse the program text to assembly which in turn the CiviC-VM can
-interpret. The CiviC language has a C-like structure. By implementing this
-compiler all the steps that involve to create a compiler can be learned.
+in order to parse program text to assembly which in turn the CiviC-VM can
+interpret. The CiviC language has a C-like structure. By implementing the
+compiler, all the steps that involve the creation of a compiler can be learned.
 Because CiviC takes use of the CiviC-VM, we do not have to worry about
 different architectures the program runs on. To aid in the creation of the
-compiler, we take use of the framework provided. The framework provides
-functionalities to create phases, generated node creation functions and helper
-functions that we can use to operate on Strings.
+compiler, we take use of the framework that comes with the assignment. The framework provides
+functionalities to create phases, to construct an AST and comes with helper
+functions.
 
-A starting point is defining the AST(Abstract Syntax Tree), which
-describes the hierarchy of "Nodes", the actual definition of the AST is stated
-in Backus Nauer form in the CiviC Language Manuel. The next step is creating the Lex and Yacc to parse a
-file and assemble the AST. This AST is used in the next phases like "desugaring", "type checking" and "code generation". These phases are explained in the following sections.
+A starting point is defining the AST(Abstract Syntax Tree), which describes the
+hierarchy of "Nodes". The formal definition of the AST is stated in Backus
+Nauer form in the CiviC Language Manuel. The next step is creating the Lex and
+Yacc to parse a file and assemble the AST. This AST is used in the next phases
+like "desugaring", "type checking" and "code generation". These phases are
+explained in the following sections.
 
 \section{Abstract Syntax Tree}
 An abstract syntaxtree is a representation of the structure of components that
@@ -41,7 +46,7 @@ The abstract syntaxtree is represented in XML form. In the XML
 file(\texttt{src/global/ast.xml}) the hierarchy and relation between nodes can
 be expressed. To implement the CiviC language, the CiviC reference manual has
 to be carefully followed. The language is defined in Backus Nauer form which is
-turned in to XML that follows a certain syntax in order to describe the tree.
+turned in to XML. The XML follows a specific pattern in order to describe the tree.
 For example, an assign node(see reference document) is described by the
 following.
 
@@ -73,11 +78,11 @@ following.
 </node>
 \end{lstlisting}
 
-An important thing to note is that <sons> represent other nodes in the ast.xml,
-and a relation between these nodes is created. To create a cyclic
+An important thing to note is that <sons> represent other nodes in the ast.xml.
+By declaring other nodes a relation between these nodes is created. To create a cyclic
 relation(needed for lists, e.g statement lists), the node that is referred to can refer back to the parent node.
 
-Also, if a node is a ctype, those are described in the \texttt{<attributes>} field.\\
+Another field can be used if a node is a ctype, those are described in the \texttt{<attributes>} field.\\
 \texttt{<type name="String" ctype="char*" init="NULL" copy="function" />}
 \\
 The AST can be visually represented in a Directed Cyclic Graph, the resulting
@@ -89,19 +94,19 @@ tree can be seen in figure \ref{fig:ast.png}.
 \caption{The resulting AST}
 \end{figure}
 
-The framework generates functions to create these nodes which can be
-used in the Yaccer matches sequence of tokens to nodes. To construct the AST in memory. Which then can be used to
-perform semantically check the code. The functions that are generated also
-follow a specific syntax:\\
+The framework generates functions to create these nodes which can be used in
+the Yaccer matches sequence of tokens to nodes. To construct the AST in memory.
+Which then can be used to perform semantically check the code. The functions
+that are generated also follow a specific syntax:\\
 \texttt{TBmake<NODENAME>\_<SON\_NAME/ATTRIBUTE\_NAME>}
 
 \section{Lex and Yacc}
 This phase forms the base of the compiler. The first step is to do a lexical
 analysis with Lex, it matches a sequence of characters that form will form a
 token, also non allowed characters are detected. A tokenstream is generated
-form the code and are provided to the Yaccer, a sequence of these map to a certain node(exactly the nodes we
-described in the ast.xml and the CiviC reference). If a successful match is
-found, the according \texttt{TBmake..(\$1, \$2, \$3)} function is called. The
+form the code and are provided to the Yaccer, a sequence of these map to a
+certain node(exactly the nodes we described in the ast.xml and the CiviC
+reference). If a successful match is found, the according \texttt{TBmake..(\$1, \$2, \$3)} function is called. The
 matched tokens are used as parameters. Then end result will be the complete AST
 in memory.
 
@@ -131,14 +136,14 @@ following sections explain the usage of this object if needed.
 
 \section{Desugaring}
 Due to the fact that declarations and initializations of variables are not
-always possible, these need to rewritten to a separate declaration or separate
+always possible, these need to be rewritten to a separate declaration or separate
 initialization.
 
 \subsection{Global variables to \_\_init}
 The first desugaring step is to rewrite the initialization of global variables
 to a new \_\_init function, this is in fact "code generation". The reason for
 this is that ultimately the assembly instructions need to be placed under a
-label/function. In addition the global variables need to initialized before any
+label/function. In addition, the global variables need to be initialized before any
 other instruction is invoked, simply because of the fact that we expect them to
 hold the right variable before anything else.
 
@@ -178,10 +183,145 @@ The list of new assign nodes is added in the end to a new function called
     \label{fig:init}
 \end{figure}
 
-\subsection{Desugar for loops}
+\subsection{Forloop variable initialization desuggering}
+All forloops start with a declaration part. This part will be split from the
+for loop much like we did with the global variables. The declaration of the
+loop variables is moved to the top of the function. The loop variables can be
+seen as though they are defined in a different scope. This means that we had to
+rename it to allow multiple local variables of the same name.
 
-\section{Type Checking}
+\begin{lstlisting}[language=C]
+for(int i = 0, 10, 1){
+    i = i + 2;
+    for(int j = 0, 10, 1){
+        i = i + 1;
+    }
+}
+\end{lstlisting}
+\begin{lstlisting}[language=C]
+int $i1;
+int $j2;
+for($i1 = 0, 10, 1){
+    $i1 = $i1 + 2;
+    for($j2 = 0, 10, 1){
+        $i1 = $i1 + 1;
+    }
+}
+\end{lstlisting}
+
+The list described in section %ref
+is used to construct a list of variable declarations with the renamed
+variables, i.e. \texttt{\$<VARNAME><NESTLEVEL>}. For all occurrences of variables with
+the old name have to be renamed to the new one. The solution is to create a
+hashmap: \texttt{"old\_varname":"new\_varname"}. If a variable of
+\texttt{"old\_varname"} is encountered it has to be renamed to the new varname.
+
+At the end of the traversal, the new vardeclist is added to the current
+vardeclist of the current function.
+
+\section{Semantic Analysis}
+Semantic analysis is where we add semantic information and check whether or not
+the given program is valid. After this phase the program should be valid and no
+further checking should be needed.
+
+\subsection{Context Analysis}
+Before we can do any type checking we should have a convenient way to get the
+type of an identifier. This is what we are going to do by linking each
+identifier with its declaration.
+
+Declarations of variables should always occur before use. This makes linking
+them fairly easy. Each time we find a new declaration we store it either in a list
+for global or local variables. When a variable is used we simply get the
+declaration from the list. Duplicate declarations or missing declarations will
+be reported.
+
+Functions on the other hand can be used before their declaration. For this we
+simply kept track of all function calls where we didn't see a declaration for
+yet. Op on reaching a declaration we would link all stored function calls. Error
+messages of non declared function calls is done at the end.
+
+\subsection{Type Checking}
+Type checking makes sure that all functions and operations are applied to the
+correct types. The implementation rests on the last phase which enables to get
+the type of the identifiers.
+
+This way we can throw the type upwards when we traverse the tree. In every
+traversal of a node we can simply traverse the children and get their types.
+When we have the types of the children it is merely checking whether or not the
+types are ok.
+
+An example for type checking for the assign node
+is layed out in figure \ref{fig:type}. The type of the left-side of the
+assignment can easily be checked, the right-side is of type Expr. The type of
+every Expr is tracked by placing it in the info node. The left and right side
+can ultimately be compared in the Assign Node.
+
+\begin{figure}[h]
+\xymatrix{
+            & *+++o[F]\txt{ASSIGN \\ type-left == type-right ?} \ar[dl] \ar[dr]&  \\
+*+++o[F]{VAR, TYPE\_int} & & *+++o[F]{EXPR} \\
+            & & ... \ar[d] \ar@/_/[u]_{\txt<7pc>{TYPE upwards}} \\
+            & & ...  \ar@/^/[u]_{\txt<9pc>{TYPE upwards}} \\
+}
+\label{fig:type}
+\caption{Assignment node type checking.}
+\end{figure}
+
+\subsection{Loop Rewriting}
+We made a little phase to rewrite do while and for loops to while loops. As we
+thought it might make the rest of the code easier. Do while loops simply have
+their body copied above the new while loop and for loops are have their
+initialization above the while and the increment at the end of the loop
+
+\subsection{Conjunction and Disjunction replacement}
+In this phase we rewrite the logic conjunction and disjunction to branches. One
+of the rewrites looked as follows:
+\begin{lstlisting}[language=C]
+/* from this */
+var = expr && expr
+
+/* to this */
+temp = expr
+if(temp)
+    temp = expr
+var = temp
+\end{lstlisting}
+
+If we take line 8 to be our old statement we only have to change the expression
+of the assignment and create new statements above it. This is a problem since
+the statement list can only been traversed forwards. Once arrived at a statement you can't go
+back. Which in turn means you only append statements after the current one.
+
+We tackled this by not picking line 8, but line 5 as our old statement. Replacing
+both the let and expression of the assignment. We can then easily insert the
+other three statements to the statement list.
 
 \section{Code Generation}
+In the code the last three phases (code generation, peephole optimization and
+assembly printing) are put in one file. This was unfortunately due to time
+constraints. It made our lives a little easier as we did not have to worry
+about passing the assembly instructions to a new phase.
+
+%TODO: we gebruiken voor elke assembly onderdeel een lijst (instr, import, ..)
+%      blabalbalbaba
+
+
+%TODO: instructies maken we zo!
+\section{Peephole Optimization}
+Our peepholer looks at two instructions at the time. Optimization of a consecutive
+load and store to the same register is done by removing both instructions.
+Another optimization is done by changing 'load 0' to 'load\_0'
+
+%TODO als je nog iets weet
+
+
+\section{Conclusion}
+%TODO Awesome conclusie
+
+
+
+%TODO Er moet ook ergens nog komen dat we nested functies en arrays niet
+%     hebben.
+
 
 \end{document}

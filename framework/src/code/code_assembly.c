@@ -17,25 +17,16 @@ void print_global(list *globals);
 char* typess[5] = { "bool", "int", "float", "void", "unknown" };
 char* typesc[5] = { "b", "i", "f", "v", "u" };
 
-/* dit gaat trouens wel fout wss als we het meenemen nar een nieuwe phase of niet?
- * mmm/ nog geen idee hoe we dat uberhaupt moeten doen ja ok no problem dan
- * anders gooien we peepholing en printing ook gwn in deze uber file! */
-int int_types[4] = { 0,1,2,3 };
-
 /***********************   INFO   ***********************/
-        //    als je hebt: export int main() { ...}
-        //    dan wordt het:  .export  "main"  int  main
-        //
 typedef struct instr instruction;
 
 struct INFO {
-    list *instrs;  // zoiets
+    list *instrs;
     list *imports;
     list *exports;
     list *globalvars;
     list *localvars;
     list *constpool;
-    node  *root; // root node for the instruction lists
     type t;
     int label;
 };

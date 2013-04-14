@@ -14,7 +14,9 @@ Richard Torenvliet - 6138861 \texttt{rich.riz@gmail.com}}
     numbers=left,
     tabsize=2,
 }
+
 \abstract{Civicc Compiler}
+
 \tableofcontents
 \maketitle
 \section{Introduction}
@@ -190,8 +192,94 @@ consisted of 'rewrite rules'. The rewrite rules were simply the old variable
 name and the new one. Whith this we were able to rename all uses of forloop
 variables with the new name.
 
-\section{Context}
+\section{Semantic Analysis}
+Semantic analysis is where we add semantic information and check whether or not
+the given program is valid. After this phase the program should be valid and no
+further checking should be needed.
+
+\subsection{Context Analysis}
+Before we can do any type checking we should have a convinient way to get the
+type of an identifier. This is what we are going to do by linking each
+identifier with its declaration.
+
+Declarations of variables should always come before the use. This makes linking
+fairly easy. Each time we find a new declaration we store it either in a list
+for global or local variables. When a variable is being used we simply get the
+declaration from the list. Duplicate declarations or missing declarations will
+be reported.
+
+Functions on the other hand can be used before their declaration. For this we
+simply kept track of all function calls where we didn't see a declaration for
+yet. Opon reaching a declaration we would link all stored function calls. Error
+messages of non declared function calls is done at the end.
+
+\subsection{Type Checking}
+Type checking makes sure that all functions and operations are applied to the
+correct types. The implementation rests on the last phase which makes it able
+to get the type of the identifiers. This way we can throw the type upwards when
+we traversing the tree. In ever traversal of a node we can simply traverse the
+children and get their types. When we have the types of the children it is
+mererly checking whether or not the types are ok.
+
+\subsection{Loop Rewriting}
+We made a little phase to rewrite do while and for loops to while loops. As we
+thought it might make the rest of the code easier. do while loops simply have
+their body copied above the new while loop and for loops are have their
+initialization above the while and the increment at the end of the loop
+
+
+\subsection{Conjunction and Disjunction replacement}
+In this phase we rewrite the logic conjunction and disjunction to branches. One
+of the rewrites looked as follows:
+\begin{lstlisting}[language=C]
+/* from this */
+var = expr && expr
+
+/* to this */
+temp = expr
+if(temp)
+    temp = expr
+var = temp
+\end{lstlisting}
+
+If we take line 8 to be our old statement we only have to change the expression
+of the assignment and create new statements above it. This is a problem since
+the statement list can only been traversed fowards. Once arrived at a statement you can't go
+back. Which in turn means you an only append statements after the current one.
+
+We tackled this by not picking line 8, but line 5 as our old statement. Replacing
+both the let and expression of the assignment. We can then easily insert the
+other three statements to the statment list.
 
 \section{Code Generation}
+In the code the last three phases (code generation, peephole optimization and
+assembly printing) are put in one file. This was unfortunately due to time
+constraints. It made our lives a little easier as we did not have to worry
+about passing the assembly instructions to a new phase.
+
+%TODO: we gebruiken voor elke assembly onderdeel een lijst (instr, import, ..)
+%      blabalbalbaba
+
+
+%TODO: instructies maken we zo!
+
+
+
+\section{Peephole Optimization}
+Our peepholer looks at two instructions at the time. Optimization of a consecutive
+load and store to the same register is done by removing both instructions.
+Another optimization is done by changing 'load 0' to 'load\_0'
+
+%TODO als je nog iets weet
+
+
+\section{Conclusion}
+%TODO Awesome conclusie
+
+
+
+%TODO Er moet ook ergens nog komen dat we nested functies en arrays niet
+%     hebben.
+
 
 \end{document}

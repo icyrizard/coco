@@ -1,5 +1,6 @@
 /***   Print tree phase for debugging purposes   ***/
 #include <stdio.h>
+#include <string.h>
 #include "print.h"
 #include "traverse.h"
 #include "tree_basic.h"
@@ -16,6 +17,7 @@ void print_global(list *globals);
 
 char* typess[5] = { "bool", "int", "float", "void", "unknown" };
 char* typesc[5] = { "b", "i", "f", "v", "u" };
+FILE *out;
 
 /***********************   INFO   ***********************/
 typedef struct instr instruction;
@@ -1196,18 +1198,18 @@ void print_const(list *consts){
     instr = list_get_elem(consts, index++);
 
     while(instr) {
-        printf("%s ", ASSEMBLYINSTR_INSTR(instr));
+        fprintf(out, "%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
-        printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+        fprintf(out, "%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
         arg = ARGLIST_NEXT(arg);
 
         while(arg){
-          printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+          fprintf(out, "%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
           arg = ARGLIST_NEXT(arg);
         }
-        printf("\n");
+        fprintf(out, "\n");
 
         instr = list_get_elem(consts, index++);
     }
@@ -1303,18 +1305,18 @@ void print_export(list *exports){
     instr = list_get_elem(exports, index++);
 
     while(instr) {
-        printf("%s ", ASSEMBLYINSTR_INSTR(instr));
+        fprintf(out, "%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
-        printf("\"%s\" ", ARG_INSTR(ARGLIST_HEAD(arg)));
+        fprintf(out, "\"%s\" ", ARG_INSTR(ARGLIST_HEAD(arg)));
         arg = ARGLIST_NEXT(arg);
 
         while(arg){
-          printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+          fprintf(out, "%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
           arg = ARGLIST_NEXT(arg);
         }
-        printf("\n");
+        fprintf(out, "\n");
 
         instr = list_get_elem(exports, index++);
     }
@@ -1326,18 +1328,18 @@ void print_imports(list *imports){
     instr = list_get_elem(imports, index++);
 
     while(instr){
-        printf("%s ", ASSEMBLYINSTR_INSTR(instr));
+        fprintf(out, "%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
-        printf("\"%s\" ", ARG_INSTR(ARGLIST_HEAD(arg)));
+        fprintf(out, "\"%s\" ", ARG_INSTR(ARGLIST_HEAD(arg)));
         arg = ARGLIST_NEXT(arg);
 
         while(arg) {
-          printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+          fprintf(out, "%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
           arg = ARGLIST_NEXT(arg);
         }
-        printf("\n");
+        fprintf(out, "\n");
 
         instr = list_get_elem(imports, index++);
     }
@@ -1349,15 +1351,15 @@ void print_global(list *globals){
     instr = list_get_elem(globals, index++);
 
     while(instr) {
-        printf("%s ", ASSEMBLYINSTR_INSTR(instr));
+        fprintf(out, "%s ", ASSEMBLYINSTR_INSTR(instr));
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
-        printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
-        printf("\n");
+        fprintf(out, "%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+        fprintf(out, "\n");
         instr = list_get_elem(globals, index++);
     }
-    printf("\n");
+    fprintf(out, "\n");
 }
 
 void print_instrs(list *instrs){
@@ -1369,34 +1371,41 @@ void print_instrs(list *instrs){
     while(instr){
         instr_name = ASSEMBLYINSTR_INSTR(instr);
         if(instr_name[STRlen(instr_name) - 1] != ':')
-            printf("\t");
+            fprintf(out, "\t");
         //else
-        //    printf("    ");
-        printf("%s ", instr_name);
+        //    fprintf(out, "    ");
+        fprintf(out, "%s ", instr_name);
 
         if(STReq(instr_name, "return") || STReq(instr_name+1, "return"))
-            printf("\n");
+            fprintf(out, "\n");
 
         /* print args */
         arg = ASSEMBLYINSTR_ARGS(instr);
         while(arg) {
-            printf("%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
+            fprintf(out, "%s ", ARG_INSTR(ARGLIST_HEAD(arg)));
             arg = ARGLIST_NEXT(arg);
         }
-        printf("\n");
+        fprintf(out, "\n");
 
         instr = list_get_elem(instrs, index++);
     }
-    printf("\n");
+    fprintf(out, "\n");
 }
 
 void print_assembly(info *arg_info)
 {
+    if(global.outfile != NULL)
+        out = fopen(global.outfile, "w");
+    else
+        out = fopen(STRcat(STRtok(global.infile, "."), ".s"), "w");
+
     print_instrs(arg_info->instrs);
     print_imports(arg_info->imports);
     print_export(arg_info->exports);
     print_global(arg_info->globalvars);
     print_const(arg_info->constpool);
+
+    fclose(out);
 }
 
 /******************   START of phase   ******************/
